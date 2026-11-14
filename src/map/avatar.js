@@ -276,3 +276,6 @@ function createAvatar(container) {
     show() { el.classList.remove('hidden'); },
   };
 }
+
+// shared with every place (they call createAvatar(...) without importing it)
+window.createAvatar = createAvatar;

@@ -1,5 +1,5 @@
-// main.js — the shared Mars base map: walking on the roads, doors, keyboard, game loop.
-// Needs avatar.js first (it provides createAvatar).
+// map.js — the shared Mars base map: walking on the roads, doors, keyboard, game loop.
+// Needs avatar.js first (it provides createAvatar). src/main.js loads them in the right order.
 // Everyone shares this file. Your own place's game goes in YOUR OWN file and talks to the map
 // through MarsMap (see "FOR TEAMMATES" at the bottom).
 const MarsMap = (function () {
@@ -12,7 +12,7 @@ const MarsMap = (function () {
 
   // =========================================================
   //  THE MAP
-  //  The drawing in main.html uses small "design" numbers inside
+  //  The drawing in index.html uses small "design" numbers inside
   //  <g transform="translate(90 7) scale(1.6)">. ART turns design numbers into map pixels.
   //
   //                       cliff route (canyon)
@@ -340,6 +340,9 @@ const MarsMap = (function () {
     toast,
   };
 })();
+// shared with every place (they use MarsMap without importing it)
+window.MarsMap = MarsMap;
+
 // ===== Fit the whole page in the window: as big as possible, centered =====
 (function () {
   const page = document.querySelector('.mm-page');
