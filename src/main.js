@@ -3,6 +3,7 @@ import './style.css';
 import { MAP } from './config/stations.js';
 import BootScene from './scenes/BootScene.js';
 import MainMapScene from './scenes/MainMapScene.js';
+import './ui/panels/powerPanel.js';
 
 new Phaser.Game({
   type: Phaser.AUTO,

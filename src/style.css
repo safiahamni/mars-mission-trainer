@@ -48,6 +48,9 @@ html, body {
   border-radius: 12px;
   font-size: 20px;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 .panel-body {
   font-size: 18px;
@@ -57,4 +60,96 @@ html, body {
 .muted {
   color: #a9aebd;
   font-size: 14px;
+}
+
+/* icons (Lucide SVG) */
+.icon {
+  display: inline-block;
+  vertical-align: -0.15em;
+  flex-shrink: 0;
+}
+
+/* power station panel */
+.power-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.power-card {
+  background: #1b1e27;
+  border-radius: 14px;
+  padding: 12px;
+}
+.power-label {
+  color: #a9aebd;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.power-big {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 4px 0;
+}
+.power-big small {
+  font-size: 14px;
+  color: #a9aebd;
+}
+.power-bar {
+  height: 14px;
+  background: #11131a;
+  border-radius: 99px;
+  overflow: hidden;
+}
+.power-bar i {
+  display: block;
+  height: 100%;
+  background: #f2c94c;
+  transition: width 0.4s;
+}
+.power-bar i.low {
+  background: #f08a24;
+}
+.power-bar i.empty {
+  background: #e0605a;
+}
+.power-warn {
+  color: #ffb4a8;
+  font-size: 14px;
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.power-msg {
+  min-height: 1.4em;
+  font-size: 16px;
+}
+.power-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.power-actions button {
+  border: 0;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 16px;
+  font-weight: 600;
+  background: #f2c94c;
+  color: #1f2430;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.power-actions button:disabled {
+  background: #4a4f5c;
+  color: #a9aebd;
+  cursor: not-allowed;
+}
+.power-fact summary {
+  cursor: pointer;
+  margin-top: 10px;
 }

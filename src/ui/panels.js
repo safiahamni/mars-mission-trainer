@@ -5,6 +5,8 @@
 //   import { registerPanel } from '../ui/panels.js';
 //   registerPanel('greenhouse', (body) => { body.innerHTML = '<p>Plant crops here</p>'; });
 
+import { icon } from './icons.js';
+
 const renderers = {};
 let current = null;
 let onCloseCb = null;
@@ -27,7 +29,7 @@ export function openPanel(station, onClose) {
     <div class="panel" role="dialog" aria-label="${station.name}">
       <div class="panel-head">
         <h2>${station.name}</h2>
-        <button class="panel-close" aria-label="Close">✕</button>
+        <button class="panel-close" aria-label="Close">${icon('close', 22)}</button>
       </div>
       <div class="panel-body"></div>
       <p class="panel-hint">Press Esc to go back to the base</p>
@@ -36,7 +38,7 @@ export function openPanel(station, onClose) {
 
   const body = root.querySelector('.panel-body');
   if (renderers[station.id]) renderers[station.id](body);
-  else body.innerHTML = `<p>🚧 This station is coming soon.</p><p class="muted">Owner: ${station.owner} · ID: <code>${station.id}</code></p>`;
+  else body.innerHTML = `<p>${icon('construction')} This station is coming soon.</p><p class="muted">Owner: ${station.owner} · ID: <code>${station.id}</code></p>`;
 
   root.querySelector('.panel-close').addEventListener('click', closePanel);
 }
