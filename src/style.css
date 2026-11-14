@@ -153,3 +153,113 @@ html, body {
   cursor: pointer;
   margin-top: 10px;
 }
+
+/* start hub (mission control) panel */
+.hub-sol {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+}
+.hub-dots {
+  display: flex;
+  gap: 6px;
+}
+.hub-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #3a3f4d;
+}
+.hub-dot.past {
+  background: #7cc35c;
+}
+.hub-dot.now {
+  background: #f2c94c;
+  box-shadow: 0 0 0 3px rgba(242, 201, 76, 0.3);
+}
+.hub-report {
+  display: flex;
+  gap: 8px;
+  background: #1b1e27;
+  border-left: 4px solid #f2c94c;
+  border-radius: 10px;
+  padding: 8px 12px;
+  margin: 12px 0;
+  font-size: 15px;
+}
+.hub-report p {
+  margin: 0;
+}
+.hub-h {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 17px;
+  margin: 16px 0 8px;
+}
+.hub-tasks {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.hub-tasks li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  color: #d5d8e0;
+}
+.hub-tasks li.done {
+  color: #7cc35c;
+  text-decoration: line-through;
+}
+.hub-status {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.hub-stat {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #1b1e27;
+  border-radius: 10px;
+  padding: 8px;
+  font-size: 14px;
+}
+.hub-stat.low {
+  color: #f08a24;
+}
+.hub-stat.empty {
+  color: #e0605a;
+}
+.hub-stat.soon {
+  color: #6b7080;
+}
+.hub-end {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 16px;
+  padding: 14px;
+  border: 0;
+  border-radius: 14px;
+  background: #5b8ad6;
+  color: #ffffff;
+  font-size: 19px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.hub-end:hover {
+  background: #6f9ae0;
+}
+.hub-done {
+  text-align: center;
+}
+.hub-big {
+  color: #f2c94c;
+}

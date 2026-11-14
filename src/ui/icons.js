@@ -1,6 +1,10 @@
+// ICONS: one place for every icon in the game.
+// Uses Lucide (free, open-source line icons: https://lucide.dev). No emoji.
+// Usage inside HTML templates:  `${icon('sun')} Solar panels`
 import {
   Sun, Zap, BatteryFull, BatteryLow, BatteryWarning, Tornado,
   TriangleAlert, Lightbulb, Construction, X,
+  Moon, CircleCheck, Circle, Flag, SatelliteDish, Droplet, Wind, Carrot, ClipboardList,
 } from 'lucide';
 
 const ICONS = {
@@ -14,6 +18,15 @@ const ICONS = {
   lightbulb: Lightbulb,
   construction: Construction,
   close: X,
+  moon: Moon,
+  check: CircleCheck,
+  circle: Circle,
+  flag: Flag,
+  satellite: SatelliteDish,
+  droplet: Droplet,
+  wind: Wind,
+  carrot: Carrot,
+  clipboard: ClipboardList,
 };
 
 // Turns a Lucide icon into an <svg> string that inherits the text colour.

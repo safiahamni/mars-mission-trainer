@@ -41,6 +41,9 @@ export function openPanel(station, onClose) {
   else body.innerHTML = `<p>${icon('construction')} This station is coming soon.</p><p class="muted">Owner: ${station.owner} · ID: <code>${station.id}</code></p>`;
 
   root.querySelector('.panel-close').addEventListener('click', closePanel);
+
+  // let other parts of the game know a station was opened (used by the Start Hub checklist)
+  window.dispatchEvent(new CustomEvent('station:open', { detail: station.id }));
 }
 
 export function closePanel() {
