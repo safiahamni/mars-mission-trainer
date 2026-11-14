@@ -2,9 +2,10 @@
 // Uses Lucide (free, open-source line icons: https://lucide.dev). No emoji.
 // Usage inside HTML templates:  `${icon('sun')} Solar panels`
 import {
-  Sun, Zap, BatteryFull, BatteryLow, BatteryWarning, Tornado,
-  TriangleAlert, Lightbulb, Construction, X,
-  Moon, CircleCheck, Circle, Flag, SatelliteDish, Droplet, Wind, Carrot, ClipboardList,
+  Sun, Zap, BatteryFull, BatteryLow, BatteryWarning, BatteryCharging, Tornado,
+  TriangleAlert, Lightbulb, Construction, X, Moon, CircleCheck, Circle, Flag,
+  SatelliteDish, Droplet, Wind, Carrot, ClipboardList, Sprout, FlaskConical,
+  Brush, ArrowLeft, Lock, Gauge, Waves, Star, Shield, ShieldCheck, BedDouble, Radio, Shirt, Radiation,
 } from 'lucide';
 
 const ICONS = {
@@ -13,6 +14,7 @@ const ICONS = {
   'battery-full': BatteryFull,
   'battery-low': BatteryLow,
   'battery-warning': BatteryWarning,
+  'battery-charging': BatteryCharging,
   tornado: Tornado,
   alert: TriangleAlert,
   lightbulb: Lightbulb,
@@ -27,6 +29,20 @@ const ICONS = {
   wind: Wind,
   carrot: Carrot,
   clipboard: ClipboardList,
+  sprout: Sprout,
+  flask: FlaskConical,
+  brush: Brush,
+  back: ArrowLeft,
+  lock: Lock,
+  gauge: Gauge,
+  waves: Waves,
+  star: Star,
+  shield: Shield,
+  'shield-check': ShieldCheck,
+  bed: BedDouble,
+  radio: Radio,
+  shirt: Shirt,
+  radiation: Radiation,
 };
 
 // Turns a Lucide icon into an <svg> string that inherits the text colour.

@@ -1,24 +1,8 @@
-import Phaser from 'phaser';
 import './style.css';
-import { MAP } from './config/stations.js';
-import BootScene from './scenes/BootScene.js';
-import MainMapScene from './scenes/MainMapScene.js';
-import './ui/panels/powerPanel.js';
-import './ui/panels/startHubPanel.js';
+import { renderCommandCenter } from './ui/rooms/commandCenter.js';
 
-new Phaser.Game({
-  type: Phaser.AUTO,
-  parent: 'game',
-  width: MAP.width,
-  height: MAP.height,
-  backgroundColor: '#c65a2e',
-  physics: {
-    default: 'arcade',
-    arcade: { debug: false },
-  },
-  scene: [BootScene, MainMapScene],
-  scale: {
-    mode: Phaser.Scale.FIT,
-    autoCenter: Phaser.Scale.CENTER_BOTH,
-  },
-});
+// For now the game opens straight into the Command Center.
+// The base map is being rebuilt; when it's ready it can open the Command Center as a room instead.
+const root = document.createElement('div');
+document.body.appendChild(root);
+renderCommandCenter(root);

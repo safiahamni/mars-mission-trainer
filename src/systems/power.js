@@ -1,79 +1,130 @@
-// POWER SYSTEM (Member 1)
-// Power is the "currency" every station spends.
-// These are pure functions: they never change the state you pass in,
-// they return a new copy. Member 2's gameController applies the result.
+// POWER (Member 1): the 0-100 battery every station spends from.
+// Follows the team's "Mars Outpost: Power Budget":
+//   - each action has a price and spends it when it runs
+//   - the solar field adds a charge every morning (+40 clean, +20 dusty, +5 dust storm)
+//   - 20 power is always kept for heaters + life support at night (the night line)
+// Pure functions: they never change the state you pass in; they return a new copy.
 
-// Game numbers (simplified for kids, documented in the README):
-// - On Mars, sunlight is weaker than on Earth, and dust storms can block it for weeks.
-// - NASA's Opportunity rover ran on solar panels and had to save power during dust storms.
 export const POWER_CONFIG = {
-  solarPerSol: 20,        // energy made on a clear sol
-  dustStormFactor: 0.4,   // a dust storm leaves only 40% of normal sunlight
-  batteryCapacity: 40,    // the most energy the battery can store
-  startBattery: 20,       // energy at the start of the mission
-  lowThreshold: 8,        // below this, show a low-power warning
+  max: 100,            // charge above 100 is lost
+  start: 55,           // battery at the start of the mission
+  nightReserve: 20,    // heaters + life support at night
+  solar: { clean: 40, dusty: 20, storm: 5 },   // morning charge
 };
 
-// Starting power state. Member 2 puts this inside the shared game state.
+// Prices from the Power Budget (keep every number here so the team can tune them)
+export const COSTS = {
+  moxieUnlock: 10,   // one time
+  moxie: 5,          // per sol
+  recycler: 5,       // per sol
+  growLights: 5,     // per sol
+  eva: 5,            // per trip
+  rover: 5,          // per use
+  shielding: 25,     // solar storm only
+};
+
+// The switchboard levers, in the order of the Switchboard Kit.
+// cost = price to run it today. perSol levers switch off every morning, so the crew plans again.
+export const SWITCHES = [
+  { id: 'heater', name: 'Heaters', plate: 'HEATERS', cost: 0, locked: true, note: 'Uses the night reserve' },
+  { id: 'recycler', name: 'Water recycler', plate: 'WATER<br>RECYCLER', cost: COSTS.recycler, perSol: true },
+  { id: 'lab', name: 'Lab equipment', plate: 'LAB<br>EQUIP', cost: 0, note: 'Chapters cost their own power' },
+  { id: 'greenhouse', name: 'Grow lights', plate: 'GREENHOUSE<br>LIGHT', cost: COSTS.growLights, perSol: true },
+  { id: 'moxie', name: 'MOXIE', plate: 'MOXIE', cost: COSTS.moxie, unlockCost: COSTS.moxieUnlock, perSol: true },
+];
+
 export function createPowerState() {
   return {
-    stored: POWER_CONFIG.startBattery,
-    capacity: POWER_CONFIG.batteryCapacity,
-    producedToday: 0,
-    wastedToday: 0,
+    battery: POWER_CONFIG.start,
+    switches: { heater: true, recycler: false, lab: true, greenhouse: false, moxie: false },
+    ranToday: {},          // which per-sol systems were already paid for today
+    moxieUnlocked: false,
+    panels: 'clean',       // 'clean' | 'dusty'
   };
 }
 
-// How much energy the solar panels make this sol.
-// env.dustStorm: true during a dust storm (comes from Member 3's events.js)
-export function solarOutput(env = {}) {
-  const factor = env.dustStorm ? POWER_CONFIG.dustStormFactor : 1;
-  return Math.round(POWER_CONFIG.solarPerSol * factor);
+const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+// Other stations use this, e.g. isCircuitOn(power, 'greenhouse')
+export function isCircuitOn(power, id) {
+  return !!power.switches[id];
 }
 
-// Called once at the start of each sol: charge the battery with today's sunlight.
-// Anything above capacity is wasted (the battery is full).
-export function chargeForNewSol(power, env = {}) {
-  const made = solarOutput(env);
-  const room = power.capacity - power.stored;
-  const added = Math.min(made, room);
-  return {
-    ...power,
-    stored: power.stored + added,
-    producedToday: made,
-    wastedToday: made - added,
-  };
+// Spendable today = battery - night reserve
+export function spendable(power) {
+  return Math.max(0, power.battery - POWER_CONFIG.nightReserve);
 }
 
-// Can we pay this much energy right now?
-export function canAfford(power, cost) {
-  return Number.isFinite(cost) && cost >= 0 && power.stored >= cost;
+// How much power is missing to get back to the night line (0 if fine)
+export function shortForNight(power) {
+  return Math.max(0, POWER_CONFIG.nightReserve - power.battery);
 }
 
-// Try to spend energy. Never goes below zero.
-// Returns { ok, power, message } so the UI can show what happened.
-export function spend(power, cost, reason = 'equipment') {
-  if (!canAfford(power, cost)) {
-    return {
-      ok: false,
-      power,
-      message: `Not enough power for ${reason}. You need ${cost} but only have ${power.stored}.`,
-    };
+// Any station can spend power: spendPower(power, COSTS.eva, 'EVA trip')
+export function spendPower(power, cost, label = 'That') {
+  if (cost > power.battery) return { ok: false, power, message: `${label} needs ${cost} power. Need ${cost - power.battery} more.` };
+  return { ok: true, power: { ...power, battery: power.battery - cost }, message: `${label}: −${cost} power.` };
+}
+
+// Price of switching a lever on right now (0 if already paid today)
+export function leverCost(power, id) {
+  const sw = SWITCHES.find((s) => s.id === id);
+  if (!sw || power.ranToday[id]) return 0;
+  return sw.cost + (sw.unlockCost && !power.moxieUnlocked ? sw.unlockCost : 0);
+}
+
+export function setSwitch(power, id, on) {
+  const sw = SWITCHES.find((s) => s.id === id);
+  if (!sw) return { ok: false, power, message: 'Unknown switch.' };
+  if (sw.locked) return { ok: false, power, message: `${sw.name} must stay on. They use the night reserve.` };
+  if (!on) {
+    const note = power.ranToday[id] ? ' (power already used today)' : '';
+    return { ok: true, power: { ...power, switches: { ...power.switches, [id]: false } }, message: `${sw.name} off${note}.` };
   }
+  const cost = leverCost(power, id);
+  if (cost > power.battery) return { ok: false, power, message: `${sw.name} needs ${cost} power. Need ${cost - power.battery} more.` };
+  const next = {
+    ...power,
+    battery: power.battery - cost,
+    switches: { ...power.switches, [id]: true },
+    ranToday: cost > 0 || sw.perSol ? { ...power.ranToday, [id]: true } : power.ranToday,
+    moxieUnlocked: power.moxieUnlocked || id === 'moxie',
+  };
+  const unlocked = id === 'moxie' && !power.moxieUnlocked ? ' MOXIE unlocked!' : '';
+  return { ok: true, power: next, cost, message: `${sw.name} on${cost ? `: −${cost} power` : ''}.${unlocked}` };
+}
+
+// Night: heaters + life support use the night reserve. Below it, the crew gets cold.
+export function nightPower(power) {
+  const cold = power.battery < POWER_CONFIG.nightReserve;
+  return { power: { ...power, battery: Math.max(0, power.battery - POWER_CONFIG.nightReserve) }, cold };
+}
+
+// Morning: the solar field charges the battery, and per-sol systems switch off to be planned again
+export function morningCharge(power, { dustStorm = false } = {}) {
+  const gained = dustStorm ? POWER_CONFIG.solar.storm : POWER_CONFIG.solar[power.panels];
+  const switches = { ...power.switches };
+  SWITCHES.filter((s) => s.perSol).forEach((s) => { switches[s.id] = false; });
   return {
-    ok: true,
-    power: { ...power, stored: power.stored - cost },
-    message: `Used ${cost} power for ${reason}.`,
+    power: {
+      ...power,
+      battery: clamp(power.battery + gained, 0, POWER_CONFIG.max),
+      switches,
+      ranToday: {},
+      panels: dustStorm ? 'dusty' : power.panels,
+    },
+    gained,
   };
 }
 
-// 'ok' | 'low' | 'empty': used for warnings and colours in the HUD
+// EVA / airlock team: cleaning the panels brings the morning charge back to +40
+export function cleanPanels(power) {
+  return { ...power, panels: 'clean' };
+}
+
+// 'ok' | 'low' | 'empty': used for warning colours
 export function powerStatus(power) {
-  if (power.stored <= 0) return 'empty';
-  if (power.stored < POWER_CONFIG.lowThreshold) return 'low';
+  if (power.battery <= 0) return 'empty';
+  if (power.battery < POWER_CONFIG.nightReserve) return 'low';
   return 'ok';
 }
-
-export const SOLAR_FACT =
-  'Mars gets less than half the sunlight Earth does, because it is farther from the Sun. ' +
-  'Dust storms can block even more. NASA\'s Opportunity rover had to rest and save power during big dust storms.';

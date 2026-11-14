@@ -1,6 +1,10 @@
 import Phaser from 'phaser';
-import { MAP, STATIONS, PATHS, PATH_WIDTH, SPAWN, doorOf } from '../config/stations.js';
+import { MAP, STATIONS, PATH_WIDTH, SPAWN, doorOf } from '../config/stations.js';
+import { WALK_LINES, moveOnPath } from '../systems/walkPath.js';
 import { openPanel, isPanelOpen } from '../ui/panels.js';
+import { DAILY_TASKS } from '../config/dailyTasks.js';
+import { wasVisited } from '../state/missionTempStore.js';
+import { createAvatar } from '../ui/avatar.js';
 
 const SPEED = 180;          // walking speed in pixels per second
 const INTERACT_RANGE = 60;  // how close to a door you must be to press E
@@ -12,16 +16,17 @@ export default class MainMapScene extends Phaser.Scene {
 
   create() {
     this.drawGround();
-    this.buildings = this.physics.add.staticGroup();
     STATIONS.forEach((s) => this.drawStation(s));
 
-    // player: placeholder circle until Member 4's astronaut sprite is ready
-    this.player = this.add.circle(SPAWN.x, SPAWN.y, 14, 0x5b8def).setStrokeStyle(3, 0x1f2430).setDepth(10);
-    this.physics.add.existing(this.player);
-    this.player.body.setCircle(14);
-    this.player.body.setCollideWorldBounds(true);
-    this.physics.world.setBounds(0, 0, MAP.width, MAP.height);
-    this.physics.add.collider(this.player, this.buildings);
+    // player position (invisible marker); walkPath.js keeps it on the sandy paths
+    this.player = this.add.circle(SPAWN.x, SPAWN.y, 14, 0x5b8def).setAlpha(0);
+
+    // the SVG avatar (src/ui/avatar.js) is drawn at the player's position
+    const holder = document.createElement('div');
+    holder.style.cssText = 'position:relative;width:34px;height:46px;';
+    this.avatar = createAvatar(holder);
+    this.avatar.moveTo(17, 44);
+    this.avatarDom = this.add.dom(SPAWN.x, SPAWN.y + 14, holder).setOrigin(0.5, 1);
 
     // controls: arrows + WASD, E to interact
     this.cursors = this.input.keyboard.createCursorKeys();
@@ -34,17 +39,39 @@ export default class MainMapScene extends Phaser.Scene {
     }).setOrigin(0.5, 1).setDepth(20).setVisible(false);
 
     this.nearest = null;
+    this.createObjectiveMarkers();
+  }
+
+  // objective markers: bouncing arrows over stations with a task today
+  createObjectiveMarkers() {
+    this.markers = DAILY_TASKS.map((task) => {
+      const s = STATIONS.find((st) => st.id === task.station);
+      const x = s.x + s.w - 20;
+      const y = s.y - 30;
+      const arrow = this.add.triangle(x, y, 0, 0, 26, 0, 13, 18, 0xffe066)
+        .setStrokeStyle(3, 0x1f2430)
+        .setDepth(15);
+      this.tweens.add({ targets: arrow, y: y - 10, duration: 500, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+      return { station: task.station, arrow };
+    });
+  }
+
+  updateObjectiveMarkers() {
+    for (const m of this.markers) m.arrow.setVisible(!wasVisited(m.station));
   }
 
   // drawing: placeholders, replaced by the real map image later
   drawGround() {
     const g = this.add.graphics();
     g.fillStyle(0xc65a2e).fillRect(0, 0, MAP.width, MAP.height);
+    // draw exactly the lines the player can walk on (main paths + door stubs)
     g.fillStyle(0xe8b98a);
-    PATHS.forEach((p) => {
-      if (p.y1 === p.y2) g.fillRoundedRect(p.x1, p.y1 - PATH_WIDTH / 2, p.x2 - p.x1, PATH_WIDTH, 10);
-      else g.fillRoundedRect(p.x1 - PATH_WIDTH / 2, p.y1, PATH_WIDTH, p.y2 - p.y1, 10);
-    });
+    for (const [[x1, y1], [x2, y2]] of WALK_LINES) {
+      const half = PATH_WIDTH / 2;
+      g.fillRoundedRect(Math.min(x1, x2) - half, Math.min(y1, y2) - half,
+        Math.abs(x2 - x1) + PATH_WIDTH, Math.abs(y2 - y1) + PATH_WIDTH, 10);
+    }
+    // trail to the Mars Exploration Zone
     g.fillStyle(0xf3e3d0);
     for (let y = 525; y < 770; y += 18) g.fillRect(1298, y, 4, 10);
     this.add.text(1398, 790, 'Mars Exploration Zone', { fontSize: '18px', color: '#ffffff', backgroundColor: '#262a35', padding: { x: 10, y: 6 } }).setOrigin(1, 0.5);
@@ -59,8 +86,6 @@ export default class MainMapScene extends Phaser.Scene {
     } else {
       shape = this.add.rectangle(cx, cy, s.w, s.h, s.color).setStrokeStyle(5, 0x1f2430);
     }
-    this.buildings.add(shape);
-    if (s.round) shape.body.setCircle(s.w / 2);
 
     // name tag above the building
     this.add.text(s.x, s.y - 10, s.name, {
@@ -93,9 +118,7 @@ export default class MainMapScene extends Phaser.Scene {
 
   tryInteract() {
     if (isPanelOpen() || !this.nearest) return;
-    this.player.body.setVelocity(0, 0);
     openPanel(this.nearest);
-    // teammates can listen: this.game.events.on('station:open', (id) => ...)
     this.game.events.emit('station:open', this.nearest.id);
   }
 
@@ -106,11 +129,11 @@ export default class MainMapScene extends Phaser.Scene {
   }
 
   // runs every frame
-  update() {
-    const body = this.player.body;
+  update(time, delta) {
+    this.updateObjectiveMarkers();
 
     // pause movement while a station panel is open
-    if (isPanelOpen()) { body.setVelocity(0, 0); return; }
+    if (isPanelOpen()) { this.avatar.setWalking(false); return; }
 
     const left = this.cursors.left.isDown || this.keys.A.isDown;
     const right = this.cursors.right.isDown || this.keys.D.isDown;
@@ -119,8 +142,14 @@ export default class MainMapScene extends Phaser.Scene {
 
     const vx = (right ? 1 : 0) - (left ? 1 : 0);
     const vy = (down ? 1 : 0) - (up ? 1 : 0);
-    const v = new Phaser.Math.Vector2(vx, vy).normalize().scale(SPEED);
-    body.setVelocity(v.x, v.y);
+    const v = new Phaser.Math.Vector2(vx, vy).normalize().scale(SPEED * (delta / 1000));
+    const pos = moveOnPath({ x: this.player.x, y: this.player.y }, v.x, v.y);
+    this.player.setPosition(pos.x, pos.y);
+
+    // move the avatar with the player, face the walking direction, animate legs
+    this.avatarDom.setPosition(this.player.x, this.player.y + 14);
+    this.avatar.setWalking(vx !== 0 || vy !== 0);
+    this.avatar.faceToward(vx, vy);
 
     // highlight the nearest station and show the hint
     const near = this.findNearest();
