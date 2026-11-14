@@ -5,6 +5,7 @@
 import './map/avatar.js';   // the player character (createAvatar)
 import './map/map.js';      // roads, walking, doors, keyboard (MarsMap)
 import './map/mars-scenery.js'; // the ground (mesa, craters, dunes, tracks) + cliff zone / clear zone
+import './hud/hud.js';           // side panel: clock, hazard meter, solar storm, EVA, red alarm, Mission failed (MarsHUD)
 
 // ===== PLACES: each teammate adds their place here (take away the // in front of your lines) =====
 // (your CSS goes in index.html, in the <head>)
