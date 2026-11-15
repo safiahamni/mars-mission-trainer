@@ -8,7 +8,7 @@
 //     then "Shield the Shelter" (radiation-shelter/shield-shelter.js) sets a small inside rate that water tanks lower.
 //   • SOLAR STORM: sometimes (random) a storm hits while you are outside: hazard rises 1.5x faster,
 //     and a pop-up tells the kid to go to the radiation shelter in the Command Center.
-//     It passes by itself after a while (a place, like the shelter, can also end it: MarsHUD.endStorm())
+//     It ends when the kid puts all 3 water tanks on the shelter shelves (shield-shelter.js calls MarsHUD.endStorm())
 //   • EVA STATUS: GO (green, under 50) · CAUTION (yellow, 50-79) · NO GO (red, 80+ or a solar storm)
 //   • YELLOW WARNING: hazard in the yellow (50-79) while outside -> softer yellow glow, banner and beep-beep
 //   • RED ALARM: hazard in the red while outside -> the whole screen flashes red with a siren
