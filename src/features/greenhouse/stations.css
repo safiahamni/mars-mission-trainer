@@ -481,3 +481,6 @@
   .gm-game .gm-stat>small{font-size:7px}
   .gm-game .gm-hud-title{font-size:13px;min-width:56px}
 }
+
+/* ---- shared team avatar inside the greenhouse: keep it above the beds and stations ---- */
+.gm-game .gm-map .avatar{z-index:6}

@@ -1,6 +1,10 @@
 import { CROP_CATALOG } from "./food.js";
 import { PATH, drawPath, moveOnPath } from "./path.js";
-import { createAvatar } from "./avatar.js";
+// The player avatar is the team's shared one (src/map/avatar.js puts createAvatar on window).
+const createAvatar = (container) => {
+  if (typeof window.createAvatar !== "function") throw new Error("Shared avatar not loaded: import './map/avatar.js' in main.js before the greenhouse.");
+  return window.createAvatar(container);
+};
 import { climateStation, soilStation, compostStation, wiringStation, shieldStation } from "./stationArt.js";
 import { cropArt, stageName, stageOf } from "./cropArt.js";
 import "./stations.css";
