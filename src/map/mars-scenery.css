@@ -11,3 +11,12 @@
 #sc-zones .sc-zone-clear { fill: rgba(255, 216, 74, 0.22); stroke: #FFD84A; stroke-width: 2; stroke-dasharray: 6 4; }
 #sc-zone-tags text { font-family: 'Nunito', sans-serif; font-weight: 900; }
 
+
+/* ===== hint card: the mission text, under the other cards in the left panel ===== */
+.sc-hint {
+  padding: 10px 14px; box-sizing: border-box;
+  background: #FFF6EC; color: #2B2A3A; border: 3px solid #2B2A3A; border-radius: 18px; box-shadow: 0 4px 0 #2B2A3A;
+  font-family: 'Nunito', sans-serif; font-size: 15px; font-weight: 900; line-height: 1.35;
+}
+.sc-hint::before { content: "WHAT TO DO"; display: block; margin-bottom: 4px; font-size: 11px; letter-spacing: 1.5px; }
+.sc-hint[hidden] { display: none; }

@@ -106,4 +106,19 @@
   </g>
 </g>`);
 
+
+  // ================= HINT CARD (the mission text, now in the left panel) =================
+  // mars-scenery.css hides the side box with the mission text, so we show the same text in a card under the panel:
+  // whatever any place writes with MarsMap.status(...) appears in this line.
+  const statusEl = document.getElementById('mm-status');
+  const hint = document.createElement('div');
+  hint.className = 'sc-hint';
+  hint.setAttribute('aria-hidden', 'true');            // the original (hidden) status box still speaks to screen readers
+  document.getElementById('mm-topbar').appendChild(hint);
+  // keep it as the LAST card, even when other places add their cards later
+  new MutationObserver(() => { if (hint.nextSibling) hint.parentNode.appendChild(hint); })
+    .observe(hint.parentNode, { childList: true });
+  const copy = () => { hint.textContent = statusEl.textContent.trim(); hint.hidden = !hint.textContent; };
+  new MutationObserver(copy).observe(statusEl, { childList: true, characterData: true, subtree: true });
+  copy();
 })();
