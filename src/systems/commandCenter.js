@@ -1,11 +1,11 @@
-// COMMAND CENTER (Member 1): the sol clock, water, today's missions from Mission control,
-// the wardrobe, the storm shelter core's bunks, and sleeping to end the sol.
+// COMMAND CENTER (Member 1): the sol clock, water, stars,
+// the wardrobe, the radiation shelter's bunks, and sleeping to end the sol.
 // Power rules live in power.js (Power Budget).
 // Radiation (hazard meter, solar storm, cliff shade, Shield the Shelter) is Member 3's:
 // src/places/radiation-shelter/shelter-game.js
 // Pure functions: they return new copies.
 import {
-  POWER_CONFIG, createPowerState, setSwitch, spendPower, nightPower, morningCharge,
+  POWER_CONFIG, createPowerState, setSwitch, spendPower, nightPower, morningCharge, unlockMoxie,
 } from './power.js';
 
 export const CC_CONFIG = {
@@ -46,13 +46,12 @@ export const FOOD_CONFIG = {
 
 export const SHIRT_COLORS = ['blue', 'teal', 'purple', 'orange', 'red'];
 
-// Today's checklist on the Mission control screen. check(game) = true means done.
-export const MISSIONS = [
-  { id: 'moxie', text: 'Run MOXIE so it makes oxygen', check: (g) => !!g.power.ranToday.moxie },
-  { id: 'recycler', text: 'Run the water recycler', check: (g) => !!g.power.ranToday.recycler },
-  { id: 'chapter', text: "Finish today's Science Lab chapter" },
-  { id: 'reserve', text: `Keep ${POWER_CONFIG.nightReserve} power for the night` },
-  { id: 'sleep', text: 'Sleep in the bunks to end the sol' },
+// STARS: up to 2 per sol, no checklist to read.
+//   chapter: finish today's Science Lab chapter (on the dust storm sol: get through the storm)
+//   warm:    go to bed with 20+ power, so the crew stays warm
+export const STARS = [
+  { id: 'chapter', text: "Finish today's chapter" },
+  { id: 'warm', text: 'Warm night: 20+ power at bedtime' },
 ];
 
 export function createGame() {
@@ -67,7 +66,7 @@ export function createGame() {
     oxygen: OXYGEN_CONFIG.start,
     food: FOOD_CONFIG.start,
     startBattery: createPowerState().battery,   // battery at sunrise (for the sunset report)
-    inShelter: false,    // in the storm shelter core (where the bunks are)
+    inShelter: false,    // in the radiation shelter (where the bunks are)
     outfit: 'crew',      // 'crew' | 'suit'
     shirt: 'blue',
     done: {},
@@ -87,16 +86,14 @@ export function isDay(game) {
   return game.phase === 'day';
 }
 
-export function todaysMissions(game) {
-  return MISSIONS.map((m) => ({ id: m.id, text: m.text, done: !!game.done[m.id] }));
-}
-
-function checkMissions(game) {
-  const done = { ...game.done };
-  for (const m of MISSIONS) {
-    if (m.check && m.check(game)) done[m.id] = true;
-  }
-  return { ...game, done };
+// The stars for one sol. warmNight = the battery is at the night line or above.
+export function solStars(game) {
+  const chapter = !!game.done.chapter || (isDustStormSol(game.sol) && !game.inChapter);
+  const warm = game.power.battery >= POWER_CONFIG.nightReserve;
+  return [
+    { ...STARS[0], earned: chapter },
+    { ...STARS[1], earned: warm },
+  ];
 }
 
 // Flip a lever on the switchboard. The water recycler adds water when it runs.
@@ -114,7 +111,7 @@ export function pullLever(game, id, on) {
     oxygen = clamp(oxygen + OXYGEN_CONFIG.moxie, 0, 100);
     message += ` Oxygen +${OXYGEN_CONFIG.moxie}.`;
   }
-  return { ok: true, game: checkMissions({ ...game, power: r.power, water, oxygen }), message };
+  return { ok: true, game: { ...game, power: r.power, water, oxygen }, message };
 }
 
 // Any station can spend power through the game: spend(game, COSTS.eva, 'EVA trip')
@@ -142,12 +139,11 @@ function sunset(game) {
   const g = { ...game, phase: 'night', sunsetAt: game.clock };
   const events = [];
   if (g.power.battery >= POWER_CONFIG.nightReserve) {
-    g.done = { ...g.done, reserve: true };
     events.push('sunset-safe');
   } else {
     events.push('sunset-low');
   }
-  return { game: checkMissions(g), events };
+  return { game: g, events };
 }
 
 // ---------- today's chapter ----------
@@ -221,16 +217,15 @@ export function spentToday(game) {
 // Sleep in the bunks: night uses the reserve, the crew drinks water,
 // stars are counted, and a new sol starts with the morning solar charge.
 export function sleep(game) {
-  if (!game.inShelter) return { ok: false, game, message: 'The bunks are inside the storm shelter core.' };
+  if (!game.inShelter) return { ok: false, game, message: 'The bunks are inside the radiation shelter.' };
   if (game.phase === 'day') return { ok: false, game, message: "It's still daytime. Sleep after sunset." };
 
   const night = nightPower(game.power);
   const water = clamp(game.water - WATER_CONFIG.crewPerNight, 0, 100);
   const oxygen = clamp(game.oxygen - OXYGEN_CONFIG.crewPerNight, 0, 100);
   const food = clamp(game.food - FOOD_CONFIG.crewPerNight, 0, 100);
-  const done = { ...game.done, sleep: true };
-  const missions = todaysMissions({ ...game, done });
-  const earned = missions.filter((m) => m.done).length;
+  const stars = solStars(game);
+  const earned = stars.filter((s) => s.earned).length;
 
   const last = game.sol >= CC_CONFIG.maxSols;
   const nextSol = last ? game.sol : game.sol + 1;
@@ -240,7 +235,8 @@ export function sleep(game) {
   const report = {
     sol: game.sol,
     earned,
-    total: missions.length,
+    total: stars.length,
+    stars,
     bedtime: game.power.battery,
     afterNight: night.power.battery,
     gained: morning.gained,
@@ -282,4 +278,17 @@ export function changeResource(game, name, amount, label = 'That') {
   if (amount < 0 && game[name] < -amount) return { ok: false, game, message: `${label} needs ${-amount} ${name}. You have ${game[name]}.` };
   const next = clamp(game[name] + amount, 0, 100);
   return { ok: true, game: { ...game, [name]: next }, message: `${label}: ${amount > 0 ? '+' : ''}${amount} ${name}.` };
+}
+
+// Life Support: unlock MOXIE once (10 power). After that runSystem(game, 'moxie') works.
+export function unlockMoxieSystem(game) {
+  const r = unlockMoxie(game.power);
+  return { ok: r.ok, game: r.ok ? { ...game, power: r.power } : game, message: r.message };
+}
+
+// Life Support runs a system for today: 'moxie' (+oxygen) or 'recycler' (+water).
+// The Command Center switchboard only SHOWS what is running.
+export function runSystem(game, id) {
+  if (game.power.ranToday[id]) return { ok: false, game, message: 'Already ran today.' };
+  return pullLever(game, id, true);
 }

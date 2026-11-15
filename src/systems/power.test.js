@@ -59,9 +59,9 @@ test('morning charge: +55 clean, +20 dusty, +5 in a dust storm, never above 100'
 });
 
 test('morning switches per-sol systems off so the crew plans again', () => {
-  let p = setSwitch(fresh(), 'greenhouse', true).power;
+  let p = setSwitch(fresh(), 'recycler', true).power;
   p = morningCharge(p).power;
-  assert.equal(p.switches.greenhouse, false);
+  assert.equal(p.switches.recycler, false);
   assert.equal(p.switches.lab, true);
 });
 

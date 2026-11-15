@@ -2,20 +2,18 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  CC_CONFIG, WATER_CONFIG, CHAPTERS, createGame, tick, todaysMissions, pullLever,
+  CC_CONFIG, WATER_CONFIG, CHAPTERS, createGame, tick, solStars, pullLever,
   enterShelter, leaveShelter, sleep, spentToday, setOutfit, setShirt,
-  todaysChapter, chapterCheck, startChapter, finishChapter, endDayEarly,
+  todaysChapter, chapterCheck, startChapter, finishChapter, endDayEarly, unlockMoxieSystem, runSystem,
 } from './commandCenter.js';
 import { COSTS, POWER_CONFIG } from './power.js';
 
 const night = (g) => endDayEarly(g).game;
 const playChapter = (g) => finishChapter(startChapter(g).game);
 
-test('running MOXIE and the recycler ticks off missions; the recycler adds water', () => {
-  let g = pullLever(createGame(), 'moxie', true).game;
+test('running MOXIE and the recycler costs power; the recycler adds water', () => {
+  let g = pullLever(unlockMoxieSystem(createGame()).game, 'moxie', true).game;
   g = pullLever(g, 'recycler', true).game;
-  assert.equal(g.done.moxie, true);
-  assert.equal(g.done.recycler, true);
   assert.equal(g.water, WATER_CONFIG.start + WATER_CONFIG.recycler);
   assert.equal(spentToday(g), COSTS.moxieUnlock + COSTS.moxie + COSTS.recycler);
 });
@@ -26,18 +24,16 @@ test('time alone never ends the day', () => {
   assert.equal(g.phase, 'day');
 });
 
-test('finishing the chapter = sunset with 20+ power = night reserve mission done', () => {
+test('finishing the chapter = sunset with 20+ power = safe night', () => {
   const r = playChapter(createGame());
   assert.equal(r.game.phase, 'night');
   assert.ok(r.events.includes('sunset-safe'));
-  assert.equal(r.game.done.reserve, true);
 });
 
-test('sunset below the night line = warning, mission not done', () => {
+test('sunset below the night line = warning', () => {
   const g = { ...createGame(), power: { ...createGame().power, battery: 10 } };
   const r = endDayEarly(g);
   assert.ok(r.events.includes('sunset-low'));
-  assert.notEqual(r.game.done.reserve, true);
 });
 
 test('you can only sleep at night, inside the shelter', () => {
@@ -81,8 +77,19 @@ test('wardrobe: change outfit and shirt colour', () => {
   assert.equal(setShirt(createGame(), 'gold').shirt, 'blue');
 });
 
-test('the checklist has the 4 daily missions', () => {
-  assert.deepEqual(todaysMissions(createGame()).map((m) => m.id), ['moxie', 'recycler', 'chapter', 'reserve', 'sleep']);
+test('stars: up to 2 per sol (chapter + warm night)', () => {
+  const played = playChapter(createGame()).game;
+  assert.deepEqual(solStars(played).map((x) => x.earned), [true, true]);
+  const cold = { ...createGame(), power: { ...createGame().power, battery: 10 } };
+  assert.deepEqual(solStars(cold).map((x) => x.earned), [false, false]);
+  const r = sleep(enterShelter(played));
+  assert.equal(r.report.earned, 2);
+  assert.equal(r.game.stars, 2);
+});
+
+test('stars: the dust storm sol gives the chapter star for getting through it', () => {
+  const g = { ...createGame(), sol: CC_CONFIG.dustStorms[0] };
+  assert.equal(solStars(g)[0].earned, true);
 });
 
 test('you can always walk out of the shelter core', () => {
@@ -122,7 +129,7 @@ test('chapter: finishing without starting does nothing', () => {
 
 test('MOXIE adds oxygen; at night the crew breathes, drinks and eats', () => {
   const g0 = createGame();
-  const g = pullLever(g0, 'moxie', true).game;
+  const g = runSystem(unlockMoxieSystem(g0).game, 'moxie').game;
   assert.equal(g.oxygen, g0.oxygen + 15);
   const r = sleep(enterShelter(night(g)));
   assert.equal(r.game.oxygen, g.oxygen - 10);

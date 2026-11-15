@@ -17,7 +17,7 @@ export const COSTS = {
   moxieUnlock: 10,   // one time
   moxie: 5,          // per sol
   recycler: 5,       // per sol
-  growLights: 5,     // per sol
+  growLights: 5,     // per sol (the Greenhouse room pays this itself, it's not on the switchboard)
   eva: 5,            // per trip
   rover: 5,          // per use
   shielding: 25,     // solar storm only
@@ -29,14 +29,13 @@ export const SWITCHES = [
   { id: 'heater', name: 'Heaters', plate: 'HEATERS', cost: 0, locked: true, note: 'Uses the night reserve' },
   { id: 'recycler', name: 'Water recycler', plate: 'WATER<br>RECYCLER', cost: COSTS.recycler, perSol: true },
   { id: 'lab', name: 'Lab equipment', plate: 'LAB<br>EQUIP', cost: 0, note: 'Chapters cost their own power' },
-  { id: 'greenhouse', name: 'Grow lights', plate: 'GREENHOUSE<br>LIGHT', cost: COSTS.growLights, perSol: true },
   { id: 'moxie', name: 'MOXIE', plate: 'MOXIE', cost: COSTS.moxie, unlockCost: COSTS.moxieUnlock, perSol: true },
 ];
 
 export function createPowerState() {
   return {
     battery: POWER_CONFIG.start,
-    switches: { heater: true, recycler: false, lab: true, greenhouse: false, moxie: false },
+    switches: { heater: true, recycler: false, lab: true, moxie: false },
     ranToday: {},          // which per-sol systems were already paid for today
     moxieUnlocked: false,
     panels: 'clean',       // 'clean' | 'dusty'
@@ -45,7 +44,7 @@ export function createPowerState() {
 
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
-// Other stations use this, e.g. isCircuitOn(power, 'greenhouse')
+// Other stations use this, e.g. isCircuitOn(power, 'moxie')
 export function isCircuitOn(power, id) {
   return !!power.switches[id];
 }
@@ -73,10 +72,19 @@ export function leverCost(power, id) {
   return sw.cost + (sw.unlockCost && !power.moxieUnlocked ? sw.unlockCost : 0);
 }
 
+// Life Support unlocks MOXIE once (pays COSTS.moxieUnlock). Until then the MOXIE lever is locked.
+export function unlockMoxie(power) {
+  if (power.moxieUnlocked) return { ok: false, power, message: 'MOXIE is already unlocked.' };
+  const r = spendPower(power, COSTS.moxieUnlock, 'Unlock MOXIE');
+  if (!r.ok) return r;
+  return { ok: true, power: { ...r.power, moxieUnlocked: true }, message: `MOXIE unlocked! −${COSTS.moxieUnlock} power.` };
+}
+
 export function setSwitch(power, id, on) {
   const sw = SWITCHES.find((s) => s.id === id);
   if (!sw) return { ok: false, power, message: 'Unknown switch.' };
   if (sw.locked) return { ok: false, power, message: `${sw.name} must stay on. They use the night reserve.` };
+  if (on && id === 'moxie' && !power.moxieUnlocked) return { ok: false, power, message: 'MOXIE is locked. Unlock it in Life Support first.' };
   if (!on) {
     const note = power.ranToday[id] ? ' (power already used today)' : '';
     return { ok: true, power: { ...power, switches: { ...power.switches, [id]: false } }, message: `${sw.name} off${note}.` };
