@@ -18,6 +18,7 @@ import './places/command-center/ccBuilding.js';
 // Radiation Shelter + Command Center (Member 3)
 // import './places/radiation-shelter/shelter.js';
 // import './places/radiation-shelter/shelter-game.js';
+import './places/radiation-shelter/shield-shelter.js'; // solar storm: "Shield the Shelter!" water-tank game in the Command Center  (before solar-panel: it uses the arrow keys first while open)
 import './places/radiation-shelter/solar-panel.js';   // solar panels yard + rover (outside the airlock: ▼)
 
 // Greenhouse

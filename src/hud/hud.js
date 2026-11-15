@@ -4,7 +4,8 @@
 //   • MISSION CLOCK: Sol + time, as a flip clock (1 real second = 1 game minute)
 //   • HAZARD METER: radiation goes up while you are OUTSIDE on the roads (+0.5 per game minute, kid-friendly),
 //     stops inside any building, and the Cliff zone (canyon) gives 10% shade.
-//     In the Command Center (radiation shelter) the needle slides back into the green part (to 37).
+//     In the Command Center (radiation shelter) the needle slides back into the green part (to 37), except in a storm:
+//     then "Shield the Shelter" (radiation-shelter/shield-shelter.js) sets a small inside rate that water tanks lower.
 //   • SOLAR STORM: sometimes (random) a storm hits while you are outside: hazard rises 1.5x faster,
 //     and a pop-up tells the kid to go to the radiation shelter in the Command Center.
 //     It passes by itself after a while (a place, like the shelter, can also end it: MarsHUD.endStorm())
@@ -50,7 +51,10 @@ const MarsHUD = (function () {
   }
   const outside = () => !map.isInside();
   let routeShade = null;                   // set by the route chooser while the avatar walks a route by itself
+  let shelterRate = null;                  // set by "Shield the Shelter": the shelter's rate during a storm (by water tanks)
   function rate() {
+    // in a solar storm the radiation shelter still lets a little in: less with every water tank (shield-shelter.js)
+    if (storm && shelterRate !== null && map.isInside() === 'shelter') return shelterRate;
     // inside a building the radiation stops, except in the Greenhouse (glass walls): it follows the outside rate
     if (!outside() && map.isInside() !== 'greenhouse') return 0;
     const shade = routeShade !== null ? routeShade : (inCanyon(map.getPos()) ? CLIFF_X : 1);
@@ -87,7 +91,7 @@ const MarsHUD = (function () {
   <div class="hud-stormpop-card">
     <h2 id="hud-stormPopTitle">Solar storm!</h2>
     <p>The Sun just threw out a big burst of radiation.<br>
-       <b>Head to the radiation shelter inside the Command Center</b>: the <b>water</b> around its storm shelter core blocks the radiation!</p>
+       <b>Head to the radiation shelter inside the Command Center</b> and put the <b>water tanks</b> on the shelves to shield it!</p>
     <p class="hud-stormpop-fact"><b>NASA:</b> water is great at stopping solar storm particles, so real shelter plans put water around the crew.</p>
     <button type="button" class="hud-stormpop-go" id="hud-stormPopGo">Go to the shelter!</button>
   </div>
@@ -231,7 +235,9 @@ const MarsHUD = (function () {
       if (storm) stormHit = true;
       if (!storm && !stormDone) { untilStorm -= dt; if (untilStorm <= 0) startStorm(); }
     }
-    if (storm) { stormLeft -= dt; if (stormLeft <= 0) endStorm(); }
+    // the storm does NOT pass by itself: it ends when the kid puts all 3 water tanks on the shelter shelves
+    // (shield-shelter.js calls endStorm). Without the shield game loaded it still passes after STORM_LENGTH.
+    if (storm && !window.ShieldShelter) { stormLeft -= dt; if (stormLeft <= 0) endStorm(); }
     drawClock();
     drawPanel();
     // red alarm: hazard in the red AND outside
@@ -262,7 +268,7 @@ const MarsHUD = (function () {
       if (warnOn) { $('hud-warn').hidden = true; warnOn = false; }
       if (alarmOn && !FORCE_ALARM) { $('hud-alarm').hidden = true; alarmOn = false; }
     }
-    if (!failed && map.isInside() === 'shelter' && hazard > SAFE_LEVEL) {
+    if (!failed && !storm && map.isInside() === 'shelter' && hazard > SAFE_LEVEL) {   // not during a storm: the water tanks matter then
       hazard = Math.max(SAFE_LEVEL, hazard - 25 * dt);   // about 2 seconds from red back to green
       drawPanel();
     }
@@ -275,6 +281,7 @@ const MarsHUD = (function () {
   return {
     getHazard: () => hazard,
     getRate: () => rate(),
+    setShelterRate: v => { shelterRate = (v === null || v === undefined) ? null : v; },   // Shield the Shelter
     setTimeScale: k => { timeScale = k > 0 ? k : 1; },   // route chooser: fast-forward while the avatar walks a route by itself
     setRouteShade: v => { routeShade = (v === null || v === undefined) ? null : v; },   // route chooser: whole-route shade
     addHazard(n) { hazard = Math.max(0, Math.min(MAX_HAZARD, hazard + n)); drawPanel(); },
