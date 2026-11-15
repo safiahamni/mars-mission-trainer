@@ -15,7 +15,7 @@
 
 (function () {
   const STEP_EVERY = 0.225;      // seconds between steps = half of the avatar's 0.45 s leg animation (one per foot)
-  const VOLUME = 0.22;           // keep it soft: it plays a lot
+  const VOLUME = 0.45;           // loud enough to hear over the other sounds
   const KEY = 'mars-footsteps-muted';
 
   let muted = false;
