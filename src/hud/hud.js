@@ -217,8 +217,10 @@ const MarsHUD = (function () {
 
   // ================= EVERY FRAME =================
   let alarmOn = false, nextWail = 0, warnOn = false, nextBeep = 0;
-  map.on('update', dt => {
+  let timeScale = 1;                       // > 1 = game time runs faster (the route chooser's automatic walk)
+  map.on('update', realDt => {
     if (failed) return;
+    const dt = realDt * timeScale;         // game minutes this frame (1 real second = 1 game minute, x timeScale)
     gameMinutes += dt;
     hazard = Math.min(MAX_HAZARD, hazard + rate() * dt);
     if (outside()) {
@@ -233,11 +235,11 @@ const MarsHUD = (function () {
     // red alarm: hazard in the red AND outside
     const on = (FORCE_ALARM || (hazard >= DANGER_AT && outside()));
     if (on !== alarmOn) { $('hud-alarm').hidden = !on; alarmOn = on; nextWail = 0; }
-    if (on) { nextWail -= dt; if (nextWail <= 0) { wail(); nextWail = 1.6; } }
+    if (on) { nextWail -= realDt; if (nextWail <= 0) { wail(); nextWail = 1.6; } }
     // yellow warning: hazard in the yellow (50-79) AND outside (softer than the red alarm)
     const warn = !on && hazard >= CAUTION_AT && hazard < DANGER_AT && outside();
     if (warn !== warnOn) { $('hud-warn').hidden = !warn; warnOn = warn; nextBeep = 0; }
-    if (warn) { nextBeep -= dt; if (nextBeep <= 0) { beepBeep(); nextBeep = 2.4; } }
+    if (warn) { nextBeep -= realDt; if (nextBeep <= 0) { beepBeep(); nextBeep = 2.4; } }
     if (hazard >= MAX_HAZARD) missionFailed();
   });
 
@@ -263,6 +265,7 @@ const MarsHUD = (function () {
   return {
     getHazard: () => hazard,
     getRate: () => rate(),
+    setTimeScale: k => { timeScale = k > 0 ? k : 1; },   // route chooser: fast-forward while the avatar walks a route by itself
     setRouteShade: v => { routeShade = (v === null || v === undefined) ? null : v; },   // route chooser: whole-route shade
     addHazard(n) { hazard = Math.max(0, Math.min(MAX_HAZARD, hazard + n)); drawPanel(); },
     isStorm: () => storm,
