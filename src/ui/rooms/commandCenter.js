@@ -21,6 +21,7 @@ import {
 import {
   CC_CONFIG, WATER_CONFIG, SHIRT_COLORS, todaysMissions, pullLever,
   enterShelter, leaveShelter, sleep, isDay, spentToday, setOutfit, setShirt,
+  chapterCheck, endDayEarly,
 } from '../../systems/commandCenter.js';
 import { runEndSol } from '../../systems/endSol.js';
 import { makeWalker, isNear } from '../../systems/roomWalk.js';
@@ -338,6 +339,16 @@ export function renderCommandCenter(room, { onExit } = {}) {
     $('wlbl').className = `cc-wlbl ${g.water < WATER_CONFIG.target ? 'low' : ''}`;
   }
 
+  // today's chapter on the Mission control screen
+  function chapterLine(ch) {
+    if (!ch.chapter) return '';
+    const needs = Object.entries(ch.chapter.needs).map(([k, v]) => `${k} ${v}+`).join(', ');
+    if (getGame().done.chapter) return '';
+    return ch.ok || getGame().inChapter
+      ? `<p class="cc-mc-good">${icon('flask', 18)} Today: Chapter ${ch.chapter.n}, ${ch.chapter.name}. Go to the Science Lab! (needs ${needs}, costs ${ch.chapter.cost} power)</p>`
+      : `<p class="cc-mc-bad">${icon('alert', 18)} Chapter ${ch.chapter.n} needs ${needs}. You are missing: ${ch.missing.join(', ')}.</p>`;
+  }
+
   // ---- draw everything ----
   let dressed = '';
   function update() {
@@ -347,7 +358,11 @@ export function renderCommandCenter(room, { onExit } = {}) {
     renderHud();
 
     // top status
-    const time = day ? `${icon('sun', 18)} Day · sunset in ${fmtSec(CC_CONFIG.dayLength - g.clock)}` : `${icon('moon', 18)} Night`;
+    const ch = chapterCheck(g);
+    const today = ch.reason === 'dust-storm' ? 'dust storm, rest day'
+      : ch.reason === 'all-done' ? 'all chapters done'
+      : g.done.chapter ? 'chapter done' : `Chapter ${ch.chapter.n}: ${ch.chapter.name}`;
+    const time = day ? `${icon('sun', 18)} Day · ${today}` : `${icon('moon', 18)} Night`;
     $('status').innerHTML = `Sol ${g.sol} of ${CC_CONFIG.maxSols} · ${time} · ${icon('star', 18)} ${g.stars}`;
     stage.classList.toggle('night', !day);
 
@@ -388,7 +403,7 @@ export function renderCommandCenter(room, { onExit } = {}) {
     const dusty = p.panels === 'dusty' ? `<p class="cc-mc-warn">${icon('sun', 18)} The solar panels are dusty: only +${POWER_CONFIG.solar.dusty} each morning. Clean them on an EVA.</p>` : '';
     $('mission-body').innerHTML = `
       <p class="cc-mc-status">Sol ${g.sol} of ${CC_CONFIG.maxSols} · ${time}</p>
-      ${sunset}${dusty}
+      ${sunset}${dusty}${day ? chapterLine(ch) : ''}
       <h4>Today's missions</h4>
       <ul class="cc-checklist">
         ${todaysMissions(g).map((m) => `<li class="${m.done ? 'done' : ''}">${icon(m.done ? 'check' : 'circle', 22)} ${m.text}</li>`).join('')}
@@ -397,8 +412,14 @@ export function renderCommandCenter(room, { onExit } = {}) {
 
     // bunks
     $('bunks-body').innerHTML = day
-      ? `<p>Sleep after sunset to end the sol.</p><p class="cc-dim">Sunset in ${fmtSec(CC_CONFIG.dayLength - g.clock)}.</p>
-         <button class="cc-btn" disabled>${icon('moon', 20)} Sleep · end sol ${g.sol}</button>`
+      ? (ch.ok || g.inChapter
+        ? `<p>The sun sets when you finish today's chapter in the Science Lab. Then come back here to sleep.</p>
+           <button class="cc-btn" disabled>${icon('moon', 20)} Sleep · end sol ${g.sol}</button>`
+        : `<p>${ch.reason === 'dust-storm' ? 'A dust storm is blocking the sky, so there is no chapter today.'
+            : ch.reason === 'all-done' ? 'All the chapters are done.'
+            : `Not enough to start Chapter ${ch.chapter.n} (need ${ch.missing.join(', ')}). Rest today and the sun will recharge the battery.`}</p>
+           <p class="cc-dim">Finish your chores first, then end the day.</p>
+           <button class="cc-btn" data-act="rest">${icon('moon', 20)} Rest · end the day early</button>`)
       : `<p>Tonight the heaters and life support use ${POWER_CONFIG.nightReserve} power${p.battery < POWER_CONFIG.nightReserve ? `, but you only have ${p.battery}. The crew will be cold` : ''}.</p>
          <button class="cc-btn" data-act="sleep">${icon('moon', 20)} Sleep · end sol ${g.sol}</button>`;
 
@@ -500,6 +521,8 @@ export function renderCommandCenter(room, { onExit } = {}) {
         ${rep.cold ? '<p class="bad">The battery was below the night line, so the crew got cold.</p>' : ''}
         ${g.over ? '' : `<p>${icon('sun', 18)} Morning: the solar field added +${rep.gained}${rep.dustStorm ? ' (a dust storm is blocking the sun!)' : ''}. Battery ${rep.morning}.</p>`}
         <p>${icon('droplet', 18)} The crew drank water: ${rep.waterFrom} → ${rep.waterTo}.</p>
+        <p>${icon('wind', 18)} The crew breathed oxygen: ${rep.oxygenFrom} → ${rep.oxygenTo}.</p>
+        <p>${icon('carrot', 18)} The crew ate food: ${rep.foodFrom} → ${rep.foodTo}.${rep.hungry ? ' The food store is empty! Harvest the greenhouse.' : ''}</p>
         ${hazard === null ? '' : `<p>${icon('radiation', 18)} Radiation today: ${hazard} / 100. The meter resets for the new sol.</p>`}
         ${others.map((t) => `<p>${t}</p>`).join('')}
         ${g.over ? `<p><strong>Your crew earned ${g.stars} stars in ${CC_CONFIG.maxSols} sols.</strong></p>` : ''}
@@ -538,6 +561,12 @@ export function renderCommandCenter(room, { onExit } = {}) {
 
     const a = e.target.closest('[data-act]')?.dataset.act;
     if (a === 'sleep') return doSleep();
+    if (a === 'rest') {
+      const r = endDayEarly(getGame());
+      if (!r.ok) return say(r.message);
+      setGame(r.game, r.events);   // sunset: the night line message shows, then the bunks unlock
+      return;
+    }
     if (a === 'wake') {
       $('summary').hidden = true;
       if (getGame().over) location.reload();

@@ -10,9 +10,21 @@ import {
 
 export const CC_CONFIG = {
   maxSols: 7,
-  dayLength: 90,       // seconds of daylight in one sol (then it is night until you sleep)
-  dustStorms: [4],     // sols that start with a dust storm (+5 morning charge, panels get dusty)
+  dustStorms: [4],     // sols that start with a dust storm (+5 morning charge, panels get dusty, no chapter)
 };
+
+// SCIENCE LAB CHAPTERS: one per day. The day ends (sunset) when today's chapter is finished.
+// Chapters never fail. The only thing that can stop one is the gate:
+//   needs = what you must HAVE to start it, cost = power it uses when it starts.
+// Numbers follow the Science Lab's missions.js (id = the Lab's mission id).
+export const CHAPTERS = [
+  { n: 1, id: 'rover-rescue',    name: 'Rover Rescue',     needs: { power: 15 },                                   cost: 10 },
+  { n: 2, id: 'mystery-rocks',   name: 'Mystery Rocks',    needs: { power: 25, oxygen: 60 },                       cost: 15 },
+  { n: 3, id: 'cosmic-claw',     name: 'Cosmic Claw',      needs: { power: 35, water: 40 },                        cost: 20 },
+  { n: 4, id: 'snapshot-safari', name: 'Snapshot Safari',  needs: { power: 30, food: 50 },                         cost: 15 },
+  { n: 5, id: 'lost-lake',       name: 'The Lost Lake',    needs: { power: 45, oxygen: 65, water: 50 },            cost: 25 },
+  { n: 6, id: 'message-earth',   name: 'Message to Earth', needs: { power: 50, oxygen: 60, food: 40, water: 40 },  cost: 30 },
+];
 
 export const WATER_CONFIG = {
   start: 48,
@@ -21,12 +33,24 @@ export const WATER_CONFIG = {
   target: 40,          // Science Lab chapters need water 40+
 };
 
+// Air and food work like water: systems add them during the day, the crew uses some every night.
+export const OXYGEN_CONFIG = {
+  start: 55,
+  moxie: 15,           // oxygen MOXIE makes when it runs (once per sol)
+  crewPerNight: 10,    // oxygen the crew breathes every night
+};
+export const FOOD_CONFIG = {
+  start: 40,
+  crewPerNight: 10,    // food the crew eats every night (packaged food + greenhouse harvests)
+};
+
 export const SHIRT_COLORS = ['blue', 'teal', 'purple', 'orange', 'red'];
 
 // Today's checklist on the Mission control screen. check(game) = true means done.
 export const MISSIONS = [
   { id: 'moxie', text: 'Run MOXIE so it makes oxygen', check: (g) => !!g.power.ranToday.moxie },
   { id: 'recycler', text: 'Run the water recycler', check: (g) => !!g.power.ranToday.recycler },
+  { id: 'chapter', text: "Finish today's Science Lab chapter" },
   { id: 'reserve', text: `Keep ${POWER_CONFIG.nightReserve} power for the night` },
   { id: 'sleep', text: 'Sleep in the bunks to end the sol' },
 ];
@@ -34,10 +58,14 @@ export const MISSIONS = [
 export function createGame() {
   return {
     sol: 1,
-    clock: 0,            // seconds since sunrise
-    phase: 'day',        // 'day' | 'night'
+    clock: 0,            // seconds since sunrise (only for the clock picture; it does NOT end the day)
+    phase: 'day',        // 'day' | 'night'. Night starts when today's chapter is finished (or the crew rests)
+    chapter: 1,          // the next Science Lab chapter to play
+    inChapter: false,    // true while a chapter is being played
     power: createPowerState(),
     water: WATER_CONFIG.start,
+    oxygen: OXYGEN_CONFIG.start,
+    food: FOOD_CONFIG.start,
     startBattery: createPowerState().battery,   // battery at sunrise (for the sunset report)
     inShelter: false,    // in the storm shelter core (where the bunks are)
     outfit: 'crew',      // 'crew' | 'suit'
@@ -76,12 +104,17 @@ export function pullLever(game, id, on) {
   const r = setSwitch(game.power, id, on);
   if (!r.ok) return { ok: false, game, message: r.message };
   let water = game.water;
+  let oxygen = game.oxygen;
   let message = r.message;
   if (id === 'recycler' && on && !game.power.ranToday.recycler) {
     water = clamp(water + WATER_CONFIG.recycler, 0, 100);
     message += ` Water +${WATER_CONFIG.recycler}.`;
   }
-  return { ok: true, game: checkMissions({ ...game, power: r.power, water }), message };
+  if (id === 'moxie' && on && !game.power.ranToday.moxie) {
+    oxygen = clamp(oxygen + OXYGEN_CONFIG.moxie, 0, 100);
+    message += ` Oxygen +${OXYGEN_CONFIG.moxie}.`;
+  }
+  return { ok: true, game: checkMissions({ ...game, power: r.power, water, oxygen }), message };
 }
 
 // Any station can spend power through the game: spend(game, COSTS.eva, 'EVA trip')
@@ -98,23 +131,78 @@ export function setShirt(game, shirt) {
   return SHIRT_COLORS.includes(shirt) ? { ...game, shirt } : game;
 }
 
-// One second of time. Returns the new game and what happened.
+// One second of time. It only moves the clock picture: the day ends with the chapter, not a timer.
 export function tick(game, dt = 1) {
   if (game.over) return { game, events: [] };
-  const g = { ...game, clock: game.clock + dt };
-  const events = [];
+  return { game: { ...game, clock: game.clock + dt }, events: [] };
+}
 
-  // sunset: check the night line
-  if (g.phase === 'day' && g.clock >= CC_CONFIG.dayLength) {
-    g.phase = 'night';
-    if (g.power.battery >= POWER_CONFIG.nightReserve) {
-      g.done = { ...g.done, reserve: true };
-      events.push('sunset-safe');
-    } else {
-      events.push('sunset-low');
-    }
+// Sunset: night starts and the night line is checked. Returns { game, events }.
+function sunset(game) {
+  const g = { ...game, phase: 'night', sunsetAt: game.clock };
+  const events = [];
+  if (g.power.battery >= POWER_CONFIG.nightReserve) {
+    g.done = { ...g.done, reserve: true };
+    events.push('sunset-safe');
+  } else {
+    events.push('sunset-low');
   }
   return { game: checkMissions(g), events };
+}
+
+// ---------- today's chapter ----------
+
+// The chapter for today, or null (dust storm day, or all 6 chapters done)
+export function todaysChapter(game) {
+  if (isDustStormSol(game.sol)) return null;
+  return CHAPTERS.find((c) => c.n === game.chapter) || null;
+}
+
+// Can the crew start today's chapter? { ok, chapter, missing: ['power 15', ...], reason }
+export function chapterCheck(game) {
+  const chapter = todaysChapter(game);
+  if (!chapter) return { ok: false, chapter: null, missing: [], reason: isDustStormSol(game.sol) ? 'dust-storm' : 'all-done' };
+  if (!isDay(game)) return { ok: false, chapter, missing: [], reason: 'night' };
+  if (game.done.chapter) return { ok: false, chapter, missing: [], reason: 'done-today' };
+  const have = { power: game.power.battery, water: game.water, oxygen: game.oxygen, food: game.food };
+  const missing = Object.entries(chapter.needs)
+    .filter(([k, v]) => have[k] < v)
+    .map(([k, v]) => `${k} ${v}`);
+  return { ok: missing.length === 0, chapter, missing, reason: missing.length ? 'not-enough' : null };
+}
+
+// Start today's chapter: pays its power cost. The Science Lab calls this when the chapter opens.
+export function startChapter(game) {
+  const check = chapterCheck(game);
+  if (!check.ok) {
+    const why = {
+      'dust-storm': 'No chapter today: a dust storm is blocking the sky. Look after the base and rest.',
+      'all-done': 'All 6 chapters are done!',
+      night: "It's night. Chapters open again in the morning.",
+      'done-today': "Today's chapter is already done. Sleep to start the next sol.",
+      'not-enough': `Not enough to start Chapter ${check.chapter?.n}. Need: ${check.missing.join(', ')}.`,
+    }[check.reason];
+    return { ok: false, game, message: why };
+  }
+  const r = spendPower(game.power, check.chapter.cost, `Chapter ${check.chapter.n}`);
+  if (!r.ok) return { ok: false, game, message: r.message };
+  return { ok: true, game: { ...game, power: r.power, inChapter: true }, chapter: check.chapter, message: r.message };
+}
+
+// The chapter is complete (chapters never fail): tick it off and the sun sets.
+export function finishChapter(game) {
+  if (!game.inChapter) return { ok: false, game, events: [], message: 'No chapter is being played.' };
+  const g = { ...game, inChapter: false, chapter: game.chapter + 1, done: { ...game.done, chapter: true } };
+  const r = sunset(g);
+  return { ok: true, game: r.game, events: r.events, message: `Chapter ${game.chapter} complete!` };
+}
+
+// Rest day: no chapter today (not enough power, or a dust storm). The crew ends the day early.
+export function endDayEarly(game) {
+  if (!isDay(game)) return { ok: false, game, events: [], message: "It's already night." };
+  if (game.inChapter) return { ok: false, game, events: [], message: 'Finish the chapter first.' };
+  const r = sunset(game);
+  return { ok: true, game: r.game, events: r.events, message: 'The crew rests today. Sleep to start the next sol.' };
 }
 
 export function enterShelter(game) {
@@ -138,6 +226,8 @@ export function sleep(game) {
 
   const night = nightPower(game.power);
   const water = clamp(game.water - WATER_CONFIG.crewPerNight, 0, 100);
+  const oxygen = clamp(game.oxygen - OXYGEN_CONFIG.crewPerNight, 0, 100);
+  const food = clamp(game.food - FOOD_CONFIG.crewPerNight, 0, 100);
   const done = { ...game.done, sleep: true };
   const missions = todaysMissions({ ...game, done });
   const earned = missions.filter((m) => m.done).length;
@@ -159,6 +249,11 @@ export function sleep(game) {
     dustStorm,
     waterFrom: game.water,
     waterTo: water,
+    oxygenFrom: game.oxygen,
+    oxygenTo: oxygen,
+    foodFrom: game.food,
+    foodTo: food,
+    hungry: food === 0,
   };
 
   const g = {
@@ -168,6 +263,8 @@ export function sleep(game) {
     phase: 'day',
     power: morning.power,
     water,
+    oxygen,
+    food,
     startBattery: morning.power.battery,
     done: {},
     stars: game.stars + earned,
@@ -175,4 +272,14 @@ export function sleep(game) {
     over: last,
   };
   return { ok: true, game: g, report };
+}
+// ---------- for other rooms (Greenhouse, Life Support, Science Lab): pure helpers ----------
+const RESOURCES = ['water', 'oxygen', 'food'];
+
+// Add (positive) or use (negative) water / oxygen / food. Using more than you have = not ok.
+export function changeResource(game, name, amount, label = 'That') {
+  if (!RESOURCES.includes(name)) return { ok: false, game, message: `Unknown resource: ${name}.` };
+  if (amount < 0 && game[name] < -amount) return { ok: false, game, message: `${label} needs ${-amount} ${name}. You have ${game[name]}.` };
+  const next = clamp(game[name] + amount, 0, 100);
+  return { ok: true, game: { ...game, [name]: next }, message: `${label}: ${amount > 0 ? '+' : ''}${amount} ${name}.` };
 }

@@ -1,15 +1,15 @@
 // POWER (Member 1): the 0-100 battery every station spends from.
 // Follows the team's "Mars Outpost: Power Budget":
 //   - each action has a price and spends it when it runs
-//   - the solar field adds a charge every morning (+40 clean, +20 dusty, +5 dust storm)
+//   - the solar field adds a charge every morning (+55 clean, +20 dusty, +5 dust storm)
 //   - 20 power is always kept for heaters + life support at night (the night line)
 // Pure functions: they never change the state you pass in; they return a new copy.
 
 export const POWER_CONFIG = {
   max: 100,            // charge above 100 is lost
-  start: 55,           // battery at the start of the mission
+  start: 60,           // battery at the start of the mission
   nightReserve: 20,    // heaters + life support at night
-  solar: { clean: 40, dusty: 20, storm: 5 },   // morning charge
+  solar: { clean: 55, dusty: 20, storm: 5 },   // morning charge
 };
 
 // Prices from the Power Budget (keep every number here so the team can tune them)
@@ -117,7 +117,7 @@ export function morningCharge(power, { dustStorm = false } = {}) {
   };
 }
 
-// EVA / airlock team: cleaning the panels brings the morning charge back to +40
+// EVA / airlock team: cleaning the panels brings the morning charge back to clean (+55)
 export function cleanPanels(power) {
   return { ...power, panels: 'clean' };
 }

@@ -48,14 +48,14 @@ test('night uses the reserve; below it the crew gets cold', () => {
   assert.equal(cold.power.battery, 0);
 });
 
-test('morning charge: +40 clean, +20 dusty, +5 in a dust storm, never above 100', () => {
-  assert.equal(morningCharge(fresh({ battery: 30 })).power.battery, 70);
+test('morning charge: +55 clean, +20 dusty, +5 in a dust storm, never above 100', () => {
+  assert.equal(morningCharge(fresh({ battery: 30 })).power.battery, 85);
   assert.equal(morningCharge(fresh({ battery: 30, panels: 'dusty' })).power.battery, 50);
   const storm = morningCharge(fresh({ battery: 30 }), { dustStorm: true });
   assert.equal(storm.power.battery, 35);
   assert.equal(storm.power.panels, 'dusty');
   assert.equal(morningCharge(fresh({ battery: 90 })).power.battery, POWER_CONFIG.max);
-  assert.equal(morningCharge(cleanPanels(fresh({ battery: 0, panels: 'dusty' }))).gained, 40);
+  assert.equal(morningCharge(cleanPanels(fresh({ battery: 0, panels: 'dusty' }))).gained, POWER_CONFIG.solar.clean);
 });
 
 test('morning switches per-sol systems off so the crew plans again', () => {
