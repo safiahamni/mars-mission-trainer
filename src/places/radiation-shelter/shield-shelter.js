@@ -1,12 +1,15 @@
+import { getGame } from '../../state/gameStore.js';
+
 // shield-shelter.js — "Shield the Shelter!": the water-tank game in a solar storm (Member 3).
 // Moved from the laptop version (radiation-shelter/shelter-game.js) and connected to the side panel (MarsHUD).
 //
-//   • a solar storm starts (MarsHUD) -> the kid walks back into the Command Center
-//   • instead of the Command Center room, "Shield the Shelter!" opens:
+//   • a solar storm starts (MarsHUD) -> the kid walks back into the Command Center (the room opens as usual)
+//   • walking into the room's RADIATION SHELTER (where the bunks are) opens "Shield the Shelter!":
 //     walk onto a water tank to pick it up, carry it to an empty shelf (3 tanks, 3 shelves)
 //   • during the storm the hazard bar keeps rising inside, slower with every tank:
 //     +0.5 -> +0.3 -> +0.2 -> +0.1 per min  (outside in a storm: +0.75)
-//   • with all 3 tanks the storm passes after 12 game minutes -> "All clear!" -> go back outside
+//   • with all 3 tanks the storm passes after 12 game minutes -> "All clear!" -> back to the Command Center room
+//   • while it is open the game time runs (the room normally pauses it), so the storm and the hazard go on
 //   • (no storm: the Command Center room opens as usual and the needle slides back to green)
 // Real science: water is one of the best shields against solar storm particles, so shelter plans put water round the crew.
 
@@ -21,11 +24,12 @@
   const num = n => String(Math.round(n * 100) / 100);
 
   // window.RadiationShelter: what the other places ask Member 3's radiation code
-  //   isStorm()   the Command Center room stays closed in a storm (this game opens instead); the Greenhouse checks it too
   //   getHazard() the Command Center's end-of-sol summary
   //   newSol()    called when the crew sleeps: fresh tanks on the floor for the next storm
+  //   isStorm()   asked by the Command Center room ("stay closed in a storm"): answers false, so the room opens
+  //               in a storm too and this game pops up in its radiation shelter (the Greenhouse also asks MarsHUD)
   window.RadiationShelter = {
-    isStorm: () => !!hud()?.isStorm(),
+    isStorm: () => false,
     getHazard: () => hud()?.getHazard() ?? 0,
     newSol: () => { if (typeof resetRoom === 'function') resetRoom(); },
   };
@@ -55,7 +59,7 @@
         <p class="rs-shield-fact">Water is great at stopping solar storm particles. That's why real shelter plans put water around the crew.</p>
       </div>
     </div>
-    <button type="button" class="rs-go-out" id="rs-goOut" hidden>Go back outside</button>
+    <button type="button" class="rs-go-out" id="rs-goOut" hidden>Back to the Command Center</button>
   </div>
 </div>`);
 
@@ -98,8 +102,11 @@
     if (tanks === 3 && storm()) setMsg(`Shielding ready! The storm passes in ${Math.ceil(stormLeft)} min…`, true);
   }
 
+  let pausedBefore = false;              // the Command Center room pauses the map: let time run while shielding
   function open() {
     map.releaseKeys();
+    pausedBefore = map.isPaused();
+    map.pause(false);
     shield.hidden = false;
     $('rs-goOut').hidden = true;
     $('rs-shieldTitle').textContent = 'Shield the Shelter!';
@@ -109,7 +116,7 @@
   }
   function allClear() {
     $('rs-shieldTitle').textContent = 'All clear!';
-    setMsg('The storm has passed. You can go back outside and finish the mission.', true);
+    setMsg('The storm has passed. Go back to the Command Center and finish the mission.', true);
     $('rs-goOut').hidden = false;
     $('rs-goOut').focus();
     tellHud();
@@ -175,25 +182,36 @@
   });
   const DIRS = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right',
                  KeyW: 'up', KeyS: 'down', KeyA: 'left', KeyD: 'right', w: 'up', s: 'down', a: 'left', d: 'right' };
-  document.addEventListener('keydown', e => {
+  // while it is open the keys walk in THIS room only (not the Command Center room behind it, not out of a door)
+  window.addEventListener('keydown', e => {
     if (!isOpen()) return;
+    e.stopImmediatePropagation();
     const d = DIRS[e.key] || DIRS[e.code];
     if (d) { roomKeys[d] = true; e.preventDefault(); }
     if ((e.key === 'Enter' || e.key === ' ') && !$('rs-goOut').hidden) { e.preventDefault(); $('rs-goOut').click(); }
-  });
-  document.addEventListener('keyup', e => { const d = DIRS[e.key] || DIRS[e.code]; if (d) roomKeys[d] = false; });
-  map.on('key', () => isOpen());                       // while the shelter is open the arrows walk in the room, not out the door
+  }, true);
+  window.addEventListener('keyup', e => {
+    const d = DIRS[e.key] || DIRS[e.code];
+    if (d) roomKeys[d] = false;
+    if (isOpen()) e.stopImmediatePropagation();
+  }, true);
+  map.on('key', () => isOpen());
 
   $('rs-goOut').addEventListener('click', () => {
     shield.hidden = true;
     resetRoom(); tellHud();
-    map.leave('up');                                    // out to the Science Lab road
+    if (pausedBefore && document.querySelector('[data-b="shelter"]')) map.pause(true);   // back to the Command Center room
   });
 
   // ---- hooking into the map + side panel ----
-  map.on('enter', place => {
-    if (place === 'shelter' && storm()) open();
-  });
+  // open when the astronaut walks into the Command Center room's radiation shelter during a storm
+  let wasInShelter = false;
+  (function watch() {
+    const inShelter = !!getGame()?.inShelter && !!document.querySelector('[data-b="shelter"]');
+    if (inShelter && !wasInShelter && storm() && !isOpen()) open();
+    wasInShelter = inShelter;
+    requestAnimationFrame(watch);
+  })();
   map.on('update', dt => {
     const s = storm();
     if (s && !wasStorm) { resetRoom(); }                // a new storm: fresh tanks on the floor
