@@ -3,10 +3,11 @@
 //  Works everywhere without touching anyone's walking code: every walker in the game uses the shared
 //  avatar (src/map/avatar.js), which gets the class "walking" while its legs move. This file listens
 //  for that class (on the base map, in the Command Center room, the shelter game, the solar panel yard,
-//  and inside the Science Lab / Life Support / Greenhouse) and plays one step per foot.
+//  and inside the Science Lab / Life Support / Greenhouse) and plays the steps.
 //
-//   • OUTSIDE on the Mars roads: like walking on beach sand (a soft "shhk" of grains shifting)
-//   • INSIDE a building: the same sandy step (dust on the boots), shorter and lighter
+//   • OUTSIDE on the Mars roads: a soft, cozy step in sand (a short rounded "pff" + a little "thup")
+//   • INSIDE a building: the same soft step, shorter and lighter
+//   • about 2 steps a second: calm, not rushed
 //   • The sounds are made by the browser (Web Audio), no sound files.
 //   • Press M to switch the footsteps off / on (remembered in this browser).
 //
@@ -14,8 +15,8 @@
 // =====================================================================
 
 (function () {
-  const STEP_EVERY = 0.225;      // seconds between steps = half of the avatar's 0.45 s leg animation (one per foot)
-  const VOLUME = 0.55;           // the steps play a lot: loud enough to hear, not too loud
+  const STEP_EVERY = 0.45;       // seconds between steps: one step per walk cycle of the avatar's legs (calm, not rushed)
+  const VOLUME = 0.6;            // the steps play a lot: loud enough to hear, not too loud
   const KEY = 'mars-footsteps-muted';
 
   let muted = false;
@@ -34,7 +35,7 @@
     const d = noise.getChannelData(0);
     let grain = 0;
     for (let i = 0; i < d.length; i++) {
-      if (Math.random() < 0.012) grain = 0.4 + Math.random() * 0.6;   // a new grain
+      if (Math.random() < 0.006) grain = 0.3 + Math.random() * 0.4;   // a new grain
       grain *= 0.985;                                                    // ...that fades in ~2 ms
       d[i] = (Math.random() * 2 - 1) * (0.25 + grain);
     }
@@ -46,49 +47,48 @@
   window.addEventListener('pointerdown', unlock, true);
 
   let foot = 0;
-  // one step in BEACH SAND: the foot presses in (a soft "shhk" of grains shifting, which swells and then
-  // slides away) with a gentle low thump under it. Indoors it is the same, shorter and lighter.
+  // one step on SOFT SAND, cozy-game style: a short, rounded "pff" (soft sand puffing under the boot)
+  // on a little low "thup". Short and gentle so it never gets tiring to hear. Indoors: the same, lighter.
   function step(outside) {
     const c = ctx;
     if (!c || c.state !== 'running') return;
     const t = c.currentTime;
     foot = 1 - foot;
-    const vary = 0.9 + Math.random() * 0.2;            // no two steps sound exactly the same
-    const len = (outside ? 0.26 : 0.16) * vary;
+    const vary = 0.92 + Math.random() * 0.16;          // no two steps sound exactly the same
+    const pitch = foot ? 1 : 0.88;                      // left and right foot a little different
+    const len = (outside ? 0.13 : 0.09) * vary;
 
-    // the sand shifting: grainy noise in the middle frequencies, the "shhk"
+    // the sand puff: soft noise, only the low-middle part (rounded, not scratchy)
     const src = c.createBufferSource();
     src.buffer = noise;
-    src.playbackRate.value = 0.85 + Math.random() * 0.3;
-    const band = c.createBiquadFilter();
-    band.type = 'bandpass';
-    band.Q.value = 0.8;
-    const f0 = (outside ? 1600 : 2200) * vary * (foot ? 1 : 0.9);
-    band.frequency.setValueAtTime(f0 * 0.7, t);
-    band.frequency.linearRampToValueAtTime(f0, t + len * 0.4);       // the grains slide as the weight rolls forward
-    band.frequency.linearRampToValueAtTime(f0 * 0.6, t + len);
-    const soft = c.createBiquadFilter();                               // take the sharp top off: soft, not scratchy
-    soft.type = 'lowpass';
-    soft.frequency.value = 4200;
+    src.playbackRate.value = 0.7 + Math.random() * 0.2;
+    const lp = c.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.Q.value = 1.2;
+    const top = (outside ? 1300 : 1800) * vary * pitch;
+    lp.frequency.setValueAtTime(top, t);
+    lp.frequency.exponentialRampToValueAtTime(top * 0.4, t + len);  // the puff closes as the sand settles
+    const hp = c.createBiquadFilter();                                // no rumble
+    hp.type = 'highpass';
+    hp.frequency.value = 180;
     const g = c.createGain();
     g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(VOLUME * (outside ? 1 : 0.7), t + 0.04);   // the foot sinks in
-    g.gain.setValueAtTime(VOLUME * (outside ? 0.8 : 0.55), t + len * 0.45);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + len);                         // the sand settles
-    src.connect(band).connect(soft).connect(g).connect(c.destination);
-    src.start(t, Math.random() * 0.2, len + 0.05);
+    g.gain.exponentialRampToValueAtTime(VOLUME * (outside ? 1 : 0.65), t + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+    src.connect(lp).connect(hp).connect(g).connect(c.destination);
+    src.start(t, Math.random() * 0.3, len + 0.03);
 
-    // the foot pressing in: a gentle low thump
+    // the little "thup" of the boot
     const o = c.createOscillator();
-    o.type = 'sine';
-    o.frequency.setValueAtTime((outside ? 75 : 95) * vary, t);
-    o.frequency.exponentialRampToValueAtTime(45, t + 0.1);
+    o.type = 'triangle';
+    o.frequency.setValueAtTime((outside ? 150 : 190) * vary * pitch, t);
+    o.frequency.exponentialRampToValueAtTime(70, t + 0.07);
     const og = c.createGain();
     og.gain.setValueAtTime(0.0001, t);
-    og.gain.exponentialRampToValueAtTime(VOLUME * 0.35, t + 0.02);
-    og.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
+    og.gain.exponentialRampToValueAtTime(VOLUME * 0.45, t + 0.006);
+    og.gain.exponentialRampToValueAtTime(0.0001, t + 0.08);
     o.connect(og).connect(c.destination);
-    o.start(t); o.stop(t + 0.14);
+    o.start(t); o.stop(t + 0.1);
   }
 
   // ---- who is walking? ----
