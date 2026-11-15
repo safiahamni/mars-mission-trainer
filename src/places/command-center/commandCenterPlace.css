@@ -1,0 +1,54 @@
+/* COMMAND CENTER on the base map (Member 1): the status card in the map's top bar. Prefix: cc- */
+.cc-mapbar {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  background: #2B2A3A;
+  color: #FFFFFF;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 800;
+}
+.cc-mapbar .icon {
+  vertical-align: -3px;
+  color: #FFD23F;
+}
+.cc-mapbar-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.cc-mapbar-row small {
+  margin-left: auto;
+  color: #C9CCD6;
+  font-size: 13px;
+}
+.cc-mapbar-row.bad,
+.cc-mapbar-row.bad .icon {
+  color: #FF8A80;
+}
+.cc-mapbar .cc-haz-careful,
+.cc-mapbar .cc-haz-careful .icon {
+  color: #FFD23F;
+}
+.cc-mapbar .cc-haz-danger,
+.cc-mapbar .cc-haz-danger .icon {
+  color: #FF8A80;
+}
+.cc-mapbar-storm {
+  padding: 6px 10px;
+  background: #FF5A5A;
+  color: #2B2A3A;
+  border: 3px solid #1E1D29;
+  border-radius: 10px;
+}
+.cc-mapbar-storm .icon {
+  color: #2B2A3A;
+}
+
+/* the Command Center room sits on top of the whole map page */
+.cc-root {
+  z-index: 50;
+}

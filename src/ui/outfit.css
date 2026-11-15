@@ -1,0 +1,32 @@
+/* OUTFITS: recolours the teammate's avatar drawing by its colours, and adds a helmet.
+   Colours come from the Astronaut Character sheet. */
+
+/* crew shirt colours kids can pick */
+.avatar.shirt-teal [fill='#5A8FE0'] { fill: #3dbba5; }
+.avatar.shirt-teal [fill='#4777C4'] { fill: #2e9a87; }
+.avatar.shirt-purple [fill='#5A8FE0'] { fill: #9b7be8; }
+.avatar.shirt-purple [fill='#4777C4'] { fill: #7d5fcc; }
+.avatar.shirt-orange [fill='#5A8FE0'] { fill: #f0913a; }
+.avatar.shirt-orange [fill='#4777C4'] { fill: #d07526; }
+.avatar.shirt-red [fill='#5A8FE0'] { fill: #e0566a; }
+.avatar.shirt-red [fill='#4777C4'] { fill: #c03f53; }
+
+/* Mars spacesuit: white suit, orange gloves, dark boots, helmet with visor and lamp */
+.avatar.suit [fill='#5A8FE0'],
+.avatar.suit [fill='#3A3D4A'] { fill: #f4f5f8; }
+.avatar.suit [fill='#4777C4'],
+.avatar.suit [fill='#2E303B'] { fill: #d4d7e0; }
+.avatar.suit [fill='#FFFFFF'],
+.avatar.suit [fill='#E6E4EA'] { fill: #3a3f4d; }
+.avatar.suit circle[r='2.6'][fill='#F2C49B'] { fill: #f0913a; }
+
+.avatar .helmet {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: none;
+  pointer-events: none;
+}
+.avatar.suit .helmet { display: block; }
+.avatar .helmet .back { display: none; }
+.avatar[class*='face-up'] .helmet .back { display: block; }

@@ -1,51 +1,78 @@
 // Run with: npm test
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { POWER_CONFIG, createPowerState, solarOutput, chargeForNewSol, canAfford, spend, powerStatus } from './power.js';
+import {
+  POWER_CONFIG, COSTS, createPowerState, spendable, shortForNight, spendPower, leverCost,
+  setSwitch, nightPower, morningCharge, cleanPanels, powerStatus, isCircuitOn,
+} from './power.js';
 
-test('clear sol makes full solar power', () => {
-  assert.equal(solarOutput({ dustStorm: false }), POWER_CONFIG.solarPerSol);
+const fresh = (extra = {}) => ({ ...createPowerState(), ...extra });
+
+test('spendable today = battery minus the 20 night reserve', () => {
+  assert.equal(spendable(fresh({ battery: 55 })), 35);
+  assert.equal(spendable(fresh({ battery: 15 })), 0);
+  assert.equal(shortForNight(fresh({ battery: 15 })), 5);
 });
 
-test('dust storm cuts solar power', () => {
-  assert.ok(solarOutput({ dustStorm: true }) < POWER_CONFIG.solarPerSol);
+test('first MOXIE run costs unlock + run (15), then 5 the next sol', () => {
+  const r = setSwitch(fresh({ battery: 55 }), 'moxie', true);
+  assert.equal(r.power.battery, 55 - COSTS.moxieUnlock - COSTS.moxie);
+  assert.equal(r.power.moxieUnlocked, true);
+  const tomorrow = morningCharge(r.power).power;
+  assert.equal(leverCost(tomorrow, 'moxie'), COSTS.moxie);
 });
 
-test('charging never goes above battery capacity', () => {
-  const full = { ...createPowerState(), stored: POWER_CONFIG.batteryCapacity - 5 };
-  const next = chargeForNewSol(full);
-  assert.equal(next.stored, POWER_CONFIG.batteryCapacity);
-  assert.equal(next.wastedToday, POWER_CONFIG.solarPerSol - 5);
+test('a lever is only paid once per sol', () => {
+  let p = setSwitch(fresh(), 'recycler', true).power;
+  p = setSwitch(p, 'recycler', false).power;
+  const again = setSwitch(p, 'recycler', true);
+  assert.equal(again.power.battery, p.battery);
 });
 
-test('spending reduces stored power', () => {
-  const r = spend(createPowerState(), 5, 'oxygen');
-  assert.equal(r.ok, true);
-  assert.equal(r.power.stored, POWER_CONFIG.startBattery - 5);
-});
-
-test('cannot overspend', () => {
-  const p = { ...createPowerState(), stored: 3 };
-  const r = spend(p, 5, 'oxygen');
+test('not enough power: the action fails and says how much more is needed', () => {
+  const r = setSwitch(fresh({ battery: 3 }), 'recycler', true);
   assert.equal(r.ok, false);
-  assert.equal(r.power.stored, 3);
+  assert.match(r.message, /Need 2 more/);
+  assert.equal(spendPower(fresh({ battery: 10 }), COSTS.shielding, 'Shielding').ok, false);
 });
 
-test('negative or broken costs are refused', () => {
-  const p = createPowerState();
-  assert.equal(canAfford(p, -2), false);
-  assert.equal(canAfford(p, NaN), false);
+test('heaters cannot be switched off', () => {
+  assert.equal(setSwitch(fresh(), 'heater', false).ok, false);
+  assert.equal(isCircuitOn(fresh(), 'heater'), true);
+});
+
+test('night uses the reserve; below it the crew gets cold', () => {
+  assert.deepEqual(nightPower(fresh({ battery: 35 })), { power: fresh({ battery: 15 }), cold: false });
+  const cold = nightPower(fresh({ battery: 10 }));
+  assert.equal(cold.cold, true);
+  assert.equal(cold.power.battery, 0);
+});
+
+test('morning charge: +40 clean, +20 dusty, +5 in a dust storm, never above 100', () => {
+  assert.equal(morningCharge(fresh({ battery: 30 })).power.battery, 70);
+  assert.equal(morningCharge(fresh({ battery: 30, panels: 'dusty' })).power.battery, 50);
+  const storm = morningCharge(fresh({ battery: 30 }), { dustStorm: true });
+  assert.equal(storm.power.battery, 35);
+  assert.equal(storm.power.panels, 'dusty');
+  assert.equal(morningCharge(fresh({ battery: 90 })).power.battery, POWER_CONFIG.max);
+  assert.equal(morningCharge(cleanPanels(fresh({ battery: 0, panels: 'dusty' }))).gained, 40);
+});
+
+test('morning switches per-sol systems off so the crew plans again', () => {
+  let p = setSwitch(fresh(), 'greenhouse', true).power;
+  p = morningCharge(p).power;
+  assert.equal(p.switches.greenhouse, false);
+  assert.equal(p.switches.lab, true);
 });
 
 test('functions do not change the original state', () => {
-  const p = createPowerState();
-  spend(p, 5);
-  chargeForNewSol(p);
-  assert.equal(p.stored, POWER_CONFIG.startBattery);
+  const p = fresh();
+  setSwitch(p, 'moxie', true); nightPower(p); morningCharge(p); spendPower(p, 5);
+  assert.deepEqual(p, fresh());
 });
 
 test('status levels', () => {
-  assert.equal(powerStatus({ stored: 0 }), 'empty');
-  assert.equal(powerStatus({ stored: POWER_CONFIG.lowThreshold - 1 }), 'low');
-  assert.equal(powerStatus({ stored: POWER_CONFIG.lowThreshold }), 'ok');
+  assert.equal(powerStatus({ battery: 0 }), 'empty');
+  assert.equal(powerStatus({ battery: POWER_CONFIG.nightReserve - 1 }), 'low');
+  assert.equal(powerStatus({ battery: POWER_CONFIG.nightReserve }), 'ok');
 });
