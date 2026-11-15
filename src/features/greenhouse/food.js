@@ -3,39 +3,42 @@
  *
  * Resource units, crop durations, and food rewards below are proposed game
  * balance values. They are not NASA measurements. This module is deliberately
- * pure: callers send returned resource costs to gameController.js and only
+ * pure: callers send returned water, power, and nutrient costs to the shared
+ * controller and only
  * commit nextState after the shared controller approves the action.
  */
 
-const DEFAULT_PLOT_IDS = ["bed-1", "bed-2", "bed-3"];
+const DEFAULT_PLOT_IDS = ["bed-1", "bed-2", "bed-3", "bed-4"];
 
 export const CROP_CATALOG = Object.freeze({
-  lettuce: Object.freeze({
-    id: "lettuce",
-    name: "Red-leaf lettuce",
+  greens: Object.freeze({
+    id: "greens",
+    name: "Leafy greens",
     icon: "🥬",
-    growthSols: 3,
+    growthSols: 30, // seconds of growth needed (real time)
     foodReward: 2,
-    plantingCost: Object.freeze({ water: 2, power: 2 }),
-    dailyCost: Object.freeze({ water: 1, power: 1 }),
+    plantingCost: Object.freeze({ water: 2, power: 2, nutrients: 1 }),
+    dailyCost: Object.freeze({ water: 1, power: 1, nutrients: 1 }),
   }),
-  radish: Object.freeze({
-    id: "radish",
-    name: "Radish",
-    icon: "🌱",
-    growthSols: 4,
-    foodReward: 3,
-    plantingCost: Object.freeze({ water: 2, power: 2 }),
-    dailyCost: Object.freeze({ water: 1, power: 1 }),
+  potato: Object.freeze({
+    id: "potato",
+    name: "Potato",
+    icon: "🥔",
+    growthSols: 210, // 3 min 30 sec
+    foodReward: 10,
+    plantingCost: Object.freeze({ water: 3, power: 3, nutrients: 2 }),
+    dailyCost: Object.freeze({ water: 2, power: 1, nutrients: 2 }),
+    perchlorateUnlock: 30,
   }),
-  tomato: Object.freeze({
-    id: "tomato",
-    name: "Dwarf tomato",
-    icon: "🍅",
-    growthSols: 6,
-    foodReward: 4,
-    plantingCost: Object.freeze({ water: 3, power: 3 }),
-    dailyCost: Object.freeze({ water: 1, power: 1 }),
+  millet: Object.freeze({
+    id: "millet",
+    name: "Millet",
+    icon: "🌾",
+    growthSols: 90, // 1 min 30 sec
+    foodReward: 6,
+    plantingCost: Object.freeze({ water: 2, power: 2, nutrients: 1 }),
+    dailyCost: Object.freeze({ water: 1, power: 1, nutrients: 1 }),
+    perchlorateUnlock: 30,
   }),
 });
 
@@ -57,9 +60,10 @@ function sumCosts(plots) {
       const crop = CROP_CATALOG[plot.cropId];
       total.water += crop.dailyCost.water;
       total.power += crop.dailyCost.power;
+      total.nutrients += crop.dailyCost.nutrients || 0;
       return total;
     },
-    { water: 0, power: 0 },
+    { water: 0, power: 0, nutrients: 0 },
   );
 }
 
@@ -115,13 +119,13 @@ export function plantCrop(state, { plotId, cropId, sol }) {
 
 /**
  * Prepare one End Sol transition. All growing crops advance together only when
- * climate is suitable and the crew can afford the total water and power cost.
+ * climate is suitable and the crew can afford water, power, and nutrient costs.
  * Call once for each Sol and commit nextState only after the controller accepts
  * resourceCost. Repeating the same Sol is rejected to prevent duplicate growth.
  */
 export function advanceGreenhouseSol(
   state,
-  { sol, waterAvailable, powerAvailable, climateOkay = true },
+  { sol, waterAvailable, powerAvailable, nutrientAvailable = Number.POSITIVE_INFINITY, climateOkay = true, growthRate = 1, extraPower = 0 },
 ) {
   if (!validSol(sol)) return fail("invalid-sol", "Choose a valid Sol first.");
   if (sol <= state.lastAdvancedSol) {
@@ -130,23 +134,30 @@ export function advanceGreenhouseSol(
   if (typeof climateOkay !== "boolean") {
     return fail("invalid-climate", "Climate status must be true or false.");
   }
-  if (!Number.isFinite(waterAvailable) || !Number.isFinite(powerAvailable)) {
-    return fail("invalid-resources", "Current water and power are required.");
+  if (!Number.isFinite(growthRate) || growthRate < 0 || growthRate > 1 || !Number.isFinite(extraPower) || extraPower < 0) {
+    return fail("Growth rate and light power cost must be valid numbers.", "invalid-cost");
+  }
+  if (!Number.isFinite(waterAvailable) || !Number.isFinite(powerAvailable) || !(Number.isFinite(nutrientAvailable) || nutrientAvailable === Number.POSITIVE_INFINITY)) {
+    return fail("invalid-resources", "Current water, power, and nutrients are required.");
   }
 
   const growingPlots = Object.entries(state.plots).filter(([plotId, plot]) => {
     const crop = CROP_CATALOG[plot.cropId];
     return crop && plot.growthSols < crop.growthSols;
   });
-  const resourceCost = sumCosts(growingPlots.map(([, plot]) => plot));
-  const affordable =
-    waterAvailable >= resourceCost.water && powerAvailable >= resourceCost.power;
+  const cropCost = sumCosts(growingPlots.map(([, plot]) => plot));
+  const affordable = waterAvailable >= cropCost.water && powerAvailable >= cropCost.power + extraPower && nutrientAvailable >= cropCost.nutrients;
   const canGrow = climateOkay && affordable;
+  const resourceCost = {
+    water: canGrow ? cropCost.water : 0,
+    power: (canGrow ? cropCost.power : 0) + extraPower,
+    nutrients: canGrow ? cropCost.nutrients : 0,
+  };
 
   const plots = { ...state.plots };
   if (canGrow) {
     for (const [plotId, plot] of growingPlots) {
-      plots[plotId] = { ...plot, growthSols: plot.growthSols + 1 };
+      plots[plotId] = { ...plot, growthSols: plot.growthSols + growthRate };
     }
   }
 
@@ -156,12 +167,12 @@ export function advanceGreenhouseSol(
   } else if (growingPlots.length > 0 && !climateOkay) {
     message = "Adjust the greenhouse climate before advancing crop growth.";
   } else if (growingPlots.length > 0 && !affordable) {
-    message = "There is not enough water or power for all growing beds.";
+    message = "There is not enough water, power, or nutrients for all growing beds.";
   }
 
   return {
     ok: true,
-    resourceCost: canGrow ? resourceCost : { water: 0, power: 0 },
+    resourceCost,
     nextState: { ...state, lastAdvancedSol: sol, plots },
     growthAdvanced: canGrow,
     message,
