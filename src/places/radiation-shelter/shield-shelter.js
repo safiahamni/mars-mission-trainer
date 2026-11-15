@@ -8,7 +8,7 @@ import { getGame } from '../../state/gameStore.js';
 //     walk onto a water tank to pick it up, carry it to an empty shelf (3 tanks, 3 shelves)
 //   • during the storm the hazard bar keeps rising inside, slower with every tank:
 //     +0.5 -> +0.3 -> +0.2 -> +0.1 per min  (outside in a storm: +0.75)
-//   • with all 3 tanks the storm passes after 12 game minutes -> "All clear!" -> back to the Command Center room
+//   • as soon as all 3 tanks are on the shelves -> "All clear!" -> back to the Command Center room
 //   • while it is open the game time runs (the room normally pauses it), so the storm and the hazard go on
 //   • (no storm: the Command Center room opens as usual and the needle slides back to green)
 // Real science: water is one of the best shields against solar storm particles, so shelter plans put water round the crew.
@@ -19,7 +19,6 @@ import { getGame } from '../../state/gameStore.js';
   if (!map) return;
 
   const INSIDE_RATES = [0.5, 0.3, 0.2, 0.1];   // inside the shelter during a storm, by tanks placed
-  const STORM_LEFT_WHEN_READY = 12;            // after all 3 tanks, the storm passes in 12 game minutes
   const SPEED = 140;                           // walking speed inside the room (px per second)
   const num = n => String(Math.round(n * 100) / 100);
 
@@ -74,7 +73,7 @@ import { getGame } from '../../state/gameStore.js';
   const CREW_START = { x: 160, y: 170 };
   const PICK_DIST = 24, SLOT_REACH = 12;
   let cx = CREW_START.x, cy = CREW_START.y, holding = null, walkTo = null;
-  let tanks = 0, stormLeft = 0, wasStorm = false;
+  let tanks = 0, wasStorm = false;
   const roomKeys = {};
 
   const isOpen = () => !shield.hidden;
@@ -99,7 +98,6 @@ import { getGame } from '../../state/gameStore.js';
     $('rs-inRate').textContent = `+${num(INSIDE_RATES[tanks])} / min`;
     $('rs-inBar').style.width = (INSIDE_RATES[tanks] / INSIDE_RATES[0] * 100) + '%';
     $('rs-tankCount').textContent = `${tanks} / 3`;
-    if (tanks === 3 && storm()) setMsg(`Shielding ready! The storm passes in ${Math.ceil(stormLeft)} min…`, true);
   }
 
   let pausedBefore = false;              // the Command Center room pauses the map: let time run while shielding
@@ -116,7 +114,8 @@ import { getGame } from '../../state/gameStore.js';
   }
   function allClear() {
     $('rs-shieldTitle').textContent = 'All clear!';
-    setMsg('The storm has passed. Go back to the Command Center and finish the mission.', true);
+    setMsg(tanks === 3 ? 'All 3 water tanks are on the shelves. The shelter is shielded! Go back to the Command Center.'
+                       : 'The storm has passed. Go back to the Command Center and finish the mission.', true);
     $('rs-goOut').hidden = false;
     $('rs-goOut').focus();
     tellHud();
@@ -126,7 +125,7 @@ import { getGame } from '../../state/gameStore.js';
     if (!slot || slot.classList.contains('rs-placed') || !storm() || tanks >= 3) return false;
     slot.classList.add('rs-placed');
     tanks++;
-    if (tanks === 3) stormLeft = STORM_LEFT_WHEN_READY;
+    if (tanks === 3) { hud()?.endStorm?.(); allClear(); }   // all 3 tanks on the shelves: shielded, the kid can go back
     else setMsg(`Tank on the shelf! Inside rate is now +${num(INSIDE_RATES[tanks])} / min. ${3 - tanks} to go.`);
     tellHud(); updateStats();
     return true;
@@ -219,11 +218,6 @@ import { getGame } from '../../state/gameStore.js';
     tellHud();
     if (!isOpen()) return;
     updateRoom(dt);
-    if (s && tanks === 3) {
-      stormLeft -= dt;
-      updateStats();
-      if (stormLeft <= 0) hud()?.endStorm?.();
-    }
     if (!s && $('rs-goOut').hidden) allClear();         // the storm ended (by itself or after shielding)
   });
 

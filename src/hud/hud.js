@@ -234,7 +234,9 @@ const MarsHUD = (function () {
       if (storm) stormHit = true;
       if (!storm && !stormDone) { untilStorm -= dt; if (untilStorm <= 0) startStorm(); }
     }
-    if (storm) { stormLeft -= dt; if (stormLeft <= 0) endStorm(); }
+    // the storm does NOT pass by itself: it ends when the kid puts all 3 water tanks on the shelter shelves
+    // (shield-shelter.js calls endStorm). Without the shield game loaded it still passes after STORM_LENGTH.
+    if (storm && !window.ShieldShelter) { stormLeft -= dt; if (stormLeft <= 0) endStorm(); }
     drawClock();
     drawPanel();
     // red alarm: hazard in the red AND outside
