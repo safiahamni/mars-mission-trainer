@@ -15,7 +15,7 @@ import './map/map.js';      // roads, walking, doors, keyboard (MarsMap)
 // import './places/greenhouse/greenhouse.js';
 
 // Science Lab
-// import './places/science-lab/lab.js';
+import './places/science-lab/lab.js';
 
 // Life Support
 // import './places/life-support/life.js';
