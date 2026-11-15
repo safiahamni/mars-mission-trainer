@@ -1,0 +1,56 @@
+/* ===== Route chooser: "Which way to the Science Lab?" (route-chooser.js) ===== */
+.rc-chooser {
+  position: absolute; inset: 0; z-index: 20;
+  background: rgba(30, 29, 41, 0.55);
+  display: flex; align-items: center; justify-content: center;
+  padding: 12px; box-sizing: border-box;
+}
+.rc-chooser[hidden] { display: none; }
+.rc-card {
+  width: 620px; box-sizing: border-box; padding: 16px 22px;
+  max-height: 100%; overflow-y: auto;
+  background: #FFFFFF; color: #2B2A3A; border: 4px solid #2B2A3A; border-radius: 22px;
+  box-shadow: 0 6px 0 #2B2A3A; display: flex; flex-direction: column; gap: 10px;
+  font-family: 'Nunito', sans-serif;
+  animation: rc-popIn 0.25s ease-out;
+}
+@keyframes rc-popIn { from { transform: scale(0.85); opacity: 0; } }
+.rc-card h2 { margin: 0; font-size: 24px; font-weight: 900; text-align: center; }
+.rc-sub { margin: 0; text-align: center; font-size: 16px; font-weight: 800; color: #5E6C78; }
+.rc-routes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.rc-card .rc-route {
+  display: flex; flex-direction: column; align-items: stretch; gap: 4px; text-align: left;
+  padding: 10px 14px; border-radius: 16px; border: 3px solid #2B2A3A; background: #FFF6D6;
+  box-shadow: 0 4px 0 #2B2A3A; cursor: pointer; font-family: inherit; color: #2B2A3A;
+  transition: transform 0.1s;
+}
+.rc-card .rc-route-cliff { background: #FFE3D2; }
+.rc-card .rc-route:hover, .rc-card .rc-route:focus-visible { transform: translateY(-3px); outline: 3px solid #3EC6F0; outline-offset: 2px; }
+.rc-route-icon { align-self: center; }
+.rc-route-icon svg { width: 36px; height: 36px; }
+.rc-route-name { font-size: 20px; font-weight: 900; text-align: center; }
+.rc-route-row { display: flex; justify-content: space-between; font-size: 15px; font-weight: 800; }
+.rc-route-row b { font-weight: 900; }
+.rc-total { border-top: 2px dashed #2B2A3A; padding-top: 6px; font-size: 17px; }
+.rc-route-note { font-size: 14px; font-weight: 800; color: #5E6C78; line-height: 1.3; }
+.rc-route-key { align-self: center; font-size: 12px; font-weight: 900; color: #8E8DA0; }
+.rc-card .rc-info-btn, .rc-card .rc-walk-self {
+  align-self: center; background: #FFFFFF; color: #2B2A3A; font-family: inherit; font-weight: 900;
+  font-size: 15px; padding: 8px 16px; border: 3px solid #2B2A3A; border-radius: 14px;
+  box-shadow: 0 4px 0 #2B2A3A; cursor: pointer;
+}
+.rc-card .rc-walk-self { box-shadow: none; border-style: dashed; color: #5E6C78; }
+.rc-info {
+  background: #E8F7FF; border: 2px solid #2B2A3A; border-radius: 12px; padding: 10px 14px;
+  font-size: 14px; font-weight: 700; line-height: 1.4;
+}
+.rc-info p { margin: 0 0 6px; } .rc-info p:last-child { margin: 0; }
+.rc-info[hidden] { display: none; }
+
+/* shown while the avatar walks the chosen route */
+.rc-banner {
+  position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); z-index: 10;
+  background: #2B2A3A; color: #FFFFFF; border-radius: 12px; padding: 6px 14px;
+  font-family: 'Nunito', sans-serif; font-size: 15px; font-weight: 900;
+}
+.rc-banner[hidden] { display: none; }
