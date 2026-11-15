@@ -482,9 +482,11 @@ export function renderCommandCenter(room, { onExit } = {}) {
   function doSleep() {
     const r = sleep(getGame());
     if (!r.ok) return say(r.message);
-    const rad = window.RadiationShelter;               // Member 3's hazard meter (on the base map)
+    // Member 3's hazard meter: the side-panel HUD (MarsHUD) and, when it's switched on, the shelter game
+    const rad = window.RadiationShelter || window.MarsHUD;
     const hazard = rad ? Math.floor(rad.getHazard()) : null;
-    rad?.newSol();                                     // a new sol: their hazard meter and storm reset
+    window.MarsHUD?.newSol();                          // a new sol: hazard meter and storm reset
+    window.RadiationShelter?.newSol();
     const others = runEndSol({ sol: r.report.sol });   // other stations' end-of-sol steps
     setGame(r.game);
     closePop('bunks');

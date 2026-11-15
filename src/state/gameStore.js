@@ -23,7 +23,17 @@ export function onGameChange(fn) {
 }
 
 // The game clock: every second the sun, the storm and the battery update.
+// It stops while a chapter or mini-game pop-up is open (see pauseClock below).
+let clockPaused = false;
+
+// Call pauseClock(true) when your pop-up game opens and pauseClock(false) when it closes,
+// so kids don't lose daylight while they play. (The Command Center room does NOT pause it:
+// planning power is part of the day.)
+export function pauseClock(on) { clockPaused = !!on; }
+export function isClockPaused() { return clockPaused; }
+
 setInterval(() => {
+  if (clockPaused) return;
   const r = tick(game, 1);
   setGame(r.game, r.events);
 }, 1000);
