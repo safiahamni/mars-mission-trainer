@@ -875,7 +875,6 @@ dialog:not(#mission) {max-height: calc(100dvh - 1rem); overflow: auto;}
 #chapter-preview .brief-hero {padding-block: .45rem;}
 #chapter-preview .rock-body > form {margin-bottom: 0;}
 
-<<<<<<< HEAD
 /* ===== Rover Rescue: "Rock found!" card, so kids know WHY they take a photo ===== */
 #find-card{position:absolute;z-index:3;left:50%;top:.6rem;transform:translateX(-50%);width:min(24rem,88%);box-sizing:border-box;padding:.8rem 1rem;text-align:center!important;background:#2f2840;color:#ece6f5;border:3px solid #9b7be8;border-radius:1rem;box-shadow:0 .4rem 0 #1a1426;text-align:left;animation:find-pop .3s ease-out}
 #find-card[hidden]{display:none}
@@ -894,11 +893,9 @@ dialog:not(#mission) {max-height: calc(100dvh - 1rem); overflow: auto;}
 .playfield.photo-flash::after{content:'';position:absolute;inset:0;z-index:4;background:#fff;pointer-events:none;animation:photo-flash .5s ease-out forwards}
 @keyframes photo-flash{from{opacity:.9}to{opacity:0}}
 @media(prefers-reduced-motion:reduce){#find-card,#find-toast{animation:none}.playfield.photo-flash::after{animation-duration:.01s}}
-=======
 /* Align the element choices in the Chapter 2 pattern report. */
 #pixel-report .brief-hero {text-align: center;}
 #pixel-options {display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch;}
 #pixel-options button {width: 100%; align-content: center; text-align: center;}
 #pixel-feedback {text-align: center;}
 #pixel-feedback:empty {display: none;}
->>>>>>> dada8993d6aded39ba632f5588ea771424a399d0
