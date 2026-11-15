@@ -1,0 +1,130 @@
+/* solar-panel.css — the "Clean solar dust" mission (Member 3). Everything starts with sd- */
+
+/* ===== the big panels on the map: dust fades as you clean, a check when clean ===== */
+.sd-map-dust { transition: opacity 0.3s; }
+.sd-map-check { display: none; }
+.sd-map-panel.sd-clean .sd-map-check { display: inline; }
+
+/* ===== the pop-up ===== */
+.sd-popup {
+  position: absolute; inset: 0; z-index: 25; padding: 12px; box-sizing: border-box;
+  background: rgba(30, 29, 41, 0.6); display: flex; align-items: center; justify-content: center;
+}
+.sd-popup[hidden] { display: none; }
+.sd-card {
+  width: 700px; max-height: 100%; overflow-y: auto; box-sizing: border-box; padding: 18px 22px;
+  background: #FFFFFF; color: #2B2A3A; border: 4px solid #2B2A3A; border-radius: 22px; box-shadow: 0 6px 0 #2B2A3A;
+  display: flex; flex-direction: column; gap: 10px; animation: sd-popIn 0.25s ease-out;
+  font-family: 'Nunito', sans-serif; position: relative;
+}
+/* sound on/off */
+.mm-page .sd-sound { position: absolute; top: 12px; right: 12px; padding: 4px 10px; font-size: 20px; line-height: 1; }
+@keyframes sd-popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.sd-card h2 { margin: 0; font-size: 26px; font-weight: 900; text-align: center; }
+.sd-msg { margin: 0; text-align: center; font-size: 17px; font-weight: 800; color: #5E6C78; }
+.sd-finished .sd-msg { color: #2C7C8C; }
+
+/* power meter */
+.sd-power { display: flex; align-items: center; gap: 10px; font-weight: 900; font-size: 16px; }
+.sd-power-bar { flex: 1; height: 16px; border-radius: 8px; background: #D9D6E0; border: 3px solid #2B2A3A; overflow: hidden; }
+.sd-power-bar div { height: 100%; width: 40%; background: #FFD84A; transition: width 0.2s; }
+.sd-finished .sd-power-bar div { background: #5CE0B5; }
+.sd-power b { min-width: 52px; text-align: right; font-size: 20px; }
+
+/* the field: Mars ground with 3 panels; the hand replaces the mouse pointer here */
+.sd-field {
+  position: relative; height: 380px; border-radius: 16px; overflow: hidden;
+  background-color: #E8B98A;
+  background-image: radial-gradient(#C98F5E 2.6px, transparent 2.8px);
+  background-size: 18px 18px;
+  display: flex; align-items: center; justify-content: space-evenly;
+  cursor: none; touch-action: none; outline: none;
+}
+.sd-field:focus-visible { box-shadow: 0 0 0 4px #3EC6F0; }
+
+.sd-panel {
+  position: relative; width: 260px; height: 330px; box-sizing: content-box;
+  border: 5px solid #2B2A3A; border-radius: 10px; background: #24508F; overflow: hidden;
+  box-shadow: 0 7px 0 #45445A;
+}
+.sd-cells {
+  position: absolute; inset: 8px; display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(5, 1fr); gap: 6px;
+}
+.sd-cells span { background: linear-gradient(135deg, #4A8BE8, #2F6FD0); border: 1.5px solid #9CC8F5; border-radius: 3px; }
+
+/* a dust spot: soft, sandy blob (fades out as you rub) */
+.sd-dust {
+  position: absolute; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle, #B97B4C 0%, #C98F5E 45%, rgba(201, 143, 94, 0.85) 65%, rgba(201, 143, 94, 0) 72%);
+  transition: opacity 0.12s;
+}
+
+/* "✓ Clean!" badge when a panel has no dust left */
+.sd-done {
+  position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%);
+  background: #5CE0B5; border: 3px solid #2B2A3A; border-radius: 12px; padding: 2px 10px;
+  font-weight: 900; font-size: 15px; white-space: nowrap; display: none;
+}
+.sd-panel.sd-clean .sd-done { display: block; animation: sd-popIn 0.25s ease-out; }
+.sd-panel.sd-clean { box-shadow: 0 6px 0 #45445A, 0 0 0 5px #5CE0B5; }
+
+/* the cleaning hand (an astronaut glove) */
+.sd-hand {
+  position: absolute; z-index: 2; width: 56px; height: 64px; pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+.sd-hand svg { display: block; filter: drop-shadow(2px 3px 0 rgba(43, 42, 58, 0.35)); }
+.sd-hand.sd-rubbing svg { animation: sd-rub 0.18s linear infinite alternate; }
+@keyframes sd-rub { from { transform: rotate(-12deg); } to { transform: rotate(12deg); } }
+.sd-finished .sd-hand { display: none; }
+.sd-finished .sd-field { cursor: default; }
+
+/* which panels are done */
+.sd-dots { display: flex; justify-content: center; gap: 8px; }
+.sd-dots span { border: 2px solid #2B2A3A; border-radius: 10px; padding: 2px 10px; font-weight: 900; font-size: 14px; background: #F4F2EE; color: #5E6C78; }
+.sd-dots .sd-dot-now { background: #FFE38A; color: #2B2A3A; }
+.sd-dots .sd-dot-done { background: #5CE0B5; color: #2B2A3A; }
+
+.sd-fact { margin: 0; font-size: 14px; font-weight: 700; color: #5E6C78; line-height: 1.4; }
+.sd-buttons { display: flex; justify-content: center; }
+.mm-page .sd-back { background: #5CE0B5; font-size: 18px; padding: 10px 24px; }
+.mm-page .sd-stop { font-size: 16px; }
+
+/* ===== the mission pop-up: "Oh no, dusty panels!" (first time in the yard) ===== */
+.sd-intro {
+  position: absolute; inset: 0; z-index: 25; padding: 12px; box-sizing: border-box;
+  background: rgba(30, 29, 41, 0.55); display: flex; align-items: center; justify-content: center;
+}
+.sd-intro[hidden] { display: none; }
+.sd-intro-card {
+  width: 440px; box-sizing: border-box; padding: 20px 26px; text-align: center;
+  background: #FFFFFF; color: #2B2A3A; border: 4px solid #2B2A3A; border-radius: 22px; box-shadow: 0 6px 0 #2B2A3A;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  font-family: 'Nunito', sans-serif; animation: sd-popIn 0.25s ease-out;
+}
+.sd-intro-pic { animation: sd-wobble 1.6s ease-in-out infinite; }
+@keyframes sd-wobble { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
+.sd-intro-card h2 { margin: 2px 0 0; font-size: 26px; font-weight: 900; }
+.sd-intro-card p { margin: 0; font-size: 17px; font-weight: 800; color: #5E6C78; line-height: 1.35; }
+.sd-intro-card p b { color: #D93A3A; }
+.mm-page .sd-intro-go { margin-top: 6px; background: #FFD84A; font-size: 19px; padding: 10px 26px; }
+.sd-intro-card .sd-intro-rover { color: #2B2A3A; background: #FFE38A; border: 2px solid #2B2A3A; border-radius: 12px; padding: 6px 10px; font-size: 15px; }
+
+/* ===== ROVER REPAIR ===== */
+/* "Needs repair!" sign above the broken rover: blinks */
+.sd-rover-broken { animation: sd-blink 0.9s ease-in-out infinite alternate; }
+@keyframes sd-blink { to { opacity: 0.35; } }
+/* the astronaut hammering away while repairing */
+.mm-scene .avatar.sd-repairing > svg { transform-origin: 17px 44px; animation: sd-hammer 0.32s ease-in-out infinite alternate; }
+@keyframes sd-hammer { from { transform: rotate(-6deg) translateY(0); } to { transform: rotate(6deg) translateY(-2px); } }
+/* the wrench in the hand, swinging, with little sparks */
+.sd-wrench { position: absolute; z-index: 6; width: 26px; height: 26px; pointer-events: none; }
+.sd-wrench[hidden] { display: none; }
+.sd-wrench svg { display: block; transform-origin: 20% 80%; animation: sd-swing 0.32s ease-in-out infinite alternate; }
+.sd-wrench.sd-flip svg { transform: scaleX(-1); animation-name: sd-swingFlip; }
+@keyframes sd-swing     { from { transform: rotate(-35deg); } to { transform: rotate(25deg); } }
+@keyframes sd-swingFlip { from { transform: scaleX(-1) rotate(-35deg); } to { transform: scaleX(-1) rotate(25deg); } }
+.sd-spark { position: absolute; left: 10px; top: 18px; width: 5px; height: 5px; border-radius: 50%; background: #FFD84A;
+            box-shadow: 0 0 4px 2px rgba(255, 216, 74, 0.8); animation: sd-sparkFly 0.5s linear infinite; }
+.sd-spark2 { animation-delay: 0.25s; left: 14px; }
+@keyframes sd-sparkFly { from { transform: translate(0, 0); opacity: 1; } to { transform: translate(-10px, 12px); opacity: 0; } }
