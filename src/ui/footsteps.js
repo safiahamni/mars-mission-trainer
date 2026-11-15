@@ -5,9 +5,9 @@
 //  for that class (on the base map, in the Command Center room, the shelter game, the solar panel yard,
 //  and inside the Science Lab / Life Support / Greenhouse) and plays the steps.
 //
-//   • OUTSIDE on the Mars roads: a soft, cozy step in sand (a short rounded "pff" + a little "thup")
+//   • OUTSIDE on the Mars roads: a soft, cozy step in sand (a short gentle "shff", no thump)
 //   • INSIDE a building: the same soft step, shorter and lighter
-//   • about 2 steps a second: calm, not rushed
+//   • about 3 steps a second: calm, not rushed
 //   • The sounds are made by the browser (Web Audio), no sound files.
 //   • Press M to switch the footsteps off / on (remembered in this browser).
 //
@@ -15,7 +15,7 @@
 // =====================================================================
 
 (function () {
-  const STEP_EVERY = 0.45;       // seconds between steps: one step per walk cycle of the avatar's legs (calm, not rushed)
+  const STEP_EVERY = 0.34;       // seconds between steps: about 3 a second (calm, not rushed)
   const VOLUME = 0.6;            // the steps play a lot: loud enough to hear, not too loud
   const KEY = 'mars-footsteps-muted';
 
@@ -47,48 +47,35 @@
   window.addEventListener('pointerdown', unlock, true);
 
   let foot = 0;
-  // one step on SOFT SAND, cozy-game style: a short, rounded "pff" (soft sand puffing under the boot)
-  // on a little low "thup". Short and gentle so it never gets tiring to hear. Indoors: the same, lighter.
+  // one step on SOFT SAND, cozy-game style: just a short, soft "shff" of sand under the boot
+  // (no thump). It fades in gently, so there is no click. Indoors: the same, lighter.
   function step(outside) {
     const c = ctx;
     if (!c || c.state !== 'running') return;
     const t = c.currentTime;
     foot = 1 - foot;
     const vary = 0.92 + Math.random() * 0.16;          // no two steps sound exactly the same
-    const pitch = foot ? 1 : 0.88;                      // left and right foot a little different
-    const len = (outside ? 0.13 : 0.09) * vary;
+    const pitch = foot ? 1 : 0.9;                       // left and right foot a little different
+    const len = (outside ? 0.14 : 0.1) * vary;
 
-    // the sand puff: soft noise, only the low-middle part (rounded, not scratchy)
     const src = c.createBufferSource();
     src.buffer = noise;
-    src.playbackRate.value = 0.7 + Math.random() * 0.2;
-    const lp = c.createBiquadFilter();
+    src.playbackRate.value = 0.8 + Math.random() * 0.2;
+    const band = c.createBiquadFilter();                // the soft middle of the sand sound
+    band.type = 'bandpass';
+    band.Q.value = 0.7;
+    const f0 = (outside ? 1500 : 2000) * vary * pitch;
+    band.frequency.setValueAtTime(f0, t);
+    band.frequency.exponentialRampToValueAtTime(f0 * 0.6, t + len);
+    const lp = c.createBiquadFilter();                  // no sharp, scratchy top
     lp.type = 'lowpass';
-    lp.Q.value = 1.2;
-    const top = (outside ? 1300 : 1800) * vary * pitch;
-    lp.frequency.setValueAtTime(top, t);
-    lp.frequency.exponentialRampToValueAtTime(top * 0.4, t + len);  // the puff closes as the sand settles
-    const hp = c.createBiquadFilter();                                // no rumble
-    hp.type = 'highpass';
-    hp.frequency.value = 180;
+    lp.frequency.value = 3000;
     const g = c.createGain();
     g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(VOLUME * (outside ? 1 : 0.65), t + 0.012);
+    g.gain.exponentialRampToValueAtTime(VOLUME * (outside ? 1 : 0.65), t + 0.025);   // gentle start
     g.gain.exponentialRampToValueAtTime(0.0001, t + len);
-    src.connect(lp).connect(hp).connect(g).connect(c.destination);
+    src.connect(band).connect(lp).connect(g).connect(c.destination);
     src.start(t, Math.random() * 0.3, len + 0.03);
-
-    // the little "thup" of the boot
-    const o = c.createOscillator();
-    o.type = 'triangle';
-    o.frequency.setValueAtTime((outside ? 150 : 190) * vary * pitch, t);
-    o.frequency.exponentialRampToValueAtTime(70, t + 0.07);
-    const og = c.createGain();
-    og.gain.setValueAtTime(0.0001, t);
-    og.gain.exponentialRampToValueAtTime(VOLUME * 0.45, t + 0.006);
-    og.gain.exponentialRampToValueAtTime(0.0001, t + 0.08);
-    o.connect(og).connect(c.destination);
-    o.start(t); o.stop(t + 0.1);
   }
 
   // ---- who is walking? ----
