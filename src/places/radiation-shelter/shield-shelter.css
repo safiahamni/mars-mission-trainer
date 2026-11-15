@@ -90,3 +90,24 @@
 
 @keyframes rs-popIn { from { transform: scale(0.85); opacity: 0; } }
 @keyframes rs-shelfGlow { to { box-shadow: inset 0 -6px 0 rgba(90, 45, 15, 0.35), 0 0 0 4px #3EC6F0, 0 0 14px 4px rgba(62, 198, 240, 0.7); } }
+
+/* ---- in the Command Center room's radiation shelter: 3 water tanks on the floor + a shelf for them ---- */
+.rs-cc-floor-tanks {                 /* the tanks wait here, left of the rug */
+  position: absolute; left: 44px; top: 182px;
+  display: flex; gap: 2px; pointer-events: none;
+}
+.rs-cc-tank { display: block; transition: opacity 0.3s, transform 0.3s; }
+.rs-cc-tank.rs-cc-gone { opacity: 0; transform: translateY(-10px); }
+.rs-cc-shelf {                       /* a wooden shelf against the right wall, 3 spots */
+  position: absolute; left: 262px; top: 214px; width: 50px; height: 122px;
+  box-sizing: border-box; padding: 3px 0;
+  display: flex; flex-direction: column; justify-content: space-between; align-items: center;
+  background: #b9773f;
+  background-image: repeating-linear-gradient(0deg, transparent 0 37px, #2B2A3A 37px 40px);
+  border: 3.5px solid #2B2A3A; border-radius: 8px;
+  box-shadow: inset 0 0 0 3px #d39a5f;
+  pointer-events: none;
+}
+.rs-cc-spot { display: block; height: 35px; }
+.rs-cc-spot svg { opacity: 0.22; filter: grayscale(1) brightness(0.6); transition: opacity 0.3s, filter 0.3s; }
+.rs-cc-spot.rs-cc-full svg { opacity: 1; filter: none; animation: rs-popIn 0.25s ease-out; }

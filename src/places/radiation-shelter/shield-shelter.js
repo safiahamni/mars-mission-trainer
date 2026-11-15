@@ -198,14 +198,37 @@ import { getGame } from '../../state/gameStore.js';
 
   $('rs-goOut').addEventListener('click', () => {
     shield.hidden = true;
-    resetRoom(); tellHud();
+    // the tanks stay on the shelf in the Command Center room (until the next storm or the next sol)
+    cx = CREW_START.x; cy = CREW_START.y; holding = null; walkTo = null; carried.hidden = true;
+    for (const k in roomKeys) roomKeys[k] = false;
+    tellHud();
     if (pausedBefore && document.querySelector('[data-b="shelter"]')) map.pause(true);   // back to the Command Center room
   });
 
   // ---- hooking into the map + side panel ----
+  // ---- the water tanks + shelf drawn in the Command Center room's radiation shelter ----
+  //   3 tanks wait on the floor; the ones the kid put on the shelves in the game stand on the room's shelf
+  const MINI_TANK = TANK.replace('width="44" height="56"', 'width="26" height="33"');
+  let shownTanks = -1, decorated = null;
+  function syncRoomShelter() {
+    const sh = document.querySelector('[data-b="shelter"]');
+    if (!sh) { decorated = null; return; }
+    if (decorated !== sh) {
+      sh.insertAdjacentHTML('beforeend', `
+        <div class="rs-cc-floor-tanks" aria-hidden="true">${('<span class="rs-cc-tank">' + MINI_TANK + '</span>').repeat(3)}</div>
+        <div class="rs-cc-shelf" aria-label="Water tank shelf">${('<span class="rs-cc-spot">' + MINI_TANK + '</span>').repeat(3)}</div>`);
+      decorated = sh; shownTanks = -1;
+    }
+    if (shownTanks === tanks) return;
+    shownTanks = tanks;
+    sh.querySelectorAll('.rs-cc-floor-tanks .rs-cc-tank').forEach((t, i) => t.classList.toggle('rs-cc-gone', i < tanks));
+    sh.querySelectorAll('.rs-cc-spot').forEach((t, i) => t.classList.toggle('rs-cc-full', i < tanks));
+  }
+
   // open when the astronaut walks into the Command Center room's radiation shelter during a storm
   let wasInShelter = false;
   (function watch() {
+    syncRoomShelter();
     const inShelter = !!getGame()?.inShelter && !!document.querySelector('[data-b="shelter"]');
     if (inShelter && !wasInShelter && storm() && !isOpen()) open();
     wasInShelter = inShelter;
