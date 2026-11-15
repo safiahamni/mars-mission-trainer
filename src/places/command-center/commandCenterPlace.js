@@ -122,5 +122,6 @@ onGameChange((g, events) => {
 });
 
 // The crew starts inside the Command Center, so the game opens in the room
+// (unless the start screen is showing: then the spaceship drops the crew on the road outside instead)
 update();
-if (map.isInside() === 'shelter') openRoom();
+if (map.isInside() === 'shelter' && !window.MartianoutsStart?.isOpen()) openRoom();

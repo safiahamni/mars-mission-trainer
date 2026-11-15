@@ -1,4 +1,4 @@
-import {missions, roverCosts} from './missions.js';
+import {missions, roverCosts, greenhouseRequirement} from './missions.js';
 
 export function createDemoController(initialPower = 80, {testMysteryRocks = false, testCosmicClaw = false, testSnapshotSafari = false, testLostLake = false, testEarth = false, sharedResources} = {}) {
   const completed = new Set();
@@ -42,6 +42,7 @@ export function createDemoController(initialPower = 80, {testMysteryRocks = fals
       if (id === 'snapshot-safari') {
         if (testSnapshotSafari) return 'Ready';
         if (!completed.has('cosmic-claw')) return 'Finish Cosmic Claw first';
+        if (sharedResources && greenhouseRequirement(id, resources().greenhouseProgress)) return 'Unlock Greenhouse beds';
         if (food < 50) return 'Harvest food first';
         return power >= minimum ? 'Ready' : 'Needs ' + minimum + ' Power';
       }
@@ -53,6 +54,7 @@ export function createDemoController(initialPower = 80, {testMysteryRocks = fals
       if (id === 'message-earth') {
         if (!testEarth && !missions.slice(0, 5).every(mission => completed.has(mission.id))) return 'Finish Chapters 1-5';
         if (power < minimum) return 'Needs ' + minimum + ' Power';
+        if (!testEarth && sharedResources && greenhouseRequirement(id, resources().greenhouseProgress)) return 'Harvest potatoes or millet';
         return testEarth || (oxygen >= 60 && food >= 40 && water >= 40) ? 'Ready' : 'Prepare base resources';
       }
       if (id !== 'rover-rescue') return 'In development';

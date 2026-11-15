@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="/src/map/mars-scenery.css">
   <link rel="stylesheet" href="/src/hud/hud.css">
   <link rel="stylesheet" href="/src/map/route-chooser.css">
+  <link rel="stylesheet" href="/src/ui/start-screen/start-screen.css">
   <!-- PLACES: each teammate adds their CSS here (take away the comment marks around your line) -->
   <!-- <link rel="stylesheet" href="/src/places/radiation-shelter/shelter.css"> -->
   <link rel="stylesheet" href="/src/places/radiation-shelter/solar-panel.css">
@@ -54,7 +55,7 @@
         <!-- ===== PLACES: each teammate draws their building inside their own group ===== -->
         <!-- Greenhouse: empty spot, straight left of the Command Center (its road ends at the right side of the spot) -->
         <g id="place-greenhouse" transform="translate(-50 260) scale(0.75) translate(-44 -36)">
-          <rect x="44" y="36" width="122" height="26" rx="7" fill="#2B2A3A"/><text x="105" y="54" font-size="14" text-anchor="middle" fill="#FFFFFF">Greenhouse</text>
+          <rect x="44" y="36" width="136" height="26" rx="7" fill="#2B2A3A"/><circle cx="59" cy="49" r="5" fill="#3EC6F0" stroke="#FFFFFF" stroke-width="1.5"/><text x="120" y="54" font-size="14" text-anchor="middle" fill="#FFFFFF">Greenhouse</text>
           <rect class="mm-spot" x="44" y="68" width="160" height="94" rx="14"/>
           <g id="gh-topdown">
             <defs><pattern id="gh-dots" width="6" height="6" patternUnits="userSpaceOnUse"><rect width="6" height="6" fill="#C65A30"/><circle cx="3" cy="3" r="1" fill="#963F2B"/></pattern></defs>
@@ -94,12 +95,12 @@
         </g>
         <!-- Science Lab: empty spot, top-right corner (the normal path ends at its bottom, the cliff route at its left side) -->
         <g id="place-lab" transform="translate(540 10) scale(0.75) translate(-476 -12)">
-          <rect x="476" y="12" width="118" height="26" rx="7" fill="#2B2A3A"/><text x="535" y="30" font-size="14" text-anchor="middle" fill="#FFFFFF">Science Lab</text>
+          <rect x="476" y="12" width="132" height="26" rx="7" fill="#2B2A3A"/><circle cx="491" cy="25" r="5" fill="#3EC6F0" stroke="#FFFFFF" stroke-width="1.5"/><text x="550" y="30" font-size="14" text-anchor="middle" fill="#FFFFFF">Science Lab</text>
           <rect class="mm-spot" x="476" y="44" width="160" height="94" rx="14"/>
         </g>
         <!-- Life Support: empty spot, bottom-right corner (its road ends at its left side) -->
         <g id="place-life" transform="translate(540 440) scale(0.75) translate(-476 -398)">
-          <rect x="476" y="398" width="124" height="26" rx="7" fill="#2B2A3A"/><text x="538" y="416" font-size="14" text-anchor="middle" fill="#FFFFFF">Life Support</text>
+          <rect x="476" y="398" width="138" height="26" rx="7" fill="#2B2A3A"/><circle cx="491" cy="411" r="5" fill="#3EC6F0" stroke="#FFFFFF" stroke-width="1.5"/><text x="553" y="416" font-size="14" text-anchor="middle" fill="#FFFFFF">Life Support</text>
           <rect class="mm-spot" x="476" y="430" width="160" height="94" rx="14"/>
         </g>
         <!-- Command Center (Member 3): this simple spot is a placeholder.

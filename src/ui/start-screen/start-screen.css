@@ -1,0 +1,150 @@
+/* =========================================================
+   MARTIANAUTS START SCREEN
+   A full-screen menu shown before the game. PLAY hides it.
+   ========================================================= */
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@700&family=Nunito:wght@800;900&display=swap');
+
+.st-screen {
+  position: fixed; inset: 0; z-index: 5000;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 100%, #5A2E3A, #0E0D1E 70%);
+  font-family: 'Nunito', sans-serif;
+  color: #2B2A3A;
+  transition: opacity .6s ease, transform .6s ease;
+}
+.st-screen.st-hide { opacity: 0; transform: scale(1.06); pointer-events: none; }
+.st-screen[hidden] { display: none; }
+
+/* background drawing: stars, Mars ground, base, astronaut */
+.st-bg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.st-star { animation: st-twinkle 3s ease-in-out infinite; }
+@keyframes st-twinkle { 0%,100% { opacity: 1; } 50% { opacity: .25; } }
+.st-astro { animation: st-bob 2.4s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 100%; }
+@keyframes st-bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-14px); } }
+.st-wave { animation: st-wave 1.2s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 90%; }
+@keyframes st-wave { 0%,100% { transform: rotate(-10deg); } 50% { transform: rotate(25deg); } }
+.st-light { animation: st-blink 1.4s steps(1) infinite; }
+@keyframes st-blink { 50% { opacity: .35; } }
+
+/* title + menu */
+.st-front {
+  position: absolute; left: 0; right: 0; top: 7vh;
+  display: flex; flex-direction: column; align-items: center; gap: 2.2vh;
+}
+.st-title {
+  font-family: 'Fredoka', 'Nunito', sans-serif; font-weight: 700;
+  font-size: clamp(56px, 9vw, 150px); line-height: 1; letter-spacing: .02em;
+  color: #FF8A3D;
+  -webkit-text-stroke: .11em #2B2A3A; paint-order: stroke fill;
+  text-shadow: 0 .09em 0 #2B2A3A, 0 0 .35em rgba(255,150,80,.45);
+  white-space: nowrap; user-select: none;
+}
+.st-title > span { display: inline-block; animation: st-hop 2.6s ease-in-out infinite; }
+.st-title > span:nth-child(odd)  { --r: 5deg;  --y: .04em; }
+.st-title > span:nth-child(even) { --r: -5deg; --y: -.06em; }
+@keyframes st-hop {
+  0%,100% { transform: translateY(var(--y)) rotate(var(--r)); }
+  50%     { transform: translateY(calc(var(--y) - .06em)) rotate(calc(var(--r) * -.4)); }
+}
+.st-title .st-helmet { width: .8em; height: .82em; vertical-align: -.06em; overflow: visible; }
+
+.st-tag {
+  background: #FFF6EC; border: 3px solid #2B2A3A; border-radius: 999px;
+  padding: 5px 20px; font-weight: 900; font-size: clamp(12px, 1.1vw, 18px); letter-spacing: .18em;
+}
+.st-menu { display: flex; gap: 18px; margin-top: 1vh; }
+.st-btn {
+  font-family: 'Nunito', sans-serif; font-weight: 900; letter-spacing: .1em;
+  font-size: clamp(18px, 1.7vw, 28px);
+  min-width: clamp(170px, 15vw, 260px); padding: .55em 1.2em;
+  color: #fff; background: #2B2A3A;
+  border: 5px solid #FFF6EC; border-radius: 18px;
+  box-shadow: 0 6px 0 #000; cursor: pointer;
+  transition: transform .12s, box-shadow .12s, filter .12s;
+}
+.st-btn:hover { transform: translateY(-3px) scale(1.04); filter: brightness(1.12); }
+.st-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #000; }
+.st-btn:focus-visible { outline: 4px solid #FFD84A; outline-offset: 3px; }
+.st-play { background: #E2673A; font-size: clamp(24px, 2.3vw, 38px); }
+
+/* ===== LANDING: the spaceship drops the astronaut at the Command Center ===== */
+.st-intro { position: fixed; inset: 0; z-index: 4900; overflow: hidden; cursor: pointer; transition: opacity .3s; }
+.st-intro.st-intro-out { opacity: 0; }
+.st-intro > div:not(.st-skip) { position: absolute; left: 0; top: 0; will-change: transform; }
+.st-ship svg { display: block; overflow: visible; filter: drop-shadow(0 6px 0 rgba(43,42,58,.35)); }
+.st-flame { animation: st-flicker .12s steps(2) infinite; transform-box: fill-box; transform-origin: 50% 0; }
+@keyframes st-flicker { 50% { transform: scaleY(.75); } }
+.st-ishadow { width: 120px; height: 34px; border-radius: 50%; background: rgba(43,42,58,.35); }
+.st-intro .st-beam {
+  width: 110px; transform-origin: 50% 0;
+  background: linear-gradient(to bottom, rgba(255,240,170,.9), rgba(255,216,74,.25));
+  clip-path: polygon(35% 0, 65% 0, 100% 100%, 0 100%);
+  border-radius: 0 0 50% 50% / 0 0 18px 18px;
+  animation: st-beamGlow .3s ease-in-out infinite alternate;
+}
+@keyframes st-beamGlow { to { filter: brightness(1.2); } }
+.st-drop svg { display: block; overflow: visible; }
+.st-intro .st-drop { transform-origin: 27px 101px; }   /* shrink toward the feet, so they land on the road */
+.st-puff { width: 80px; height: 80px; border-radius: 50%; border: 6px solid #FFF6EC; }
+.st-skip {
+  position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%);
+  background: rgba(43,42,58,.85); color: #FFF6EC; border-radius: 999px; padding: 6px 16px;
+  font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 14px; letter-spacing: .05em;
+}
+
+/* ===== TOUR: Welcome card + spotlight on each place ===== */
+.tt { position: fixed; inset: 0; z-index: 4950; font-family: 'Nunito', sans-serif; color: #2B2A3A; transition: opacity .3s; }
+.tt.tt-out { opacity: 0; }
+.tt-block { position: absolute; inset: 0; }                       /* clicks don't reach the map */
+.tt.tt-dark .tt-block { background: rgba(14,13,30,.68); }
+.tt-hole {
+  position: fixed; border-radius: 20px; pointer-events: none;
+  box-shadow: 0 0 0 9999px rgba(14,13,30,.68);
+  outline: 4px dashed #FFD84A; outline-offset: 4px;
+  transition: left .45s ease, top .45s ease, width .45s ease, height .45s ease;
+  animation: tt-glow 1.2s ease-in-out infinite alternate;
+}
+.tt-hole[hidden] { display: none; }
+@keyframes tt-glow { to { outline-color: #FFF6EC; } }
+.tt-card {
+  position: fixed; width: 380px; box-sizing: border-box;
+  background: #FFF6EC; border: 5px solid #2B2A3A; border-radius: 22px; box-shadow: 0 8px 0 #2B2A3A;
+  padding: 18px 22px 16px; transition: left .45s ease, top .45s ease;
+}
+.tt-card[hidden] { display: none; }
+.tt-card.tt-pop { animation: st-pop .3s ease-out; }
+.tt-step { font-weight: 900; font-size: 13px; letter-spacing: .14em; color: #E2673A; }
+.tt-head { display: flex; gap: 12px; align-items: center; margin: 6px 0 8px; }
+.tt-ico { width: 52px; height: 52px; flex: none; display: grid; place-items: center; font-size: 30px; background: #fff; border: 3px solid #2B2A3A; border-radius: 14px; }
+.tt-title { font-family: 'Fredoka', 'Nunito', sans-serif; font-weight: 700; font-size: 30px; line-height: 1.05; }
+.tt-text { font-weight: 800; font-size: 16px; line-height: 1.4; margin: 0 0 10px; }
+.tt-text b { color: #C2501F; }
+.tt-fact { background: #E8F7FF; border: 2px solid #2B2A3A; border-radius: 12px; padding: 7px 11px; font-weight: 800; font-size: 13.5px; line-height: 1.35; margin-bottom: 12px; }
+.tt-fact b { color: #1F6FA8; }
+.tt-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.tt-dots { display: flex; gap: 5px; }
+.tt-dots i { width: 9px; height: 9px; border-radius: 50%; background: #D9CFC2; display: block; transition: width .25s; }
+.tt-dots i.on { background: #E2673A; width: 22px; border-radius: 6px; }
+.tt-btns { display: flex; gap: 8px; }
+.tt-btn {
+  white-space: nowrap; font-family: 'Nunito', sans-serif; font-weight: 900; font-size: 16px; letter-spacing: .06em;
+  padding: 8px 16px; border: 3px solid #2B2A3A; border-radius: 14px; background: #fff; color: #2B2A3A;
+  box-shadow: 0 4px 0 #2B2A3A; cursor: pointer; transition: transform .1s;
+}
+.tt-btn:hover { transform: translateY(-2px); }
+.tt-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #2B2A3A; }
+.tt-btn:focus-visible { outline: 3px solid #3EC6F0; outline-offset: 2px; }
+.tt-next { background: #E2673A; color: #fff; }
+.tt-skip {
+  position: fixed; right: 24px; top: 20px; cursor: pointer;
+  font-family: 'Nunito', sans-serif; font-weight: 900; font-size: 14px; color: #FFF6EC;
+  background: rgba(43,42,58,.9); border: 2px solid #FFF6EC; border-radius: 999px; padding: 6px 14px;
+}
+.tt-skip[hidden] { display: none; }
+.tt-welcome { left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(560px, 92vw); text-align: center; padding: 22px 34px 22px; animation: tt-in .35s ease-out; }
+@keyframes tt-in { from { transform: translate(-50%, -50%) scale(.85); opacity: 0; } }
+.tt-astro { width: 96px; height: 140px; overflow: visible; }
+.tt-welcome .tt-title { font-size: 46px; color: #FF8A3D; -webkit-text-stroke: 6px #2B2A3A; paint-order: stroke fill; text-shadow: 0 5px 0 #2B2A3A; margin: 2px 0 12px; }
+.tt-welcome .tt-text { font-size: 18px; }
+.tt-welcome .tt-foot { justify-content: center; margin-top: 14px; }
+@keyframes st-pop { from { transform: scale(.85); opacity: 0; } }
