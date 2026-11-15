@@ -13,6 +13,7 @@ import './places/greenhouse/greenhouse.js';
 // (your CSS goes in index.html, in the <head>)
 // Command Center room: switchboard, Mission control, battery, wardrobe, storm shelter core (Member 1)
 import './places/command-center/commandCenterPlace.js';
+import './places/command-center/ccBuilding.js';
 // Radiation Shelter + Command Center (Member 3)
 // import './places/radiation-shelter/shelter.js';
 // import './places/radiation-shelter/shelter-game.js';

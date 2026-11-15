@@ -1,0 +1,24 @@
+/* COMMAND CENTER BUILDING on the base map (Member 1). Prefix: cc- */
+
+/* crew inside: green outline + "Crew safe" badge */
+#cc-building .cc-badge {
+  display: none;
+}
+#cc-building.cc-inside .cc-badge {
+  display: inline;
+}
+#cc-building.cc-inside .cc-wall {
+  stroke: #5CE0B5;
+  stroke-width: 6;
+}
+
+/* solar storm: the shelter core's water line turns red and pulses */
+#cc-building.cc-storm .cc-core-border {
+  stroke: #FF5A5A;
+  animation: cc-pulse 0.8s infinite alternate;
+}
+@keyframes cc-pulse {
+  to {
+    opacity: 0.35;
+  }
+}
