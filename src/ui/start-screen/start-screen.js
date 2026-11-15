@@ -1,5 +1,5 @@
 // =========================================================
-//  MARTIANOUTS START SCREEN
+//  MARTIANAUTS START SCREEN
 //  Shows a full-screen menu (PLAY) before the game, then the spaceship landing,
 //  then a short tour of the base (Welcome card + a spotlight on each place).
 //  The game waits (MarsMap.pause) until the player presses PLAY.
@@ -35,16 +35,20 @@
   <circle class="st-light" cx="-24" cy="-58" r="6" fill="${TRIM}" stroke="${INK}" stroke-width="3"/>`;
   }
 
-  // the little helmet that replaces the first "O" of the title
+  // the little astronaut head that is the second "A" of the title (MARTIAN-A-UTS):
+  // a round helmet inside a big orange A (the helmet is the A's crossbar, with a light at the tip)
+  const A_POLE = 'M6 58 L30 -18 L54 58';
   const HELMET = `<svg class="st-helmet" viewBox="0 0 60 62" aria-hidden="true">
+    <path d="${A_POLE}" fill="none" stroke="${INK}" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="${A_POLE}" fill="none" stroke="#FF8A3D" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
     <circle cx="30" cy="31" r="27" fill="#fff" stroke="${INK}" stroke-width="5"/>
     <rect x="11" y="17" width="38" height="28" rx="14" fill="${VISOR}" stroke="${INK}" stroke-width="4"/>
     <circle cx="24" cy="30" r="2.6" fill="${INK}"/><circle cx="36" cy="30" r="2.6" fill="${INK}"/>
     <path d="M25 36 Q30 40 35 36" stroke="${INK}" stroke-width="2.6" fill="none" stroke-linecap="round"/>
     <ellipse cx="18" cy="22" rx="4" ry="2.4" fill="#fff" opacity=".8"/>
-    <circle cx="30" cy="4.5" r="4" fill="${TRIM}" stroke="${INK}" stroke-width="2.5"/></svg>`;
+    <circle class="st-light" cx="30" cy="-24" r="5.5" fill="${TRIM}" stroke="${INK}" stroke-width="2.5"/></svg>`;
 
-  const title = [...'MARTIANOUTS'].map((ch, i) =>
+  const title = [...'MARTIANAUTS'].map((ch, i) =>
     `<span style="animation-delay:${(i * 0.12).toFixed(2)}s">${i === 7 ? HELMET : ch}</span>`).join('');
 
   // stars (fixed pattern so it looks the same every time)
@@ -79,7 +83,7 @@
   </svg>
 
   <div class="st-front">
-    <div class="st-title" role="heading" aria-level="1" aria-label="Martianouts">${title}</div>
+    <div class="st-title" role="heading" aria-level="1" aria-label="Martianauts">${title}</div>
     <div class="st-tag">ONE ASTRONAUT · ONE MARS BASE · SURVIVE</div>
     <div class="st-menu">
       <button type="button" class="st-btn st-play" id="st-play">PLAY</button>
