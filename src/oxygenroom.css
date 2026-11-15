@@ -1,0 +1,1589 @@
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background-color: #bd5734;
+  color: #ffffff;
+  min-height: 100vh;
+}
+
+#app {
+  width: 100%;
+}
+
+.air-screen {
+  width: 100%;
+  max-width: 1100px;
+  margin: auto;
+  padding: 8px;
+}
+
+/* =========================
+   TOP HEADER
+========================= */
+
+.top-bar {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.header-left,
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.room-name,
+.air-status,
+.status-chip {
+  background: #29283c;
+  border-radius: 9px;
+  padding: 9px 12px;
+  font-size: 11px;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.room-name {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.blue-dot,
+.oxygen-icon {
+  color: #35c7ed;
+}
+
+.back-link {
+  color: #ffe08b;
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.header-right {
+  gap: 8px;
+}
+
+.air-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.oxygen-icon {
+  font-size: 15px;
+}
+
+.air-info {
+  width: 155px;
+}
+
+.air-label {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+  font-size: 9px;
+}
+
+.air-track {
+  height: 9px;
+  background: #666779;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.air-fill {
+  width: 60%;
+  height: 100%;
+  background: #36c5e9;
+  border-radius: 10px;
+}
+
+.sol {
+  font-size: 10px;
+}
+
+.status-chip {
+  padding: 11px 12px;
+}
+
+.status-chip span {
+  color: #ffda43;
+  margin-right: 3px;
+}
+
+/* =========================
+   MAIN CONTENT LAYOUT
+========================= */
+
+.content {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(260px, 1fr);
+  gap: 16px;
+  align-items: center;
+}
+/* =========================
+   BLUE ROOM
+========================= */
+
+.room {
+  position: relative;
+  aspect-ratio: 1.29 / 1;
+  min-height: 400px;
+  overflow: hidden;
+
+  background-color: #70b6d8;
+
+  background-image:
+    linear-gradient(#ffffff27 1px, transparent 1px),
+    linear-gradient(90deg, #ffffff27 1px, transparent 1px);
+
+  background-size: 20px 20px;
+
+  border: 9px solid #d8dce3;
+  outline: 2px solid #30303a;
+  border-radius: 17px;
+
+  box-shadow: 0 4px 7px #733c2d;
+}
+
+/* =========================
+   BEIGE WALKWAYS
+========================= */
+
+
+
+/* =========================
+   BEIGE WALKWAYS
+========================= */
+
+
+.path {
+  position: absolute;
+  z-index: 1;
+
+  background-color: #f0c28f;
+  background-image: radial-gradient(
+    #c28c5b 1px,
+    transparent 1.5px
+  );
+
+  background-size: 8px 8px;
+  border: 1px solid #d6a477;
+  border-radius: 5px;
+}
+
+/* TOP HORIZONTAL PATH */
+.path.horizontal {
+  top: 37%;
+  left: 13.3%;
+  width: 74%;
+  height: 5%;
+}
+
+/* CENTRAL PATH TO EXIT */
+.path.vertical {
+  top: 37%;
+  left: 47.8%;
+  width: 4.2%;
+  height: 64.5%;
+}
+
+/* LEFT VERTICAL PATH */
+.path.left-vertical {
+  top: 37%;
+  left: 13.3%;
+  width: 4.2%;
+  height: 29%;
+}
+
+/* LEFT HORIZONTAL BRANCH */
+.path.left-branch {
+  top: 66%;
+  left: 13.3%;
+  width: 20.4%;
+  height: 5%;
+}
+
+/* RIGHT VERTICAL PATH */
+.path.right-vertical {
+  top: 37%;
+  left: 83.4%;
+  width: 4.2%;
+  height: 29%;
+}
+
+/* RIGHT HORIZONTAL BRANCH */
+.path.right-branch {
+  top: 66%;
+  left: 66%;
+  width: 21.4%;
+  height: 5%;
+}
+
+
+/* =========================
+   STATION LABELS
+========================= */
+
+.station {
+  position: absolute;
+  z-index: 3;
+  text-align: center;
+}
+
+.station-title {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+
+  background: #29283c;
+  color: white;
+
+  border-radius: 7px;
+  padding: 5px 8px;
+
+  font-size: 10px;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.number {
+  width: 20px;
+  height: 20px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  background: #ffd83f;
+  color: #29283c;
+
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+/* =========================
+   CO2 INTAKE MACHINE
+========================= */
+
+.co2 {
+  top: 13%;
+  left: 12%;
+  z-index: 3;
+}
+
+.co2-machine {
+  position: relative;
+  width: 85px;
+  height: 49px;
+  margin: 10px auto 0;
+
+  background: #b7b9c8;
+  border: 3px solid #414759;
+  border-radius: 7px;
+}
+
+.co2-slots {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 7px;
+}
+
+.co2-slots i {
+  display: block;
+  height: 3px;
+  background: #414759;
+  border-radius: 4px;
+}
+
+.co2-bottom {
+  position: absolute;
+  bottom: -13px;
+  left: 24px;
+  display: flex;
+  gap: 3px;
+}
+
+.co2-bottom span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ef6464;
+  border: 1px solid #414759;
+}
+
+/* =========================
+   MOXIE MACHINE
+========================= */
+
+.moxie {
+  top: 11%;
+  left: 40%;
+  z-index: 4;
+}
+
+.moxie-outline {
+  position: absolute;
+  top: 7px;
+  left: -20px;
+
+  width: 136px;
+  height: 120px;
+
+  border: 2px dashed #e3f7ff;
+  border-radius: 14px;
+
+  z-index: -1;
+}
+
+.moxie-machine {
+  position: relative;
+  width: 83px;
+  height: 66px;
+  margin: 13px auto 0;
+}
+
+.moxie-top {
+  position: absolute;
+  width: 34px;
+  height: 9px;
+  top: -9px;
+  left: 8px;
+
+  background: #a6b4c8;
+  border: 2px solid #414759;
+  border-radius: 4px;
+}
+
+.moxie-body {
+  position: relative;
+  width: 83px;
+  height: 66px;
+
+  background: #737d91;
+  border: 2px solid #414759;
+  border-radius: 11px;
+}
+
+.moxie-screen {
+  position: absolute;
+  top: 9px;
+  left: 7px;
+  width: 39px;
+  height: 21px;
+
+  background: #30384a;
+  color: #77859b;
+
+  border-radius: 4px;
+  font-size: 8px;
+  display: grid;
+  place-items: center;
+}
+
+.moxie-yellow {
+  position: absolute;
+  top: 22px;
+  left: 29px;
+  width: 21px;
+  height: 20px;
+
+  background: #ffd83f;
+  border: 2px solid #414759;
+  border-radius: 4px;
+}
+
+.moxie-buttons {
+  position: absolute;
+  bottom: 12px;
+  left: 9px;
+  display: flex;
+  gap: 4px;
+}
+
+.moxie-buttons i {
+  width: 8px;
+  height: 8px;
+  border: 2px solid #414759;
+  border-radius: 50%;
+}
+
+.moxie-side {
+  position: absolute;
+  right: 6px;
+  top: 11px;
+  width: 13px;
+  height: 42px;
+
+  background: #8993a5;
+  border: 2px solid #414759;
+  border-radius: 4px;
+}
+
+.locked-label {
+  color: #29283c;
+  font-size: 9px;
+  margin-top: 5px;
+}
+
+/* =========================
+   CONNECTING PIPES
+========================= */
+
+.pipe {
+  position: absolute;
+  z-index: 2;
+  height: 11px;
+
+  background: #aeb7c9;
+  border: 2px solid #414759;
+  border-radius: 4px;
+
+  top: 24%;
+}
+
+.pipe-left {
+  left: 26%;
+  width: 16.5%;
+}
+
+.pipe-right {
+  left: 56%;
+  width: 18%;
+}
+
+/* =========================
+   OXYGEN TANKS
+========================= */
+
+.tanks {
+  top: 12%;
+  right: 5%;
+  z-index: 3;
+}
+
+.tank-row {
+  display: flex;
+  gap: 9px;
+  margin: 12px auto 0;
+}
+
+.tank {
+  position: relative;
+  width: 35px;
+  height: 70px;
+
+  background: #e8f5ff;
+  border: 2px solid #505a71;
+  border-radius: 17px;
+
+  overflow: hidden;
+
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.tank span {
+  position: absolute;
+  top: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+
+  width: 10px;
+  height: 10px;
+
+  background: white;
+  border: 2px solid #505a71;
+  border-radius: 50%;
+}
+
+.tank::after {
+  content: "";
+  position: absolute;
+  bottom: 7px;
+  left: 3px;
+  right: 3px;
+
+  height: 25px;
+  background: #43c5e9;
+  border-radius: 10px;
+}
+
+.tank b {
+  position: relative;
+  z-index: 1;
+  color: #126d94;
+  font-size: 8px;
+  margin-bottom: 8px;
+}
+
+/* =========================
+   FACT LABELS
+========================= */
+
+.fact-label,
+.moxie-note {
+  position: absolute;
+  z-index: 3;
+
+  background: #fff6dc;
+  color: #30303a;
+
+  border: 1px solid #414759;
+  border-radius: 5px;
+
+  padding: 7px;
+  font-size: 9px;
+  line-height: 1.3;
+}
+
+.fact-label {
+  top: 40%;
+  left: 1%;
+}
+
+.moxie-note {
+  top: 40%;
+  right: 1%;
+}
+
+/* =========================
+   POWER CELL
+========================= */
+
+.power-station {
+  position: absolute;
+  z-index: 3;
+  bottom: 9%;
+  left: 8%;
+  text-align: center;
+}
+
+.battery {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+
+  width: 61px;
+  height: 43px;
+  margin: 10px auto;
+
+  background: #aeb7c9;
+  border: 3px solid #414759;
+  border-radius: 6px;
+}
+
+.battery::before {
+  content: "";
+  position: absolute;
+  width: 26px;
+  height: 6px;
+  top: -9px;
+  left: 14px;
+
+  background: #aeb7c9;
+  border: 2px solid #414759;
+  border-bottom: 0;
+}
+
+.battery-cell {
+  width: 12px;
+  height: 25px;
+  background: #ffdc4a;
+  border: 2px solid #414759;
+  border-radius: 3px;
+}
+
+.power-callout {
+  position: absolute;
+  top: 8px;
+  left: 70px;
+
+  background: #ffdb42;
+  color: #29283c;
+
+  padding: 5px;
+  border-radius: 4px;
+  white-space: nowrap;
+  font-size: 9px;
+  font-weight: bold;
+}
+
+/* =========================
+   SCIENCE LINK
+========================= */
+
+.science-station {
+  position: absolute;
+  z-index: 3;
+  bottom: 3%;
+  right: 8%;
+  text-align: center;
+}
+
+.science-card {
+  width: 105px;
+  padding: 12px 7px;
+
+  background: #29283c;
+  border: 3px solid #777d91;
+  border-radius: 8px;
+
+  margin-bottom: 12px;
+}
+
+.science-card strong {
+  font-size: 9px;
+}
+
+.stars {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 7px;
+
+  font-size: 23px;
+  color: #9ba3b1;
+}
+
+.stars .earned {
+  color: #ffdc43;
+}
+
+.station-footer {
+  display: inline-block;
+  background: #29283c;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 9px;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.science-station small {
+  display: block;
+  color: #29283c;
+  font-size: 9px;
+  margin-top: 5px;
+  white-space: nowrap;
+}
+
+/* =========================
+   EXIT
+========================= */
+
+.exit-button {
+  position: absolute;
+  z-index: 4;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+
+  background: #f2a04b;
+  border: 2px solid #414759;
+
+  padding: 7px 24px;
+  color: #29283c;
+  font-size: 10px;
+  font-weight: bold;
+
+  cursor: pointer;
+}
+
+/* =========================
+   RIGHT INSTRUCTION PANEL
+========================= */
+
+
+/* =========================
+   RIGHT INSTRUCTION PANEL
+========================= */
+
+.instructions {
+  background: #29283c;
+  border-radius: 15px;
+  padding: 24px 22px;
+  box-shadow: 0 4px 8px #733c2d;
+
+  width: 100%;
+  max-width: 360px;
+  height: fit-content;
+
+  justify-self: center;
+  align-self: center;
+}
+
+.instructions h2 {
+  font-size: 23px;
+  text-align: center;
+  margin-bottom: 22px;
+  color: white;
+}
+
+.instruction {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.instruction .number {
+  width: 25px;
+  height: 25px;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.instruction strong {
+  color: #ffdc43;
+  font-size: 16px;
+  display: block;
+  margin-bottom: 5px;
+}
+
+.instruction p {
+  color: #ffffff;
+  font-size: 13px;
+  line-height: 1.5;
+  margin-top: 0;
+}
+
+.panel-divider {
+  height: 1px;
+  background: #55546a;
+  margin: 18px 0;
+}
+
+.instructions h3 {
+  color: #75d7c4;
+  font-size: 17px;
+  margin-bottom: 10px;
+}
+
+.loop-text {
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+
+/* =========================
+   RESPONSIVE SCREEN
+========================= */
+
+@media (max-width: 750px) {
+  .top-bar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .header-right {
+    flex-wrap: wrap;
+  }
+
+  .content {
+    grid-template-columns: 1fr;
+  }
+
+  .room {
+    min-height: 400px;
+  }
+
+  .instructions {
+     max-width: 500px;
+     justify-self: center;
+     align-self: center;
+  }
+}
+
+/* Number beside station labels */
+.station-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  margin-top: 7px;
+}
+
+.station-label .number {
+  width: 20px;
+  height: 20px;
+  font-size: 11px;
+}
+
+
+/* =========================
+   CO2 INTERACTION PROMPT
+========================= */
+
+.interaction-prompt {
+  position: absolute;
+  z-index: 15;
+  left: 50%;
+  bottom: 15px;
+  transform: translateX(-50%);
+
+  background: #29283c;
+  color: white;
+  border: 2px solid #ffd83f;
+  border-radius: 8px;
+  padding: 10px 16px;
+
+  font-size: 12px;
+  font-weight: bold;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* =========================
+   CO2 MINI-GAME
+========================= */
+
+.co2-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  background: #17243dcc;
+  padding: 15px;
+}
+
+.co2-game-card {
+  width: min(440px, 95%);
+  background: #29283c;
+  border: 3px solid #ffd83f;
+  border-radius: 15px;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 5px 20px #0006;
+}
+
+.co2-game-card h2 {
+  color: #ffd83f;
+  font-size: 20px;
+  margin-bottom: 8px;
+}
+
+.co2-game-card > p {
+  font-size: 12px;
+  margin-bottom: 12px;
+}
+
+.co2-game-status {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  font-weight: bold;
+  color: #55d5f3;
+  margin-bottom: 12px;
+}
+
+.co2-game-area {
+  position: relative;
+  height: 210px;
+  background: #70b6d8;
+  border: 3px solid #d8dce3;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.co2-target {
+  position: absolute;
+  transform: translate(-50%, -50%);
+
+  width: 53px;
+  height: 53px;
+
+  border: 3px solid #414759;
+  border-radius: 50%;
+
+  background: #e8f5ff;
+  color: #087da8;
+
+  font-size: 13px;
+  font-weight: bold;
+
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+
+.co2-target:hover {
+  transform: translate(-50%, -50%) scale(1.12);
+}
+
+.co2-target.collected {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.co2-feedback {
+  margin-top: 14px;
+  font-weight: bold;
+  color: white;
+}
+
+.co2-close-button {
+  margin-top: 10px;
+  padding: 10px 22px;
+
+  border: none;
+  border-radius: 8px;
+
+  background: #ffd83f;
+  color: #29283c;
+
+  font-weight: bold;
+  cursor: pointer;
+}
+
+
+/* Science quiz */
+.quiz-section {
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px solid #dce3ed;
+}
+
+.quiz-section h3 {
+  margin-bottom: 10px;
+}
+
+.quiz-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.quiz-option {
+  padding: 12px;
+  border: 1px solid #b8c9dc;
+  border-radius: 10px;
+  background: #f4f8fc;
+  color: #24364b;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.quiz-option:hover:not(:disabled) {
+  background: #e1efff;
+  border-color: #4388d6;
+}
+
+.quiz-option:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.quiz-feedback {
+  margin-top: 15px;
+  font-weight: 600;
+}
+
+/* Smooth Air bar increase */
+.air-fill {
+  transition: width 1s ease-in-out;
+}
+
+/* Air bar glow animation */
+.air-fill.air-increase {
+  animation: airGlow 1s ease-in-out;
+}
+
+@keyframes airGlow {
+  0% {
+    filter: brightness(1);
+  }
+
+  50% {
+    filter: brightness(1.8);
+    box-shadow: 0 0 15px #4dff9a;
+  }
+
+  100% {
+    filter: brightness(1);
+    box-shadow: none;
+  }
+}
+
+/* Floating +20% Air message */
+.air-gain-effect {
+  position: absolute;
+  color: #4dff9a;
+  font-weight: bold;
+  font-size: 18px;
+  pointer-events: none;
+  animation: floatAir 1.5s ease-out forwards;
+  z-index: 100;
+}
+
+@keyframes floatAir {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(-35px);
+  }
+}
+
+/* Smooth Air bar animation */
+.air-fill {
+  transition: width 1s ease-in-out;
+}
+
+.air-fill.air-increase {
+  animation: airGlow 1s ease-in-out;
+}
+
+@keyframes airGlow {
+  0% {
+    filter: brightness(1);
+  }
+
+  50% {
+    filter: brightness(1.8);
+    box-shadow: 0 0 15px #4dff9a;
+  }
+
+  100% {
+    filter: brightness(1);
+    box-shadow: none;
+  }
+}
+
+/* Floating Air increase message */
+.air-gain-effect {
+  position: absolute;
+  z-index: 20;
+  left: 50%;
+  top: 15%;
+  transform: translateX(-50%);
+  color: #4dff9a;
+  font-size: 20px;
+  font-weight: bold;
+  pointer-events: none;
+  animation: floatAir 1.5s ease-out forwards;
+}
+
+@keyframes floatAir {
+  from {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translate(-50%, -35px);
+  }
+}
+
+/* =========================
+   TOP HUD – MORE VISIBLE
+========================= */
+
+.top-bar {
+  margin-bottom: 14px;
+}
+
+/* All HUD boxes: bigger text, lighter border so they stand out from the background */
+.room-name,
+.air-status,
+.status-chip {
+  background: #29283c;
+  border: 2px solid #75d7c4;          /* teal outline */
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 15px;                    /* was 11px */
+  color: #ffffff;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.35);
+}
+
+.header-right { gap: 12px; }
+
+.back-link {
+  font-size: 14px;                    /* was 10px */
+  font-weight: bold;
+  color: #ffe08b;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.back-link:hover { color: #ffffff; }
+
+/* Air meter */
+.oxygen-icon { font-size: 22px; }
+
+.air-info { width: 210px; }           /* was 155px */
+
+.air-label {
+  font-size: 14px;                    /* was 9px */
+  margin-bottom: 6px;
+}
+
+.air-percentage {
+  font-size: 16px;
+  color: #4dff9a;
+}
+
+.air-track {
+  height: 16px;                       /* was 9px */
+  background: #14131f;                /* darker so the fill pops */
+  border: 2px solid #8f8ea8;
+  border-radius: 12px;
+}
+
+.air-fill {
+  background: linear-gradient(90deg, #36c5e9, #4dff9a);
+}
+
+.sol { font-size: 15px; }
+
+/* Science + Power cells chips */
+.status-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.status-chip span {
+  font-size: 18px;                    /* bigger star / battery icon */
+  margin-right: 0;
+}
+
+/* Phones: let the boxes wrap and fill the width */
+@media (max-width: 750px) {
+  .header-right,
+  .header-left { width: 100%; }
+  .air-status  { width: 100%; }
+  .air-info    { flex: 1; width: auto; }
+}
+
+/* Header sits centered directly above the light-blue room */
+.room-column {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.room-column .top-bar {
+  flex-direction: column;      /* row 1: room name + back link, row 2: air + chips */
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 0;                   /* the gap above handles spacing */
+}
+
+.room-column .header-left,
+.room-column .header-right {
+  width: auto;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.room-column .air-info {
+  width: 170px;                /* slightly narrower so the row fits the room's width */
+}
+
+/* =====================================================
+   SOL PROGRESSION
+===================================================== */
+
+.sol {
+  color: #ffdc43;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.sol-action {
+  background: #3b3a50;
+  border: 1px solid #75d7c4;
+  border-radius: 12px;
+  padding: 14px;
+  margin-top: 15px;
+}
+
+.sol-action-copy strong {
+  display: block;
+  color: #ffdc43;
+  font-size: 15px;
+  margin-bottom: 6px;
+}
+
+.sol-action-copy p {
+  color: #ffffff;
+  font-size: 12px;
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+
+.end-sol-button {
+  width: 100%;
+  padding: 12px;
+  background: #75d7c4;
+  color: #29283c;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.end-sol-button:hover:not(:disabled) {
+  background: #a0f0df;
+  transform: translateY(-2px);
+}
+
+.end-sol-button:disabled {
+  background: #777889;
+  color: #d0d0d0;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* =====================================================
+   SCIENCE CORNER
+===================================================== */
+
+.science-corner {
+  margin-top: 22px;
+  padding: 24px;
+  background: #29283c;
+  border: 2px solid #75d7c4;
+  border-radius: 16px;
+  box-shadow: 0 4px 8px #733c2d;
+}
+
+.science-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 22px;
+}
+
+.science-kicker {
+  color: #75d7c4;
+  font-size: 11px;
+  font-weight: bold;
+  letter-spacing: 1.5px;
+}
+
+.science-heading h2 {
+  color: #ffffff;
+  font-size: 23px;
+  margin-top: 7px;
+  margin-bottom: 6px;
+}
+
+.science-heading p {
+  color: #d8d8e4;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.science-sol {
+  padding: 8px 12px;
+  background: #3b3a50;
+  color: #ffdc43;
+  border: 1px solid #777889;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+/* Three science cards */
+
+.science-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 15px;
+}
+
+.science-info-card {
+  padding: 18px;
+  background: #3b3a50;
+  border: 1px solid #55546a;
+  border-radius: 12px;
+  min-width: 0;
+}
+
+.science-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 7px 12px;
+  margin-bottom: 12px;
+  background: #29283c;
+  color: #75d7c4;
+  border-radius: 8px;
+  font-size: 17px;
+  font-weight: bold;
+}
+
+.science-info-card h3 {
+  color: #ffdc43;
+  font-size: 16px;
+  margin-bottom: 12px;
+}
+
+.science-info-card p,
+.science-info-card li {
+  color: #eeeeF5;
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.science-info-card ol {
+  padding-left: 18px;
+}
+
+.science-info-card li {
+  margin-bottom: 9px;
+}
+
+.science-info-card li strong {
+  color: #75d7c4;
+}
+
+/* NASA achievement card */
+
+.fact-label-small {
+  display: block;
+  color: #75d7c4;
+  font-size: 9px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+
+.nasa-number {
+  display: block;
+  color: #ffdc43;
+  font-size: 35px;
+  margin-bottom: 7px;
+}
+
+.nasa-sol-note {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #55546a;
+  color: #75d7c4 !important;
+  font-weight: bold;
+}
+
+/* Power flow */
+
+.power-flow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 18px;
+}
+
+.power-flow span {
+  padding: 7px;
+  background: #29283c;
+  border: 1px solid #75d7c4;
+  border-radius: 6px;
+  color: #ffffff;
+  font-size: 9px;
+  font-weight: bold;
+}
+
+.power-flow b {
+  color: #ffdc43;
+  font-size: 15px;
+}
+
+/* Sol fact strip */
+
+.sol-fact-strip {
+  margin-top: 17px;
+  padding: 15px;
+  background: #3b3a50;
+  border-left: 4px solid #ffdc43;
+  border-radius: 8px;
+}
+
+.sol-fact-strip strong {
+  display: block;
+  color: #ffdc43;
+  font-size: 14px;
+  margin-bottom: 7px;
+}
+
+.sol-fact-strip p {
+  color: #eeeeF5;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.sol-fact-strip span {
+  display: block;
+  margin-top: 8px;
+  color: #75d7c4;
+  font-size: 10px;
+}
+
+/* =====================================================
+   CO2 MINI-GAME
+===================================================== */
+
+.challenge-timer {
+  padding: 10px;
+  margin: 15px 0;
+  background: #3b3a50;
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 15px;
+}
+
+.challenge-timer strong {
+  color: #ffdc43;
+  font-size: 20px;
+}
+
+.molecule-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin: 20px auto;
+  max-width: 280px;
+}
+
+.molecule {
+  min-height: 55px;
+  background: #e8f5ff;
+  color: #087da8;
+  border: 3px solid #414759;
+  border-radius: 50%;
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.molecule:hover:not(:disabled) {
+  transform: scale(1.1);
+  background: #b9ecff;
+}
+
+.molecule.collected {
+  background: #75d7c4;
+  color: #29283c;
+  opacity: 0.5;
+  cursor: default;
+}
+
+.collection-count {
+  color: #ffffff;
+  font-size: 14px;
+}
+
+.collection-count strong {
+  color: #ffdc43;
+}
+
+/* =====================================================
+   MOXIE UNLOCKED STATE
+===================================================== */
+
+.moxie.unlocked .moxie-outline {
+  border-color: #75d7c4;
+  border-style: solid;
+  box-shadow: 0 0 12px #75d7c4;
+}
+
+.moxie.unlocked .locked-label {
+  color: #176b55;
+  font-weight: bold;
+}
+
+/* =====================================================
+   RESPONSIVE DESIGN
+===================================================== */
+
+@media (max-width: 750px) {
+  .science-corner {
+    padding: 16px;
+  }
+
+  .science-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .science-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .science-info-card {
+    padding: 16px;
+  }
+
+  .instructions {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 450px) {
+  .science-heading h2 {
+    font-size: 19px;
+  }
+
+  .science-sol {
+    white-space: normal;
+  }
+
+  .science-corner {
+    padding: 12px;
+  }
+
+  .mission-card {
+    padding: 18px;
+  }
+
+  .molecule-container {
+    gap: 8px;
+  }
+}
+
+.sol-action > p {
+  color: #ffffff;
+  font-size: 12px;
+  line-height: 1.5;
+  margin-bottom: 12px;
+}

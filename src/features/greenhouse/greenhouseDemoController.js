@@ -4,7 +4,7 @@ import { advanceGreenhouseSol, createGreenhouseState, harvestCrop, plantCrop, CR
 const cap = (n) => Math.max(0, Math.min(100, n));
 const fail = (message, code = "invalid-action") => ({ ok: false, code, message });
 
-export function createGreenhouseDemoController() {
+export function createGreenhouseDemoController({ readResources, chargeSupplies } = {}) {
   let state = {
     sol: 1,
     resources: { water: 67, power: 64, food: 30 },
@@ -23,15 +23,17 @@ export function createGreenhouseDemoController() {
   };
   const listeners = new Set();
 
-  const snapshot = () => ({ ...state, resources: { ...state.resources }, climate: { ...state.climate }, greenhouse: { ...state.greenhouse, plots: Object.fromEntries(Object.entries(state.greenhouse.plots).map(([id, plot]) => [id, { ...plot }])) } });
+  const snapshot = () => ({ ...state, resources: { ...state.resources, ...readResources?.(), food: state.resources.food }, climate: { ...state.climate }, greenhouse: { ...state.greenhouse, plots: Object.fromEntries(Object.entries(state.greenhouse.plots).map(([id, plot]) => [id, { ...plot }])) } });
   const notify = () => listeners.forEach((listener) => listener(snapshot()));
   const charge = ({ water = 0, power = 0, nutrients = 0 } = {}) => {
     if (state.resources.water < water || state.resources.power < power || state.nutrients < nutrients) return false;
+    if (chargeSupplies && !chargeSupplies({ water, power })) return false;
     state = { ...state, resources: { ...state.resources, water: state.resources.water - water, power: state.resources.power - power }, nutrients: state.nutrients - nutrients, waterUsed: state.waterUsed + water, powerUsed: state.powerUsed + power };
     return true;
   };
 
   function dispatch(action) {
+    if (readResources) state = { ...state, resources: readResources() };
     if (action.type === "set-climate") {
       const climate = { ...state.climate, ...action.climate };
       if (!Number.isFinite(climate.temperature) || !Number.isFinite(climate.light)) return fail("Adjust both greenhouse controls first.");
@@ -151,7 +153,9 @@ export function createGreenhouseDemoController() {
     return fail("That greenhouse action is not available.");
   }
 
-  return { getSnapshot: snapshot, dispatch, subscribe(listener) { listeners.add(listener); return () => listeners.delete(listener); } };
+  return { getSnapshot: snapshot, dispatch, syncFood(food) {
+    state = { ...state, resources: { ...state.resources, food } };
+  }, subscribe(listener) { listeners.add(listener); return () => listeners.delete(listener); } };
 }
 
 export { CROP_CATALOG };

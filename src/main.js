@@ -22,7 +22,7 @@ import './places/radiation-shelter/solar-panel.js';   // solar panels yard + rov
 import './places/greenhouse/greenhouse.js';
 
 // Science Lab
-// import './places/science-lab/lab.js';
+import './places/science-lab/lab.js';
 
 // Life Support
-// import './places/life-support/life.js';
+import './places/life-support/life.js';
