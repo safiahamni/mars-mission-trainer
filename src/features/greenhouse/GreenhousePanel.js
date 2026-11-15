@@ -1,5 +1,6 @@
 import { CROP_CATALOG } from "./food.js";
 import { ghIcon, watchIcons } from "./ghIcons.js";
+import { sfx } from "./gh-sfx.js";
 import { PATH, drawPath, moveOnPath } from "./path.js";
 // The player avatar is the team's shared one (src/map/avatar.js puts createAvatar on window).
 const createAvatar = (container) => {
@@ -39,6 +40,9 @@ function pickCompostItems(n = 5) {
   const rest = shuffle(COMPOST_POOL.filter((x) => !picked.includes(x)));
   return shuffle([...picked, ...rest.slice(0, n - 3)]);
 }
+const SPK = '<svg class="gi" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z"/>';
+const SPK_ON = SPK + '<path d="M16 9a5 5 0 0 1 0 6"/><path d="M19.364 18.364a9 9 0 0 0 0-12.728"/></svg>';
+const SPK_OFF = SPK + '<line x1="22" x2="16" y1="9" y2="15"/><line x1="16" x2="22" y1="9" y2="15"/></svg>';
 const WIRE_COLORS = ["red", "blue", "yellow", "purple"];
 const WIRE_SOCKETS = ["purple", "yellow", "blue", "red"];
 
@@ -61,6 +65,8 @@ export function mountGreenhousePanel(root, controller, { onExit, dressAvatar } =
   let toastErrForce = false;
   let toastTimer = null;
   let player = { ...PATH.start };
+  let sfxPrev = null;             // last outage / radiation state, so sounds only play when something changes
+  let flash = null;               // flashlight position inside the dark wiring panel (px), null = centre
   let avatar = null;
   let movementFrame = 0;
   let previousFrameTime = 0;
@@ -193,7 +199,7 @@ export function mountGreenhousePanel(root, controller, { onExit, dressAvatar } =
     if (t.axis === "light") cg.light = clamp(cg.light + t.d, 0, 100);
     else if (t.axis === "temp") cg.temp = clamp(cg.temp + t.d, 10, 34);
     else { cg.light = clamp(cg.light - 14, 0, 100); cg.temp = clamp(cg.temp + (Math.random() < 0.5 ? 2.5 : -2.5), 10, 34); cg.msg = "Dust storm! The gauges got knocked around."; }
-    cg.caught++;
+    cg.caught++; sfx.catchOrb();
     it.node.classList.add("pop"); it.dead = true;
     setTimeout(() => it.node.remove(), 220);
   }
@@ -331,7 +337,7 @@ export function mountGreenhousePanel(root, controller, { onExit, dressAvatar } =
     const paths=WIRE_COLORS.map((c,i)=>{if(!wireConnected.has(c))return"";const j=wireSockets.indexOf(c);return `<path class="eb-wire ${c}" d="M0 ${rowY(i)} C50 ${rowY(i)} 50 ${rowY(j)} 100 ${rowY(j)}"/>`;}).join("");
     const plugs=WIRE_COLORS.map(c=>`<button class="eb-end ${c} ${wirePicked===c?"picked":""} ${wireConnected.has(c)?"done":""}" data-action="wire-pick" data-color="${c}" aria-label="${c} plug"><i></i><span>${c.toUpperCase()}</span></button>`).join("");
     const sockets=wireSockets.map(c=>`<button class="eb-end right ${c} ${wireConnected.has(c)?"done":""}" data-action="wire-socket" data-color="${c}" aria-label="${c} socket"><span>${c.toUpperCase()}</span><i></i></button>`).join("");
-    return modalShell("Fix the electricity box", "The power is out! Connect each plug to the socket of the same color before time runs out.", `<div class="eb-timer"><span>⚡ POWER OUT</span><i><em data-timer-fill style="width:${taskTotal?taskTimer/taskTotal*100:100}%"></em></i><b data-timer-readout>${taskTimer}</b></div><div class="eb-box ${wireMiss?"miss":""}"><div class="eb-head"><span>⚡ MAIN POWER PANEL</span><i class="eb-lamp"></i></div><div class="eb-panel"><div class="eb-col">${plugs}</div><svg class="eb-wires" viewBox="0 0 100 212" preserveAspectRatio="none" aria-hidden="true">${paths}</svg><div class="eb-col">${sockets}</div></div></div><div class="gm-wire-status">${wireConnected.size}/4 WIRES CONNECTED · <span>${wirePicked?"Now tap the socket with the same color":"Tap a plug, then its matching socket"}</span></div>${note?`<div class="eb-note">${esc(note)}</div>`:""}<div class="eb-risk">If time runs out, the power stays off and your plants stop growing.</div>`);
+    return modalShell("Fix the electricity box", "It is pitch dark in here! Move your flashlight (mouse or finger) over the panel to find the plugs and sockets, then drag each plug to the socket of the same color before time runs out.", `<div class="eb-timer"><span>⚡ POWER OUT</span><i><em data-timer-fill style="width:${taskTotal?taskTimer/taskTotal*100:100}%"></em></i><b data-timer-readout>${taskTimer}</b></div><div class="eb-box ${wireMiss?"miss":""}"${flash?` style="--fx:${flash.x}px;--fy:${flash.y}px"`:""}><div class="eb-dark" aria-hidden="true"></div><div class="eb-head"><span>⚡ MAIN POWER PANEL</span><i class="eb-lamp"></i></div><div class="eb-panel"><div class="eb-col">${plugs}</div><svg class="eb-wires" viewBox="0 0 100 212" preserveAspectRatio="none" aria-hidden="true">${paths}</svg><div class="eb-col">${sockets}</div></div></div><div class="gm-wire-status">${wireConnected.size}/4 WIRES CONNECTED · <span>${wirePicked?"Drop it on the socket with the same color":"Drag a plug to its matching socket"}</span></div>${note?`<div class="eb-note">${esc(note)}</div>`:""}<div class="eb-risk">If time runs out, the power stays off and your plants stop growing.</div>`);
   }
   function shieldTargets() {
     const ids = Object.keys(snapshot.greenhouse.plots);
@@ -404,6 +410,13 @@ export function mountGreenhousePanel(root, controller, { onExit, dressAvatar } =
     const s=snapshot;
     const plots=Object.keys(s.greenhouse.plots);
     const outage=s.powerOutage;
+    if(sfxPrev){
+      if(outage&&!sfxPrev.outage)sfx.outage();
+      else if(!outage&&sfxPrev.outage)sfx.powerOn();
+      const rl=s.radiationLevel||0;
+      if(rl>sfxPrev.rad&&s.radiationAlert)sfx.alarm(rl);
+    }
+    sfxPrev={outage:!!outage,rad:s.radiationLevel||0};
     const radiation=s.radiationAlert;                    // shields still need aligning
     const radiationOn=s.radiationOn??s.radiationAlert;
     const radLevel=s.radiationLevel||(radiationOn?2:0);   // 1 = caution (yellow) · 2 = danger (red), same as the base map   // radiation warning is on outside (keeps blinking after the shields are up)
@@ -415,7 +428,7 @@ export function mountGreenhousePanel(root, controller, { onExit, dressAvatar } =
     const basicDone=[tempOkay,s.soilPerchlorate<30,compostDoneSol===s.sol].filter(Boolean).length;
     const panelsCovered=plots.every(id=>{const p=panels[id]||{};return p.rotation===90&&p.position>=30&&p.position<=50;});
     const soilFill=soilStep===2?soilProgress:soilStep>2?100:0;
-    root.innerHTML=`<div class="gm-game ${outage?"has-outage":""} ${outageFlicker?"outage-flicker":""} ${radiationOn?"has-radiation":""} ${radLevel===1?"rad-caution":""}" style="--fx-delay:-${Math.max(0,fxElapsed)}ms">
+    root.innerHTML=`<div class="gm-game ${modal==="wiring"?"wiring-open":""} ${outage?"has-outage":""} ${outageFlicker?"outage-flicker":""} ${radiationOn?"has-radiation":""} ${radLevel===1?"rad-caution":""}" style="--fx-delay:-${Math.max(0,fxElapsed)}ms">
       <header class="gm-title-tab">${ghIcon("leaf",26)}<b>Greenhouse · Food</b></header>
       ${outage?'<div class="gm-event-banner power">⚠ POWER OUTAGE · FIX THE WIRING TO RESTORE LIGHTS + PUMPS</div>':""}${radiationOn?(radiation?`<div class="gm-event-banner radiation">${radLevel===1?"RADIATION RISING · ALIGN THE SHIELDS TO PROTECT THE BEDS":"RADIATION DANGER · ALIGN THE SHIELDS OR YOUR CROPS GET HURT"}</div>`:`<div class="gm-event-banner radiation shielded">🛡 SHIELDS ACTIVE · RADIATION IS STILL ${radLevel===1?"RISING":"HIGH"} OUTSIDE</div>`):""}
       <div class="gm-layout"><main class="gm-map-wrap"><div class="gm-map-label"><b>GREENHOUSE MODULE</b><span>WASD / arrows to walk · E to interact · tap stations</span></div><div class="gm-map" tabindex="0" aria-label="Top-down playable greenhouse">
@@ -428,7 +441,7 @@ export function mountGreenhousePanel(root, controller, { onExit, dressAvatar } =
         ${wiringStation({outage})}
         <div class="gm-exit-door"></div>
       </div></main>
-      <aside class="gm-tasks"><div class="gm-task-head"><span>${ghIcon("clipboard-check")}</span><div><b>TASK CHECKLIST</b><small>${basicDone} of 3 basic tasks done</small></div></div>
+      <aside class="gm-tasks"><div class="gm-task-head"><span>${ghIcon("clipboard-check")}</span><div><b>TASK CHECKLIST</b><small>${basicDone} of 3 basic tasks done</small></div><button class="gm-sound" data-action="sound-toggle" aria-label="${sfx.muted?"Turn sound on":"Turn sound off"}" title="${sfx.muted?"Sound off":"Sound on"}">${sfx.muted?SPK_OFF:SPK_ON}</button></div>
         <div class="gm-task-group"><h3>BASIC TASKS</h3>
           ${taskItem("climate","Set the climate",tempOkay?"Temperature and light are in the green":"Play the climate game to tune the habitat",tempOkay?"done":"todo")}
           ${taskItem("soil","Treat the soil",s.soilPerchlorate<30?"Perchlorate is low. Potato + millet unlocked":(soilStep===3?"✔ Incubation done! Go test the soil":(soilWaitTimer?`⏳ Incubating · <span data-ck-soil-time>${fmtTime(soilRemaining)}</span> left`:`Perchlorate ${s.soilPerchlorate}. Get it below 30`)),s.soilPerchlorate<30?"done":(soilStep===3?"urgent":"todo"))}
@@ -450,6 +463,7 @@ export function mountGreenhousePanel(root, controller, { onExit, dressAvatar } =
     avatar=createAvatar(scene);
     dressAvatar?.(avatar);   // same outfit / shirt colour as on the base map
     placeAvatar();
+    if(wireDrag?.moved)paintDrag();
   }
 
   function placeAvatar(){
@@ -472,10 +486,11 @@ export function mountGreenhousePanel(root, controller, { onExit, dressAvatar } =
   }
   function finishCompost() {
     const win=compostCorrect/compostItems.length>=0.8;
-    const r=doAction({type:win?"compost-success":"compost-fail"});
+    const r=doAction({type:win?"compost-success":"compost-fail"});win?sfx.success():sfx.fail();
     note=r.message;compostWin=win;if(win)compostDoneSol=snapshot.sol;compostStarted=false;compostIndex=0;compostCorrect=0;compostItems=pickCompostItems();modal="compostfacts";render();
   }
   function openStation(id) {
+    sfx.open();
     if (id === "soil" && !snapshot.soilLabUnlocked) {
       note = "Earn two Science Stars to unlock the Soil Lab."; render(); return;
     }
@@ -559,38 +574,44 @@ export function mountGreenhousePanel(root, controller, { onExit, dressAvatar } =
     root.querySelector("[data-sl-jar]")?.classList.remove("hot");
     if (!drop) return;
     if (!slOverJar(event.clientX, event.clientY)) { note = kind === "scoop" ? "Drop the scoop over the treatment chamber to pour in the regolith." : "Drop the bottle over the treatment chamber to add the microbes."; render(); return; }
-    soilPour = true;
-    if (kind === "scoop") { soilScoops = Math.min(3, soilScoops + 1); note = soilScoops >= 3 ? "Three scoops of regolith are in the chamber. Now add the microbe mix." : `Scoop ${soilScoops} of 3 poured in.`; if (soilScoops >= 3) soilStep = 1; }
-    else { soilDoses = Math.min(3, soilDoses + 1); note = soilDoses >= 3 ? "Microbes added. Start the 30-minute incubation." : `Microbe dose ${soilDoses} of 3 added.`; if (soilDoses >= 3) soilStep = 2; }
+    soilPour = true; sfx.pour();
+    if (kind === "scoop") { soilScoops = Math.min(3, soilScoops + 1); note = soilScoops >= 3 ? "Three scoops of regolith are in the chamber. Now add the microbe mix." : `Scoop ${soilScoops} of 3 poured in.`; if (soilScoops >= 3) { soilStep = 1; sfx.good(); } }
+    else { soilDoses = Math.min(3, soilDoses + 1); note = soilDoses >= 3 ? "Microbes added. Start the 30-minute incubation." : `Microbe dose ${soilDoses} of 3 added.`; if (soilDoses >= 3) { soilStep = 2; sfx.good(); } }
     render();
   }
   function onSoilPointerUp(event) { endSoilDrag(event, true); }
   function onSoilPointerCancel(event) { endSoilDrag(event, false); }
   function onClick(event) {
+    if(Date.now()<wireClickBlock)return;
     const el=event.target.closest("[data-action]");if(!el)return;
     const a=el.dataset.action;
+    sfx.unlock();
+    if(a==="sound-toggle"){sfx.toggle();render();return;}
+    if(!["sort","wire-socket","shield-turn","sl-test","plant-choice","harvest","soil-test","climate-hold","close","soil-close","facts-close","shield-close"].includes(a))sfx.click();
+    if(a==="close"||a==="soil-close"||a==="facts-close"||a==="shield-close")sfx.close();
     if(a==="shield-close"){clearInterval(taskTimerId);taskTimerId=null;modal="";render();return;}
     if(a==="shield-turn"){
       if(shieldStage!==0)return;
+      sfx.turn();
       const id=el.dataset.plot;shieldFacing[id]=((shieldFacing[id]??0)+1)%4;shieldMsg="";
       const targets=shieldTargets();
       if(targets.every((pid)=>shieldFacing[pid]===shieldDir)){
-        shieldStage=3;
+        shieldStage=3;sfx.shieldUp();
         setTimeout(()=>{if(modal==="shield"&&shieldStage===3){clearInterval(taskTimerId);taskTimerId=null;const r=doAction({type:"shield-lock",covered:true});shieldDoneSol=snapshot.sol;note=r.message;shieldStage=4;render();}},900);
       }
       render();return;
     }
     if(a==="sl-toggle"){
       if(soilWaitTimer){clearInterval(soilWaitTimer);soilWaitTimer=null;note="Incubation paused.";render();return;}
-      runSoilTimer();
+      runSoilTimer();sfx.start();
       note="Incubation running. You can do other tasks while you wait.";render();return;
     }
-    if(a==="sl-test"){
+    if(a==="sl-test"){sfx.beep();
       soilTests[el.dataset.test]=62+Math.floor(Math.random()*34);
       if(Object.keys(soilTests).length===3){
         const before=snapshot.soilPerchlorate;const res=doAction({type:"soil-treat"});
-        if(!res.ok){note=res.message;soilTests={};render();return;}
-        soilResult={...soilTests,before,after:snapshot.soilPerchlorate};soilStep=4;soilProgress=100;note=res.message;toastForce=true;
+        if(!res.ok){sfx.buzz();note=res.message;soilTests={};render();return;}
+        sfx.success();soilResult={...soilTests,before,after:snapshot.soilPerchlorate};soilStep=4;soilProgress=100;note=res.message;toastForce=true;
       }
       render();return;
     }
@@ -603,8 +624,8 @@ export function mountGreenhousePanel(root, controller, { onExit, dressAvatar } =
     if(a==="facts-close"){modal="";render();return;}
     if(a==="locked-bed"){modal="locked";render();return;}
     if(a==="plant"){plantBed=el.dataset.plot;modal="plant";render();return;}
-    if(a==="plant-choice"){const r=doAction({type:"plant",plotId:plantBed,cropId:el.dataset.crop});note=r.message;modal="";render();return;}
-    if(a==="harvest"){const r=doAction({type:"harvest",plotId:el.dataset.plot});note=r.message;render();return;}
+    if(a==="plant-choice"){const r=doAction({type:"plant",plotId:plantBed,cropId:el.dataset.crop});r.ok===false?sfx.buzz():sfx.plant();note=r.message;modal="";render();return;}
+    if(a==="harvest"){const r=doAction({type:"harvest",plotId:el.dataset.plot});r.ok===false?sfx.buzz():sfx.harvest();note=r.message;render();return;}
     if(a==="inspect-bed"){const p=snapshot.greenhouse.plots[el.dataset.plot];const c=CROP_CATALOG[p.cropId];note=`${c.name} is ready on Sol ${snapshot.sol+c.growthSols-p.growthSols}. Sleep in the Command Center to grow it.`;render();return;}
     if(a==="climate-start"){beginClimatePlay();return;}
     if(a==="climate-hold"){
@@ -616,11 +637,11 @@ export function mountGreenhousePanel(root, controller, { onExit, dressAvatar } =
     if(a==="soil-scoop"){if(soilStep!==0){const r=doAction({type:"soil-fail"});note=`Wrong step. ${r.message}`;soilStep=0;soilProgress=0;clearInterval(soilWaitTimer);soilWaitTimer=null;}else{soilStep=1;note="Sample in the tray. Add the microbe mix next.";}render();return;}
     if(a==="soil-microbes"){if(soilStep!==1){const r=doAction({type:"soil-fail"});note=`Wrong step. ${r.message}`;soilStep=0;soilProgress=0;clearInterval(soilWaitTimer);soilWaitTimer=null;}else{soilStep=2;note="Microbes added. Start the treatment wait.";}render();return;}
     if(a==="soil-wait"){if(soilStep!==2){const r=doAction({type:"soil-fail"});note=`Wrong step. ${r.message}`;soilStep=0;render();return;}if(!soilWaitTimer){soilProgress=0;const started=Date.now();soilWaitTimer=setInterval(()=>{soilProgress=Math.min(100,(Date.now()-started)/50);if(soilProgress>=100){clearInterval(soilWaitTimer);soilWaitTimer=null;soilStep=3;note="Treatment finished. Run the soil test!";}if(modal==="soil")render();},200);note="Microbes are treating the sample. You can close this and run another task.";}render();return;}
-    if(a==="soil-test"){if(soilStep!==3){const r=doAction({type:"soil-fail"});note=`Test too early! ${r.message}`;soilStep=0;soilProgress=0;clearInterval(soilWaitTimer);soilWaitTimer=null;}else{const r=doAction({type:"soil-treat"});note=r.message;soilStep=0;soilProgress=0;clearInterval(soilWaitTimer);soilWaitTimer=null;}render();return;}
-    if(a==="sort"){if(!compostStarted)return;const item=compostItems[compostIndex];if(el.dataset.bin===item.bin)compostCorrect++;compostIndex++;if(compostIndex>=compostItems.length){clearInterval(taskTimerId);taskTimerId=null;modal="";finishCompost();}else render();return;}
+    if(a==="soil-test"){if(soilStep!==3){const r=doAction({type:"soil-fail"});note=`Test too early! ${r.message}`;soilStep=0;soilProgress=0;clearInterval(soilWaitTimer);soilWaitTimer=null;}else{const r=doAction({type:"soil-treat"});r.ok===false?sfx.buzz():sfx.success();note=r.message;soilStep=0;soilProgress=0;clearInterval(soilWaitTimer);soilWaitTimer=null;}render();return;}
+    if(a==="sort"){if(!compostStarted)return;const item=compostItems[compostIndex];if(el.dataset.bin===item.bin){compostCorrect++;sfx.good();}else sfx.bad();compostIndex++;if(compostIndex>=compostItems.length){clearInterval(taskTimerId);taskTimerId=null;modal="";finishCompost();}else render();return;}
     if(a==="drag-item"){return;}
     if(a==="wire-pick"){if(wireConnected.has(el.dataset.color))return;wirePicked=el.dataset.color;wireMiss=false;render();return;}
-    if(a==="wire-socket"){if(wireConnected.has(el.dataset.color))return;if(!wirePicked){note="Tap a colored plug first, then the socket with the same color.";render();return;}if(wirePicked===el.dataset.color){wireConnected.add(wirePicked);wireMiss=false;note=`${wireConnected.size} of 4 wires connected.`;if(wireConnected.size===4){clearInterval(taskTimerId);taskTimerId=null;const r=doAction({type:"repair-power"});wiringFixedSol=snapshot.sol;modal="";wireConnected.clear();note=r.message;}}else{wireMiss=true;taskTimer=Math.max(0,taskTimer-2);note="Colors do not match. Time −2 seconds.";}wirePicked="";render();return;}
+    if(a==="wire-socket"){connectWire(el.dataset.color);return;}
   }
 
   function onInput(event){
@@ -660,6 +681,77 @@ export function mountGreenhousePanel(root, controller, { onExit, dressAvatar } =
 
   root.addEventListener("click",onClick);
   root.addEventListener("pointerdown",onSoilPointerDown);
+  function connectWire(color){
+    if(wireConnected.has(color))return;if(!wirePicked){note="Tap a colored plug first, then the socket with the same color.";render();return;}if(wirePicked===color){wireConnected.add(wirePicked);wireMiss=false;sfx.connect();note=`${wireConnected.size} of 4 wires connected.`;if(wireConnected.size===4){clearInterval(taskTimerId);taskTimerId=null;sfx.powerOn();const r=doAction({type:"repair-power"});wiringFixedSol=snapshot.sol;modal="";wireConnected.clear();note=r.message;}}else{sfx.zap();wireMiss=true;taskTimer=Math.max(0,taskTimer-2);note="Colors do not match. Time −2 seconds.";}wirePicked="";render();
+  }
+
+  // ---- fixing the wires: drag a plug onto its socket (tapping a plug and then a socket still works too) ----
+  let wireDrag = null, wireClickBlock = 0;
+  function wirePanelPoint(e){const p=root.querySelector(".eb-panel");if(!p)return null;const r=p.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top};}
+  function paintDrag(){
+    const panel=root.querySelector(".eb-panel");if(!panel||!wireDrag?.moved)return;
+    let svg=panel.querySelector(".eb-drag");
+    if(!svg){svg=document.createElementNS("http://www.w3.org/2000/svg","svg");svg.setAttribute("class","eb-drag");svg.setAttribute("aria-hidden","true");panel.appendChild(svg);}
+    const{sx,sy,x,y,color}=wireDrag,mx=(sx+x)/2;
+    svg.innerHTML=`<path class="eb-wire ${color}" d="M${sx} ${sy} C${mx} ${sy} ${mx} ${y} ${x} ${y}"/><circle class="eb-drag-head ${color}" cx="${x}" cy="${y}" r="10"/>`;
+  }
+  function wireSocketAt(e){
+    const direct=document.elementFromPoint(e.clientX,e.clientY)?.closest?.('[data-action="wire-socket"]');
+    if(direct)return direct;
+    let best=null,bd=22;                                  // a little forgiveness near a socket
+    root.querySelectorAll('[data-action="wire-socket"]').forEach((n)=>{const r=n.getBoundingClientRect();const dx=Math.max(r.left-e.clientX,0,e.clientX-r.right),dy=Math.max(r.top-e.clientY,0,e.clientY-r.bottom);const d=Math.hypot(dx,dy);if(d<bd){bd=d;best=n;}});
+    return best;
+  }
+  function onWireDown(e){
+    if(modal!=="wiring"||e.button>0)return;
+    const plug=e.target.closest?.('[data-action="wire-pick"]');if(!plug)return;
+    const color=plug.dataset.color;if(wireConnected.has(color))return;
+    const panel=root.querySelector(".eb-panel");if(!panel)return;
+    const pr=panel.getBoundingClientRect(),br=plug.getBoundingClientRect();
+    wireDrag={color,sx:br.right-pr.left-6,sy:br.top+br.height/2-pr.top,x:e.clientX-pr.left,y:e.clientY-pr.top,startX:e.clientX,startY:e.clientY,moved:false};
+    window.addEventListener("pointermove",onWireDragMove);
+    window.addEventListener("pointerup",onWireDragUp);
+    window.addEventListener("pointercancel",onWireDragCancel);
+  }
+  function onWireDragMove(e){
+    if(!wireDrag)return;
+    if(!wireDrag.moved){
+      if(Math.hypot(e.clientX-wireDrag.startX,e.clientY-wireDrag.startY)<6)return;
+      wireDrag.moved=true;wirePicked=wireDrag.color;wireMiss=false;
+      root.querySelector(`.eb-end[data-color="${wireDrag.color}"]:not(.right)`)?.classList.add("picked");
+      sfx.click();
+    }
+    const p=wirePanelPoint(e);if(p){wireDrag.x=p.x;wireDrag.y=p.y;}
+    paintDrag();
+    root.querySelectorAll(".eb-end.hover").forEach((n)=>n.classList.remove("hover"));
+    wireSocketAt(e)?.classList.add("hover");
+  }
+  function stopWireDrag(){
+    window.removeEventListener("pointermove",onWireDragMove);
+    window.removeEventListener("pointerup",onWireDragUp);
+    window.removeEventListener("pointercancel",onWireDragCancel);
+    root.querySelectorAll(".eb-end.hover").forEach((n)=>n.classList.remove("hover"));
+    root.querySelector(".eb-drag")?.remove();
+  }
+  function onWireDragUp(e){
+    const d=wireDrag;wireDrag=null;stopWireDrag();
+    if(!d||!d.moved)return;                               // just a tap: the click handler does the tap-plug-then-socket way
+    wireClickBlock=Date.now()+80;                           // swallow the click the browser sends after a drag
+    if(modal!=="wiring"){wirePicked="";return;}
+    const sock=wireSocketAt(e);
+    if(sock)connectWire(sock.dataset.color);else{wirePicked="";render();}
+  }
+  function onWireDragCancel(){const d=wireDrag;wireDrag=null;stopWireDrag();if(d?.moved){wirePicked="";if(modal==="wiring")render();}}
+  function onWirePointer(event){
+    if(modal!=="wiring")return;
+    const box=root.querySelector(".eb-box");if(!box)return;
+    const r=box.getBoundingClientRect();
+    flash={x:Math.round(event.clientX-r.left),y:Math.round(event.clientY-r.top)};
+    box.style.setProperty("--fx",flash.x+"px");box.style.setProperty("--fy",flash.y+"px");
+  }
+  root.addEventListener("pointerdown",onWireDown);
+  root.addEventListener("pointermove",onWirePointer);
+  root.addEventListener("pointerdown",onWirePointer);
   root.addEventListener("pointermove",onSoilPointerMove);
   root.addEventListener("pointerup",onSoilPointerUp);
   root.addEventListener("pointercancel",onSoilPointerCancel);
@@ -683,7 +775,7 @@ export function mountGreenhousePanel(root, controller, { onExit, dressAvatar } =
       const t=root.querySelector("[data-sl-time]");if(t)t.textContent=fmtTime(soilRemaining);
       const bd=root.querySelector("[data-soil-badge]");if(bd)bd.textContent=`⏳ ${fmtTime(soilRemaining)}`;
       const ck=root.querySelector("[data-ck-soil-time]");if(ck)ck.textContent=fmtTime(soilRemaining);
-      if(soilRemaining<=0){clearInterval(soilWaitTimer);soilWaitTimer=null;soilStep=3;note="Soil incubation is complete! Open the soil lab to test it.";toastForce=true;render();}
+      if(soilRemaining<=0){clearInterval(soilWaitTimer);soilWaitTimer=null;soilStep=3;sfx.ding();note="Soil incubation is complete! Open the soil lab to test it.";toastForce=true;render();}
     },1000);
   }
   // coming back to the greenhouse: pick the soil lab up where it was left (the clock kept running)
@@ -731,5 +823,5 @@ export function mountGreenhousePanel(root, controller, { onExit, dressAvatar } =
     snapshot=next;
     render();
   });
-  return ()=>{stopIcons();timersClear();clearInterval(growTimerId);cancelAnimationFrame(cgRaf);root.removeEventListener("pointermove",onClimatePointer);root.removeEventListener("pointerdown",onClimatePointer);document.removeEventListener("keydown",onClimateKey);document.removeEventListener("keyup",onClimateKey);if(soilStep>0||soilWaitTimer){soilSaved={step:soilStep,scoops:soilScoops,doses:soilDoses,tests:soilTests,result:soilResult,remaining:soilRemaining,endAt:soilWaitTimer?Date.now()+soilRemaining*1000:0};if(soilWaitTimer){clearTimeout(soilAwayTimer);soilAwayTimer=setTimeout(()=>{soilAwayTimer=null;window.MarsMap?.toast?.('The greenhouse soil lab is done incubating!');},soilRemaining*1000);}}else soilSaved=null;clearInterval(soilWaitTimer);if(movementFrame)cancelAnimationFrame(movementFrame);root.removeEventListener("pointerdown",onSoilPointerDown);root.removeEventListener("pointermove",onSoilPointerMove);root.removeEventListener("pointerup",onSoilPointerUp);root.removeEventListener("pointercancel",onSoilPointerCancel);window.removeEventListener("blur",onWindowBlur);window.removeEventListener("resize",onResize);document.removeEventListener("keyup",onKeyUp);document.removeEventListener("keydown",onKeyDown);unsubscribe();root.replaceChildren();};
+  return ()=>{stopWireDrag();root.removeEventListener("pointerdown",onWireDown);root.removeEventListener("pointermove",onWirePointer);root.removeEventListener("pointerdown",onWirePointer);stopIcons();timersClear();clearInterval(growTimerId);cancelAnimationFrame(cgRaf);root.removeEventListener("pointermove",onClimatePointer);root.removeEventListener("pointerdown",onClimatePointer);document.removeEventListener("keydown",onClimateKey);document.removeEventListener("keyup",onClimateKey);if(soilStep>0||soilWaitTimer){soilSaved={step:soilStep,scoops:soilScoops,doses:soilDoses,tests:soilTests,result:soilResult,remaining:soilRemaining,endAt:soilWaitTimer?Date.now()+soilRemaining*1000:0};if(soilWaitTimer){clearTimeout(soilAwayTimer);soilAwayTimer=setTimeout(()=>{soilAwayTimer=null;window.MarsMap?.toast?.('The greenhouse soil lab is done incubating!');},soilRemaining*1000);}}else soilSaved=null;clearInterval(soilWaitTimer);if(movementFrame)cancelAnimationFrame(movementFrame);root.removeEventListener("pointerdown",onSoilPointerDown);root.removeEventListener("pointermove",onSoilPointerMove);root.removeEventListener("pointerup",onSoilPointerUp);root.removeEventListener("pointercancel",onSoilPointerCancel);window.removeEventListener("blur",onWindowBlur);window.removeEventListener("resize",onResize);document.removeEventListener("keyup",onKeyUp);document.removeEventListener("keydown",onKeyDown);unsubscribe();root.replaceChildren();};
 }
