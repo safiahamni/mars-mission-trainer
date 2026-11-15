@@ -1357,3 +1357,11 @@
 .cc-suit-warn .icon { color: #c3a8ff; }
 .cc-suit-warn strong { display: block; color: #ffd23f; font-size: 20px; }
 .cc-suit-warn p { margin: 4px 0 0; color: #eef0f5; font-size: 16px; }
+
+.cc-sunrise {color:#ffd54a;animation:cc-sunrise .65s ease-out both}
+.cc-new-sol {color:#ffd54a;font-weight:800}
+@keyframes cc-sunrise {
+  from {opacity:0;transform:translateY(18px) scale(.6)}
+  to {opacity:1;transform:translateY(0) scale(1)}
+}
+@media (prefers-reduced-motion:reduce) {.cc-sunrise {animation:none}}

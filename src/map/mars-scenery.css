@@ -18,5 +18,11 @@
   background: #FFF6EC; color: #2B2A3A; border: 3px solid #2B2A3A; border-radius: 18px; box-shadow: 0 4px 0 #2B2A3A;
   font-family: 'Nunito', sans-serif; font-size: 15px; font-weight: 900; line-height: 1.35;
 }
-.sc-hint::before { content: "WHAT TO DO"; display: block; margin-bottom: 4px; font-size: 11px; letter-spacing: 1.5px; }
+.sc-hint::before { content: attr(data-heading); display: block; margin-bottom: 4px; font-size: 11px; letter-spacing: 1.5px; }
 .sc-hint[hidden] { display: none; }
+
+.sc-checklist { list-style: none; margin: .25rem 0 .45rem; padding: 0; display: grid; gap: .3rem; }
+.sc-checklist li { display: flex; align-items: flex-start; gap: .45rem; }
+.sc-check-mark { display: grid; place-items: center; flex: 0 0 1.05em; height: 1.05em; margin-top: .13em; border: 1.5px solid currentColor; border-radius: .23em; line-height: 1; }
+.sc-checklist li[data-done="true"] { color: #386755; }
+.sc-checklist li[data-done="true"] .sc-check-mark { background: #c9f1df; }

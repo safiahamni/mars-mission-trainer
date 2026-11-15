@@ -127,11 +127,11 @@ window.MarsLifeSupport = {
   runMoxie() {
     if (room.hidden) return null;
     const game = getGame();
-    if (game.oxygen >= 100) return null;
+    if (game.over || game.chapter < 2 || game.done.moxie || game.oxygen >= 100) return null;
     const result = spend(game, COSTS.moxie, 'MOXIE');
     if (!result.ok) return null;
     const oxygen = Math.min(100, game.oxygen + 20);
-    setGame({ ...result.game, oxygen });
+    setGame({ ...result.game, oxygen, done: { ...game.done, moxie: true } });
     return oxygen;
   },
   moxieCost: COSTS.moxie
@@ -154,8 +154,8 @@ window.addEventListener('resize', placeRoom);
 
 function syncResources() {
   if (room.hidden) return;
-  const { oxygen, water } = getGame();
-  frame.contentWindow?.postMessage({ type: 'mars-life:sync', oxygen, water }, location.origin);
+  const { oxygen, water, sol, chapter, done } = getGame();
+  frame.contentWindow?.postMessage({ type: 'mars-life:sync', oxygen, water, sol, scienceStars: chapter - 1, moxieRan: !!done.moxie }, location.origin);
 }
 frame.addEventListener('load', syncResources);
 
