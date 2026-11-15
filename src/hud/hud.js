@@ -31,7 +31,7 @@ const MarsHUD = (function () {
   const STORM_LENGTH = 15;                 // it passes after 15 game minutes
   const FORCE_STORM = q.has('storm'), FORCE_ALARM = q.has('alarm'), FORCE_FAIL = q.has('fail');
 
-  let sol = 3, gameMinutes = 10 * 60;      // Sol 3 · 10:00
+  let sol = 1, gameMinutes = 10 * 60;      // Sol 3 · 10:00
   let hazard = 0;
   let storm = false, stormDone = false, stormLeft = 0, untilStorm = rollStorm();
   function rollStorm() {
