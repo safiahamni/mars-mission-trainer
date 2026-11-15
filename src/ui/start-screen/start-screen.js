@@ -277,7 +277,7 @@
     { sel: ['#place-shelter .cc-wall'], alt: ['#place-shelter .mm-spot'], pad: [44, 12, 12, 12], side: 'right', ico: '🏠', title: 'Command Center',
       text: 'Your home on Mars! Sleep here, check today’s missions and switch on the power. In a solar storm, hide in the <b>storm shelter core</b> inside.',
       fact: '<b>NASA:</b> on the Space Station, astronauts also sleep in tiny cabins and get their jobs from Mission Control.' },
-    { sel: ['#sd-airlock'], design: [218, 339, 89, 42], side: 'right', ico: '🚪', title: 'Airlock',
+    { sel: ['#cc-airlock', '#sd-airlock'], design: [258, 332, 50, 68], side: 'right', ico: '🚪', title: 'Airlock',
       text: 'The door between inside and outside. It keeps the air <b>inside</b> the base. Put on your spacesuit before you step out!',
       fact: '<b>NASA:</b> the Space Station’s airlock is called <b>Quest</b>. Spacewalkers get ready there.' },
     { sel: ['.sd-map-panel'], pad: [26, 12, 12, 12], side: 'top', ico: '☀️', title: 'Solar panels',
@@ -300,6 +300,8 @@
       fact: '<b>NASA:</b> Perseverance is collecting Mars rock samples to send back to Earth one day.' },
   ];
   let tourKey = null;        // the keyboard handler while the tour is on screen
+  // the rocket on the last "Let's go!" button (Lucide icon, https://lucide.dev)
+  const ROCKET = `<svg class="tt-rocket" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09"/><path d="M9 12a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.4 22.4 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 .05 5 .05"/></svg>`;
 
   // where a place is on the screen right now: {x, y, w, h}
   function placeRect(pl) {
@@ -314,12 +316,17 @@
       list.forEach(sel => document.querySelectorAll(sel).forEach(e => add(e.getBoundingClientRect())));
     }
     if (!R && pl.design) {                 // map design numbers -> screen
+      // put an invisible box at those numbers in the map drawing and measure it: this matches the
+      // other places exactly, even when the page is zoomed to fit the window (getScreenCTM doesn't)
       const g = document.getElementById('place-shelter')?.parentNode;
-      const m = g && g.getScreenCTM && g.getScreenCTM();
-      if (m) {
+      if (g) {
         const [x, y, w, h] = pl.design;
-        const a = new DOMPoint(x, y).matrixTransform(m), b = new DOMPoint(x + w, y + h).matrixTransform(m);
-        R = { l: a.x, t: a.y, r: b.x, b: b.y };
+        const probe = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        Object.entries({ x, y, width: w, height: h, fill: 'none', 'pointer-events': 'none' })
+          .forEach(([k, v]) => probe.setAttribute(k, v));
+        g.appendChild(probe);
+        add(probe.getBoundingClientRect());
+        probe.remove();
       }
     }
     if (!R) return null;
@@ -385,7 +392,7 @@
       q('.tt-place .tt-text').innerHTML = pl.text;
       q('.tt-place .tt-fact').innerHTML = pl.fact;
       wrap.querySelectorAll('.tt-dots i').forEach((d, i) => d.classList.toggle('on', i === step));
-      q('.tt-place .tt-next').textContent = step === N - 1 ? 'Let’s go! 🚀' : 'Next →';
+      q('.tt-place .tt-next').innerHTML = step === N - 1 ? `Let’s go! ${ROCKET}` : 'Next →';
       const bounds = wrap.getBoundingClientRect();
       const sx = wrap.clientWidth / bounds.width;
       const sy = wrap.clientHeight / bounds.height;

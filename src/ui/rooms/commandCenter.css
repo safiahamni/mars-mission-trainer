@@ -809,19 +809,30 @@
   line-height: 1.4;
 }
 
-/* end-of-sol summary */
-.cc-summary {
-  left: 0;
-  top: 0;
-  width: 1512px;
-  height: 1032px;
+/* end-of-sol summary: covers the whole screen (the left column of cards too), card in the middle */
+.cc-summary-screen {
+  --ink: #2b2a3a;
+  --yellow: #ffd23f;
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
   display: grid;
   place-items: center;
   background: rgba(20, 22, 34, 0.7);
-  z-index: 20;
+  color: #fff;
+  font-family: 'Nunito', 'Arial Rounded MT Bold', 'Helvetica Rounded', system-ui, sans-serif;
+  font-weight: 700;
 }
-.cc-summary[hidden] {
+.cc-summary-screen[hidden] {
   display: none;
+}
+.cc-summary-screen button {
+  font: inherit;
+  cursor: pointer;
+}
+.cc-summary-screen .cc-summary-in {
+  box-sizing: border-box;
+  transform: scale(var(--cc-s, 1));   /* the same size as the rest of the room */
 }
 .cc-summary-in {
   width: 520px;

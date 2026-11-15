@@ -27,7 +27,7 @@ import { makeWalker, isNear } from '../../systems/roomWalk.js';
 import {
   ROOM_STAGE, ROOM_PATHS, SHELTER_PATHS, ROOM_PATH_WIDTH, SHELTER_DOOR_Y, ROOM_SPAWN, ROOM_SPOTS, EXITS,
 } from '../../config/commandCenterLayout.js';
-import { getGame, setGame, onGameChange } from '../../state/gameStore.js';
+import { getGame, setGame, onGameChange, pauseClock } from '../../state/gameStore.js';
 
 const STAGE_W = ROOM_STAGE.width;
 const STAGE_H = ROOM_STAGE.height;
@@ -230,7 +230,7 @@ export function renderCommandCenter(room, { onExit } = {}) {
       <div class="cc-task"><b>1</b><div><h4>Switchboard</h4><p>Shows which machines are on. MOXIE and the water recycler are run in Life Support.</p></div></div>
       <div class="cc-task"><b>2</b><div><h4>Battery bank</h4><p>Your power. Keep <strong>${POWER_CONFIG.nightReserve}</strong> for the night, or the crew gets cold.</p></div></div>
       <div class="cc-task"><b class="purple">W</b><div><h4 class="purple">Wardrobe</h4><p>Put on the spacesuit before going outside.</p></div></div>
-      <div class="cc-task"><b class="teal">Z</b><div><h4 class="teal">Bunks</h4><p>Finish today?s tasks, then sleep here to start the next Sol.</p></div></div>
+      <div class="cc-task"><b class="teal">Z</b><div><h4 class="teal">Bunks</h4><p>Finish today&#8217;s tasks, then sleep here to start the next Sol.</p></div></div>
       <div class="cc-goal">${icon('star', 24)}<div><small>TODAY'S GOAL</small><strong data-b="goal"></strong></div></div>
     </aside>
 
@@ -283,12 +283,17 @@ export function renderCommandCenter(room, { onExit } = {}) {
       </div>
     </div>
 
-    <!-- end of sol summary -->
-    <div class="cc-summary" data-b="summary" hidden></div>
   </div>`;
 
   const stage = room.querySelector('.cc-stage');
   const $ = (name) => room.querySelector(`[data-b="${name}"]`);
+
+  // the end-of-sol summary covers the WHOLE screen (the cards on the left too), with the card
+  // in the middle, so it lives on the page itself, not inside the room
+  const summary = document.createElement('div');
+  summary.className = 'cc-summary-screen';
+  summary.hidden = true;
+  document.body.appendChild(summary);
 
   // ---- scale the stage to fit the screen ----
   function fit() {
@@ -296,6 +301,7 @@ export function renderCommandCenter(room, { onExit } = {}) {
     const h = room.clientHeight;
     const s = Math.min(w / STAGE_W, h / STAGE_H);
     stage.style.transform = `translate(${(w - STAGE_W * s) / 2}px, ${(h - STAGE_H * s) / 2}px) scale(${s})`;
+    summary.style.setProperty('--cc-s', s);   // the summary card is the same size as in the room
   }
 
   // ---- the HUD (battery cells + water tank) ----
@@ -484,7 +490,7 @@ export function renderCommandCenter(room, { onExit } = {}) {
     closePop('bunks');
     const g = r.game;
     const rep = r.report;
-    $('summary').innerHTML = `
+    summary.innerHTML = `
       <div class="cc-summary-in">
         <div class="cc-sunrise" aria-hidden="true">${icon('sun', 42)}</div>
         <p class="cc-new-sol">Good morning! Sol ${g.sol} of ${CC_CONFIG.maxSols}</p>
@@ -503,7 +509,7 @@ export function renderCommandCenter(room, { onExit } = {}) {
         ${g.over ? '' : `<p class="cc-today">${icon('flask', 18)} <strong>Today: ${todayText(g)}</strong></p>`}
         <button class="cc-btn" data-act="wake">${g.over ? 'Play again' : `${icon('sun', 20)} Wake up · Sol ${g.sol}`}</button>
       </div>`;
-    $('summary').hidden = false;
+    summary.hidden = false;
     message = '';
     update();
   }
@@ -533,8 +539,10 @@ export function renderCommandCenter(room, { onExit } = {}) {
       }
       return;
     }
-    if (a === 'wake') {
-      $('summary').hidden = true;
+  });
+  summary.addEventListener('click', (e) => {
+    if (e.target.closest('[data-act="wake"]')) {
+      summary.hidden = true;
       if (getGame().over) location.reload();
     }
   });
@@ -556,9 +564,19 @@ export function renderCommandCenter(room, { onExit } = {}) {
     $('player').style.top = `${pos.y - 44}px`;
   }
 
+  // the clock keeps running in the Command Center, but stops inside the radiation shelter
+  // (it has its own mini-game), and starts again when the player walks back out
+  let shelterPaused = false;
+  function shelterClock(inside) {
+    if (inside === shelterPaused) return;
+    shelterPaused = inside;
+    pauseClock(inside);
+  }
+
   function afterMove() {
     const g = getGame();
     const inside = pos.y >= SHELTER_DOOR_Y && pos.x > CORRIDOR_X_HALF;
+    shelterClock(inside);
     if (inside && !g.inShelter) {
       setGame(enterShelter(g));
       say('You are inside the radiation shelter. The bunks are here.');
@@ -624,7 +642,7 @@ export function renderCommandCenter(room, { onExit } = {}) {
     last = now;
     let dx = 0;
     let dy = 0;
-    if ($('summary').hidden) held.forEach((k) => { dx += KEYS[k][0]; dy += KEYS[k][1]; });
+    if (summary.hidden) held.forEach((k) => { dx += KEYS[k][0]; dy += KEYS[k][1]; });
     dx = Math.sign(dx);
     dy = Math.sign(dy);
     if (dx || dy) {
@@ -654,6 +672,8 @@ export function renderCommandCenter(room, { onExit } = {}) {
   function cleanup() {
     if (cleaned) return;
     cleaned = true;
+    summary.remove();
+    shelterClock(false);   // leaving the room: the clock runs again
     stopListening();
     window.removeEventListener('keydown', onKeyDown);
     window.removeEventListener('keyup', onKeyUp);
