@@ -1,4 +1,5 @@
 import './life-adapted.css';
+import { icon } from './icons.js';
 
 // life.js — LIFE SUPPORT: the WATER RECYCLING SYSTEM (Member 2's place).
 // Each time the game starts, ONE random problem breaks the water recycler:
@@ -23,7 +24,7 @@ export function initWaterRecycler(room, { onClose, onFull } = {}) {   // onClose
   const PROBLEMS = {
     filter: {
       alarm: 'Oh no! The filter is clogged!',
-      todo: 'Grab the dirty filter and throw it in the trash 🗑️',
+      todo: 'Grab the dirty filter and throw it in the trash.',
       introTitle: 'Oh no! The filter needs changing!',
       introText: 'It is clogged with dirt, so the water can\'t get through. Throw the dirty filter in the trash and a new one will pop in.',
       fact: 'Filters catch the dirt first. On the International Space Station, the water system recycles 98% of the water ' +
@@ -31,7 +32,7 @@ export function initWaterRecycler(room, { onClose, onFull } = {}) {   // onClose
     },
     brine: {
       alarm: 'Oh no! The brine bag is full!',
-      todo: 'Grab the full bag and throw it in the trash 🗑️',
+      todo: 'Grab the full bag and throw it in the trash.',
       introTitle: 'Oh no! The brine bag needs changing!',
       introText: 'It is full of salty leftovers from cleaning urine, so the machine stopped. Throw the full bag in the trash and a new one will pop in.',
       fact: 'When urine is cleaned, a salty leftover called brine is left. NASA\'s Brine Processor squeezes the last water out of it, ' +
@@ -39,7 +40,7 @@ export function initWaterRecycler(room, { onClose, onFull } = {}) {   // onClose
     },
     water: {
       alarm: 'Oh no! The Cleaner stopped and germs are getting through!',
-      todo: 'Click the germs to zap them! ⚡',
+      todo: 'Click the germs to zap them!',
       introTitle: 'Oh no! The Cleaner stopped!',
       introText: 'Dirty water always has germs in it. The Cleaner kills them by heating the water, but it stopped, ' +
                  'so germs are getting into the clean water! Zap every germ to help the Cleaner.',
@@ -67,7 +68,7 @@ export function initWaterRecycler(room, { onClose, onFull } = {}) {   // onClose
   station.setAttribute('tabindex', '0');
   station.setAttribute('aria-label', 'Water Recycler');
   station.innerHTML = `
-    <div class="station-title">Water Recycler</div>
+    <div class="station-title"><span class="number">4</span> Water recycler</div>
     <svg class="ls-mini-rack" viewBox="482 432 152 74" aria-hidden="true">
       <g id="ls-recycler-map" class="ls-prob-${problem} ls-map-broken">
         <rect x="484" y="434" width="148" height="70" rx="9" fill="#E9EEF3" stroke="#2B2A3A" stroke-width="3"/>
@@ -90,7 +91,7 @@ export function initWaterRecycler(room, { onClose, onFull } = {}) {   // onClose
         <path d="M610 456 l7 0 l-4 9 l6 0 l-10 14 l3 -10 l-6 0 Z" fill="#FFD84A" stroke="#2B2A3A" stroke-width="1"/>
       </g>
     </svg>
-    <div class="ls-station-state">⚠ Needs fixing</div>`;
+    <div class="ls-station-state">Needs fixing</div>`;
   room.appendChild(station);
 
   // ================= THE POP-UP =================
@@ -161,8 +162,8 @@ export function initWaterRecycler(room, { onClose, onFull } = {}) {   // onClose
   // ================= DRAW EVERYTHING =================
   function render() {
     const alarmEl = $('ls-alarm');
-    alarmEl.textContent = full ? 'Great job, crew! The tank is full! 🎉'
-                        : fixed ? 'Fixed! Here comes the clean water…' : '⚠ ' + P.alarm;
+    alarmEl.innerHTML = full ? `${icon('party-popper')} Great job, crew! The tank is full!`
+                        : fixed ? 'Fixed! Here comes the clean water…' : `${icon('triangle-alert')} ${P.alarm}`;
     alarmEl.classList.toggle('ls-ok', fixed);
     $('ls-todo').textContent = fixed ? '' : P.todo + (problem === 'water' ? `  (${germsLeft} left)` : '');
     $('ls-todo').hidden = fixed;
@@ -183,11 +184,11 @@ export function initWaterRecycler(room, { onClose, onFull } = {}) {   // onClose
     // the trash on the right (not needed for germs)
     const side = problem !== 'water';
     document.querySelector('.ls-stage').classList.toggle('ls-no-side', !side);
-    $('ls-tools').innerHTML = side ? `<div class="ls-trash${fixed ? ' ls-gulp' : ''}" id="ls-trash"><b class="ls-emoji">🗑️</b><span>Trash</span></div>` : '';
+    $('ls-tools').innerHTML = side ? `<div class="ls-trash${fixed ? ' ls-gulp' : ''}" id="ls-trash"><b class="ls-emoji">${icon('trash-2', '', { stroke: 2 })}</b><span>Trash</span></div>` : '';
 
     // germs
     $('ls-germs').innerHTML = (problem === 'water' && !fixed)
-      ? GERM_SPOTS.slice(0, GERMS).map(([x, y], i) => `<button type="button" class="ls-germ" data-i="${i}" style="left:${x}%;top:${y}%;animation-delay:${-i * 0.37}s" aria-label="Germ">🦠</button>`).join('')
+      ? GERM_SPOTS.slice(0, GERMS).map(([x, y], i) => `<button type="button" class="ls-germ" data-i="${i}" style="left:${x}%;top:${y}%;animation-delay:${-i * 0.37}s" aria-label="Germ">${icon('germ', '', { stroke: 2.2 })}</button>`).join('')
       : '';
     $('ls-germs').querySelectorAll('.ls-germ').forEach((g, i) => { if (i >= germsLeft) g.remove(); else g.onclick = () => zapGerm(g); });
 
@@ -210,7 +211,7 @@ export function initWaterRecycler(room, { onClose, onFull } = {}) {   // onClose
     fixed = true;
     station.classList.add('ls-water-fixed'); station.classList.remove('ls-water-broken');
     $('ls-recycler-map').classList.remove('ls-map-broken');
-    station.querySelector('.ls-station-state').textContent = '✓ Repaired';
+    station.querySelector('.ls-station-state').innerHTML = `Repaired ${icon('check', '', { stroke: 3.5 })}`;
     render();
   }
 
@@ -276,7 +277,7 @@ export function initWaterRecycler(room, { onClose, onFull } = {}) {   // onClose
   function confetti() {
     const c = $('ls-confetti');
     c.innerHTML = Array.from({ length: 18 }, (_, i) =>
-      `<span style="left:${5 + Math.random() * 90}%;animation-delay:${Math.random() * 0.4}s">${['⭐', '💧', '✨'][i % 3]}</span>`).join('');
+      `<span style="left:${5 + Math.random() * 90}%;animation-delay:${Math.random() * 0.4}s">${[icon('star', 'ls-c-star', { fill: true }), icon('droplet', 'ls-c-drop', { fill: true }), icon('sparkles', 'ls-c-spark', { fill: true })][i % 3]}</span>`).join('');
     setTimeout(() => { c.innerHTML = ''; }, 2200);
   }
 
@@ -312,7 +313,7 @@ export function initWaterRecycler(room, { onClose, onFull } = {}) {   // onClose
   let introSeen = false;
   function showIntro() {
     $('ls-introIcon').innerHTML = problem === 'filter' ? filterItem('ls-iconFilter', true, false)
-                                : problem === 'brine' ? bagItem('ls-iconBag', true, false) : '<b>🦠</b>';
+                                : problem === 'brine' ? bagItem('ls-iconBag', true, false) : `<b class="ls-germ-icon">${icon('germ', '', { stroke: 2 })}</b>`;
     $('ls-introTitle').textContent = P.introTitle;
     $('ls-introText').textContent = P.introText;
     $('ls-intro').hidden = false;
