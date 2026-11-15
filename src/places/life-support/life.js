@@ -54,8 +54,7 @@ const BUILDING = `
   <rect x="142" y="112" width="13" height="26" rx="3" fill="#FFFFFF" stroke="#2B2A3A" stroke-width="1.3"/><rect x="143.5" y="126" width="10" height="10.5" rx="2" fill="#3EC6F0"/>
   <rect x="159" y="112" width="13" height="26" rx="3" fill="#B98A5E" stroke="#2B2A3A" stroke-width="1.3"/><path d="M162 119 h7 M162 125 h7 M162 131 h7" stroke="#7A5634" stroke-width="1.2"/>
   <rect x="176" y="112" width="13" height="26" rx="3" fill="#FFFFFF" stroke="#2B2A3A" stroke-width="1.3"/>
-  <rect x="193" y="112" width="13" height="26" rx="3" fill="#9B6BF2" stroke="#2B2A3A" stroke-width="1.3"/><path d="M200.5 117 l-3 7 h4 l-3 7" fill="none" stroke="#FFD23F" stroke-width="1.5" stroke-linejoin="round"/>
-  <text x="98" y="130" font-size="10" text-anchor="middle" fill="#2B2A3A" class="ls-label">Air + water</text>`;
+  <rect x="193" y="112" width="13" height="26" rx="3" fill="#9B6BF2" stroke="#2B2A3A" stroke-width="1.3"/><path d="M200.5 117 l-3 7 h4 l-3 7" fill="none" stroke="#FFD23F" stroke-width="1.5" stroke-linejoin="round"/>`;
 
 // put the building in the map, in the middle of the Life Support spot (in place of the picture)
 const place = document.getElementById('place-life');
@@ -71,7 +70,6 @@ if (place && spot) {
   const style = document.createElement('style');
   style.textContent = `
     #ls-building text { font-family: 'Nunito', sans-serif; font-weight: 900; }
-    #ls-building .ls-label { font-weight: 800; opacity: 0.55; }
     #ls-building.ls-inside .ls-wall { stroke: #5CE0B5; stroke-width: 6; }          /* crew inside: green outline */
     #ls-building .ls-o2 { transition: y 0.6s, height 0.6s; }
     #ls-building.ls-low .ls-o2 { fill: #FF5A5A; animation: ls-pulse 0.8s infinite alternate; }  /* low oxygen: red */

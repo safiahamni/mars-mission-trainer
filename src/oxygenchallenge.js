@@ -281,7 +281,7 @@ setScale()
 window.addEventListener('resize', setScale)
 
 const room = document.querySelector('.room')
-const roomUnit = () => room.clientWidth / 764     // the room is drawn on a 764 x 628 plan
+const roomUnit = () => room.clientHeight / 628    // the room is drawn on a 764 x 628 plan (sized by its height)
 const player = createAvatar(room)
 const water = initWaterRecycler(room, {          // Add Water Recycling to this same room
   onFull: () => { publishLifeResource('water', 100); updateAirDisplay() },
