@@ -431,7 +431,7 @@ export function mountGreenhousePanel(root, controller, { onExit } = {}) {
       <aside class="gm-tasks"><div class="gm-task-head"><span>✅</span><div><b>TASK CHECKLIST</b><small>${basicDone} of 3 basic tasks done</small></div></div>
         <div class="gm-task-group"><h3>BASIC TASKS</h3>
           ${taskItem("climate","Set the climate",tempOkay?"Temperature and light are in the green":"Play the climate game to tune the habitat",tempOkay?"done":"todo")}
-          ${taskItem("soil","Treat the soil",s.soilPerchlorate<30?"Perchlorate is low. Potato + millet unlocked":(soilStep===3?"✔ Incubation done! Go test the soil":(soilWaitTimer?`⏳ Incubating · ${fmtTime(soilRemaining)} left`:`Perchlorate ${s.soilPerchlorate}. Get it below 30`)),s.soilPerchlorate<30?"done":(soilStep===3?"urgent":"todo"))}
+          ${taskItem("soil","Treat the soil",s.soilPerchlorate<30?"Perchlorate is low. Potato + millet unlocked":(soilStep===3?"✔ Incubation done! Go test the soil":(soilWaitTimer?`⏳ Incubating · <span data-ck-soil-time>${fmtTime(soilRemaining)}</span> left`:`Perchlorate ${s.soilPerchlorate}. Get it below 30`)),s.soilPerchlorate<30?"done":(soilStep===3?"urgent":"todo"))}
           ${taskItem("compost","Sort the compost",compostDoneSol===s.sol?"Sorted this Sol":"Sort 5 items in 20 seconds",compostDoneSol===s.sol?"done":"todo")}
         </div>
         <div class="gm-task-group emergency"><h3>⚠ EMERGENCY TASKS</h3>
@@ -674,6 +674,7 @@ export function mountGreenhousePanel(root, controller, { onExit } = {}) {
       const f=root.querySelector("[data-sl-fill]");if(f)f.style.width=`${soilProgress}%`;
       const t=root.querySelector("[data-sl-time]");if(t)t.textContent=fmtTime(soilRemaining);
       const bd=root.querySelector("[data-soil-badge]");if(bd)bd.textContent=`⏳ ${fmtTime(soilRemaining)}`;
+      const ck=root.querySelector("[data-ck-soil-time]");if(ck)ck.textContent=fmtTime(soilRemaining);
       if(soilRemaining<=0){clearInterval(soilWaitTimer);soilWaitTimer=null;soilStep=3;note="Soil incubation is complete! Open the soil lab to test it.";toastForce=true;render();}
     },1000);
   }
