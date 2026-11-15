@@ -12,7 +12,15 @@ import { getGame, setGame } from '../../state/gameStore.js';
 
 import { spend } from '../../systems/commandCenter.js';
 
+// The radiation warning outside (solar storm, or radiation too high = the red alarm) is the same warning inside.
+const radiationWarning = () => {
+  const hud = window.RadiationShelter || window.MarsHUD;
+  return !!(hud?.isStorm?.() || window.MarsHUD?.isStorm?.() || window.MarsHUD?.status?.() === 'nogo');
+};
+
 const controller = createGreenhouseDemoController({
+  readSol: () => getGame().sol,
+  readRadiation: radiationWarning,
   readResources() {
     const game = getGame();
     return { water: game.water, power: game.power.battery, food: game.food };
@@ -32,6 +40,9 @@ controller.subscribe(({ resources }) => {
 });
 let overlay = null;
 let unmount = null;
+
+// keep the greenhouse in step with the outside (a storm starting or a new sol), even while it is open
+setInterval(() => controller.refresh(), 1000);
 
 function leaveGreenhouse() {
   if (unmount) { unmount(); unmount = null; }

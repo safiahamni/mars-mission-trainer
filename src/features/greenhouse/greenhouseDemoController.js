@@ -1,10 +1,11 @@
 /** Temporary feature-local game state until the shared controller is integrated. */
 import { advanceGreenhouseSol, createGreenhouseState, harvestCrop, plantCrop, CROP_CATALOG } from "./food.js";
 
+const definedOnly = (o = {}) => Object.fromEntries(Object.entries(o).filter(([, v]) => Number.isFinite(v)));
 const cap = (n) => Math.max(0, Math.min(100, n));
 const fail = (message, code = "invalid-action") => ({ ok: false, code, message });
 
-export function createGreenhouseDemoController({ readResources, chargeSupplies } = {}) {
+export function createGreenhouseDemoController({ readResources, chargeSupplies, readSol, readRadiation } = {}) {
   let state = {
     sol: 1,
     resources: { water: 67, power: 64, food: 30 },
@@ -23,8 +24,35 @@ export function createGreenhouseDemoController({ readResources, chargeSupplies }
   };
   const listeners = new Set();
 
-  const snapshot = () => ({ ...state, resources: { ...state.resources, ...readResources?.(), food: state.resources.food }, climate: { ...state.climate }, greenhouse: { ...state.greenhouse, plots: Object.fromEntries(Object.entries(state.greenhouse.plots).map(([id, plot]) => [id, { ...plot }])) } });
+  // ---- things that come from the shared game (the base map) ----
+  // readSol(): the shared game's sol.  readRadiation(): true while a solar storm / radiation warning is on outside.
+  let outageTriggered = false;   // the Sol 3 power outage happens once
+  let shielded = false;          // shields locked during the current storm
+  let radiationSeconds = 0;      // seconds of unshielded radiation (hurts the plants)
+  function syncExternal() {
+    let changed = false;
+    const sol = readSol?.();
+    if (Number.isFinite(sol) && sol !== state.sol) {
+      state = { ...state, sol };
+      changed = true;
+      if (sol >= 3 && !outageTriggered) {
+        outageTriggered = true;
+        state = { ...state, powerOutage: true, climateHealthy: false, climate: { ...state.climate, light: 0 } };
+      }
+    }
+    if (readRadiation) {
+      const on = !!readRadiation();
+      if (!on) shielded = false;
+      const alert = on && !shielded;
+      if (alert !== state.radiationAlert) { state = { ...state, radiationAlert: alert }; changed = true; }
+      if (on !== state.radiationOn) { state = { ...state, radiationOn: on }; changed = true; }   // the warning outside, even after the shields are up
+    }
+    return changed;
+  }
+
+  const snapshot = () => (syncExternal(), { ...state, resources: { ...state.resources, ...definedOnly(readResources?.()), food: state.resources.food }, climate: { ...state.climate }, greenhouse: { ...state.greenhouse, plots: Object.fromEntries(Object.entries(state.greenhouse.plots).map(([id, plot]) => [id, { ...plot }])) } });
   const notify = () => listeners.forEach((listener) => listener(snapshot()));
+  const refresh = () => { if (syncExternal()) notify(); };
   const charge = ({ water = 0, power = 0, nutrients = 0 } = {}) => {
     if (state.resources.water < water || state.resources.power < power || state.nutrients < nutrients) return false;
     if (chargeSupplies && !chargeSupplies({ water, power })) return false;
@@ -33,7 +61,8 @@ export function createGreenhouseDemoController({ readResources, chargeSupplies }
   };
 
   function dispatch(action) {
-    if (readResources) state = { ...state, resources: readResources() };
+    if (readResources) state = { ...state, resources: { ...state.resources, ...definedOnly(readResources()) } };
+    syncExternal();
     if (action.type === "set-climate") {
       const climate = { ...state.climate, ...action.climate };
       if (!Number.isFinite(climate.temperature) || !Number.isFinite(climate.light)) return fail("Adjust both greenhouse controls first.");
@@ -100,6 +129,8 @@ export function createGreenhouseDemoController({ readResources, chargeSupplies }
     }
     if (action.type === "shield-lock") {
       if (!action.covered) return fail("Every panel needs to cover its bed from the beam.", "shield-open");
+      shielded = true;
+      radiationSeconds = 0;
       state = { ...state, radiationAlert: false, cropHealth: cap(state.cropHealth + 10) };
       notify();
       return { ok: true, message: "All beds shielded. Radiation blocked; crop health +10." };
@@ -108,6 +139,10 @@ export function createGreenhouseDemoController({ readResources, chargeSupplies }
     if (action.type === "grow-tick") {
       // Real-time growth. Does not notify listeners: the panel updates its own countdowns every second.
       const seconds = Number.isFinite(action.seconds) ? action.seconds : 1;
+      if (state.radiationAlert) {   // unshielded radiation slowly hurts the plants
+        radiationSeconds += seconds;
+        if (radiationSeconds >= 5) { radiationSeconds = 0; state = { ...state, cropHealth: cap(state.cropHealth - 1) }; }
+      }
       const rate = state.powerOutage ? 0 : state.climateHealthy ? 1 : 0.75;
       if (rate === 0) return { ok: true, rate, stalled: true };
       const plots = { ...state.greenhouse.plots };
@@ -153,7 +188,7 @@ export function createGreenhouseDemoController({ readResources, chargeSupplies }
     return fail("That greenhouse action is not available.");
   }
 
-  return { getSnapshot: snapshot, dispatch, syncFood(food) {
+  return { getSnapshot: snapshot, dispatch, refresh, syncFood(food) {
     state = { ...state, resources: { ...state.resources, food } };
   }, subscribe(listener) { listeners.add(listener); return () => listeners.delete(listener); } };
 }
