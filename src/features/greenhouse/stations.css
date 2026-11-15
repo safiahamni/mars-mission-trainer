@@ -1,0 +1,486 @@
+/* Station artwork: climate console, soil lab line, compost bins.
+   Every rule is prefixed with .gm-game so it beats the older station rules in style.css. */
+
+.gm-game{--lh:22px}
+
+.gm-game :is(.climate-station,.soil-station,.compost-station){
+  display:block;padding:0;gap:0;border:0;border-radius:0;
+  background:transparent;box-shadow:none;overflow:visible;
+}
+.gm-game :is(.climate-station,.soil-station,.compost-station):hover{filter:brightness(1.06)}
+
+.gm-game .climate-station{top:7%;left:3%;width:20%;height:17%}
+.gm-game .soil-station{top:7%;right:3%;width:280px;height:64px}
+.gm-game .compost-station{bottom:7%;left:3%;width:170px;height:52px}
+
+/* Dark name pill with a yellow number badge */
+.gm-game .st-label{
+  position:absolute;z-index:3;top:calc(var(--lh) / -2);left:-8px;
+  display:inline-flex;align-items:center;gap:6px;height:var(--lh);padding:0 10px 0 0;
+  border-radius:999px;background:#2b2a3a;color:#fff;
+  font-size:12px;font-weight:900;white-space:nowrap;box-shadow:0 2px 0 #00000033;
+}
+.gm-game .st-num{
+  display:grid;place-items:center;flex:none;width:var(--lh);height:var(--lh);
+  border-radius:50%;background:#ffd84a;color:#2b2a3a;font-style:normal;font-size:12px;font-weight:1000;
+}
+.gm-game .compost-station .st-label{top:auto;bottom:calc(var(--lh) / -2);left:4%}
+.gm-game .st-warn{
+  position:absolute;z-index:3;right:-6px;bottom:-10px;padding:3px 8px;border:2px solid #2b2a3a;border-radius:999px;
+  background:#ff6460;color:#fff;font-size:clamp(8px,.85vw,11px);font-weight:900;
+}
+
+/* 1 · Climate control */
+.gm-game .cp-panel{
+  position:absolute;inset:0;display:block;padding:clamp(14px,1.7vw,24px) 7% 7%;
+  border:3px solid #2b2a3a;border-radius:16px;background:#e6e4ea;box-shadow:0 4px 0 #2b2a3a40;
+}
+.gm-game .cp-screen{
+  display:flex;flex-direction:column;justify-content:center;gap:2px;height:100%;padding:4% 9%;
+  border:3px solid #2b2a3a;border-radius:10px;background:#283640;
+}
+.gm-game .cp-name{color:#fff;font-size:clamp(9px,.95vw,13px);font-weight:900;letter-spacing:.02em}
+.gm-game .cp-track{position:relative;display:block;height:clamp(8px,.9vw,12px);margin:3px 0 8%;border-radius:8px;background:#4f5b66}
+.gm-game .cp-band{position:absolute;top:0;bottom:0;border-radius:8px;background:#52d5ae}
+.gm-game .cp-knob{
+  position:absolute;top:50%;width:clamp(16px,1.7vw,24px);aspect-ratio:1;transform:translate(-50%,-50%);
+  border:3px solid #2b2a3a;border-radius:50%;background:#ffd84a;transition:left .2s;
+}
+.gm-game .cp-knob.temp{background:#ff9068}
+
+/* 2 · Soil lab */
+.gm-game .sl-row{position:absolute;inset:calc(var(--lh) * .55) 0 0 0;display:flex;align-items:stretch}
+.gm-game .sl-machine{position:relative;display:block;flex:1 1 0;min-width:0}
+.gm-game .sl-machine svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.gm-game .sl-tag{
+  position:absolute;left:50%;bottom:-6px;transform:translateX(-50%);padding:1px 4px;border-radius:5px;
+  background:#2b2a3a;color:#fff;font-size:8px;font-weight:900;white-space:nowrap;
+}
+.gm-game .sl-arrow{position:relative;flex:0 0 4%;align-self:center}
+.gm-game .sl-arrow::before{
+  content:"";position:absolute;left:50%;top:-4px;transform:translateX(-50%);
+  border-left:6px solid #2b2a3a;border-top:4px solid transparent;border-bottom:4px solid transparent;
+}
+
+/* 3 · Compost sort */
+.gm-game .cs-row{position:absolute;inset:0 0 calc(var(--lh) / 2) 0;display:flex;align-items:flex-end;gap:3%}
+.gm-game .cs-row svg{flex:1 1 0;width:0;min-width:0;height:100%;overflow:visible}
+.gm-game .cs-row .cs-crate{flex-grow:1.4}
+
+/* 4 · Electricity box on the map */
+.gm-game .wiring-station{display:block;padding:0;gap:0;border:0;border-radius:0;background:transparent;box-shadow:none;right:3%;bottom:7%;width:64px;height:56px}
+.gm-game .wiring-station .ws-art{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.gm-game .wiring-station .st-label{top:auto;left:auto;right:4%;bottom:calc(var(--lh) / -2)}
+.gm-game .wiring-station .st-warn{bottom:auto;top:-12px;right:-4px}
+.gm-game .st-num.urgent{background:#ff5e5b;color:#fff}
+.gm-game .ws-lamp.out{animation:ebBlink .7s infinite alternate}
+.gm-game .ws-spark{transform-box:fill-box;transform-origin:center;animation:wsSpark .35s steps(2) infinite alternate}
+@keyframes wsSpark{from{opacity:1}to{opacity:.25}}
+@keyframes ebBlink{to{opacity:.35}}
+
+/* Fix wiring minigame: electricity box */
+.gm-game .eb-timer{display:flex;align-items:center;gap:10px;padding:7px 12px;border:3px solid #2b2a3a;border-radius:10px;background:#ff6d67;color:#fff;font-size:14px;font-weight:1000}
+.gm-game .eb-timer>i{flex:1;height:12px;overflow:hidden;border:2px solid #2b2a3a;border-radius:7px;background:#ffffff40}
+.gm-game .eb-timer em{display:block;height:100%;background:#ffd84a;transition:width 1s linear}
+.gm-game .eb-timer b{min-width:34px;text-align:right;font-size:22px}
+.gm-game .eb-box{position:relative;width:min(520px,100%);margin:12px auto 8px;padding:12px;border:4px solid #2b2a3a;border-radius:18px;background:#d7d5df;box-shadow:inset 0 0 0 3px #f1eff5,0 5px 0 #2b2a3a55}
+.gm-game .eb-box.miss{animation:ebShake .35s}
+@keyframes ebShake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.gm-game .eb-head{display:flex;align-items:center;justify-content:space-between;height:32px;margin-bottom:10px;padding:0 12px;border-radius:9px;background:#2b2a3a;color:#ffd84a;font-size:13px;font-weight:1000}
+.gm-game .eb-lamp{width:16px;height:16px;border:2px solid #fff;border-radius:50%;background:#ff5e5b;animation:ebBlink .7s infinite alternate}
+.gm-game .eb-panel{position:relative;box-sizing:border-box;display:grid;grid-template-columns:104px minmax(0,1fr) 104px;height:200px;padding:8px 10px;border:3px solid #2b2a3a;border-radius:11px;background:#283640}
+.gm-game .eb-panel{grid-template-rows:minmax(0,1fr);overflow:hidden}
+.gm-game .eb-col{display:grid;grid-template-rows:repeat(4,minmax(0,1fr));align-items:center;min-height:0;position:relative;z-index:2}
+.gm-game .eb-wires{position:absolute;left:116px;right:116px;top:8px;bottom:8px;display:block;width:auto;height:auto;overflow:visible;z-index:1}
+.gm-game .eb-wire{fill:none;stroke-width:6;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.gm-game .eb-wire.red{stroke:#ff5555}.gm-game .eb-wire.blue{stroke:#3ec6f0}.gm-game .eb-wire.yellow{stroke:#ffd84a}.gm-game .eb-wire.purple{stroke:#bc86ff}
+.gm-game .eb-end{--c:#fff;display:flex;align-items:center;justify-content:space-between;gap:8px;height:36px;padding:0 8px;border:3px solid #151521;border-radius:9px;background:#3a4252;color:#fff;font:inherit;font-size:12px;font-weight:1000;cursor:pointer;transition:transform .1s}
+.gm-game .eb-end.right{flex-direction:row}
+.gm-game .eb-end i{flex:none;width:18px;height:18px;border:3px solid #151521;border-radius:50%;background:var(--c)}
+.gm-game .eb-end:hover:not(.done){transform:scale(1.05)}
+.gm-game .eb-end.red{--c:#ff5555}.gm-game .eb-end.blue{--c:#3ec6f0}.gm-game .eb-end.yellow{--c:#ffd84a}.gm-game .eb-end.purple{--c:#bc86ff}
+.gm-game .eb-end.picked{outline:4px solid #fff;transform:scale(1.08)}
+.gm-game .eb-end.done{opacity:.45;cursor:default}
+.gm-game .eb-risk{margin-top:6px;text-align:center;color:#a53a2f;font-size:12px;font-weight:900}
+.gm-game .gm-wire-status{font-size:12px}
+
+@media(max-width:740px){
+  .gm-game .eb-panel{grid-template-columns:84px minmax(0,1fr) 84px;height:190px}
+  .gm-game .eb-wires{left:96px;right:96px}
+  .gm-game .eb-end{height:34px;padding:0 6px;font-size:11px}
+  .gm-game .climate-station{width:30%;height:17%}
+  .gm-game .soil-station{width:230px;height:56px}
+  .gm-game .compost-station{width:150px;height:48px}
+}
+
+/* ---- wiring: keep plugs in column 1 and sockets in column 3 (the SVG is absolutely positioned) ---- */
+.gm-game .eb-panel>.eb-col:first-child{grid-column:1}
+.gm-game .eb-panel>.eb-col:last-child{grid-column:3}
+.gm-game .eb-wire{stroke-width:7;filter:drop-shadow(0 0 2px #0008)}
+
+/* ---- stations nudged away from the walls ---- */
+.gm-game .soil-station{top:11%;right:9%}
+.gm-game .compost-station{bottom:11%;left:9%}
+.gm-game .wiring-station{bottom:11%;right:8%}
+
+/* ---- compost sorting modal ---- */
+.gm-game .cm-stage{position:relative;margin:10px 0 12px;padding:14px 12px 16px;border:3px solid #2b2a3a;border-radius:12px;background:repeating-linear-gradient(90deg,#3a4150 0 28px,#343a48 28px 56px);box-shadow:inset 0 -10px 0 #2b2f3b}
+.gm-game .cm-dots{display:flex;justify-content:center;gap:7px;margin-bottom:10px}
+.gm-game .cm-dots i{width:14px;height:14px;border:2px solid #151521;border-radius:50%;background:#555e70}
+.gm-game .cm-dots i.done{background:#52d5ae}
+.gm-game .cm-dots i.now{background:#ffd84a;animation:cmPulse .8s infinite alternate}
+@keyframes cmPulse{to{transform:scale(1.25)}}
+.gm-game .cm-item{width:min(260px,100%);margin:0 auto;grid-template-columns:1fr;justify-items:center;text-align:center;gap:4px;padding:14px 12px;border:3px solid #2b2a3a;border-style:solid;border-radius:14px;background:#fffdf8;box-shadow:0 5px 0 #151521;animation:cmDrop .35s ease-out}
+.gm-game .cm-item span{font-size:52px;line-height:1.1}
+.gm-game .cm-item b{font-size:16px}
+.gm-game .cm-item small{font-size:10px;line-height:1.3;color:#6b6879}
+@keyframes cmDrop{from{transform:translateY(-22px);opacity:0}}
+.gm-game .cm-bins{gap:12px}
+.gm-game .cm-bins button{position:relative;min-height:128px;padding:20px 6px 10px;border:3px solid #2b2a3a;border-top-width:3px;border-radius:6px 6px 16px 16px;overflow:visible;box-shadow:0 5px 0 #151521;transition:transform .12s}
+.gm-game .cm-bins button:hover{transform:translateY(-4px) rotate(-1deg)}
+.gm-game .cm-bins button:active{transform:translateY(1px)}
+.gm-game .cm-lid{position:absolute;left:-7px;right:-7px;top:-12px;height:16px;border:3px solid #2b2a3a;border-radius:8px;background:#f4f2f6;transform-origin:left bottom;transition:transform .18s}
+.gm-game .cm-bins button:hover .cm-lid{transform:rotate(-9deg) translateY(-3px)}
+.gm-game .cm-bins em{font-style:normal;font-size:36px;line-height:1}
+.gm-game .cm-bins b{font-size:14px;letter-spacing:.04em}
+.gm-game .cm-bins small{font-size:11px;opacity:.95}
+.gm-game .gm-sort-meter{margin-top:12px;font-size:12px}
+@media (prefers-reduced-motion:reduce){.gm-game .cm-item,.gm-game .cm-dots i.now{animation:none}}
+
+/* ---- wiring v3: fixed pixel rows so the SVG wires always line up with the plugs ---- */
+.gm-game .eb-panel{height:auto;grid-template-rows:212px;padding:8px 10px}
+.gm-game .eb-col{grid-template-rows:repeat(4,44px);row-gap:12px;align-content:start;align-items:stretch;height:212px}
+.gm-game .eb-end{height:44px}
+.gm-game .eb-wires{top:8px;bottom:auto;height:212px}
+@media(max-width:740px){.gm-game .eb-panel{height:auto}.gm-game .eb-end{height:44px}}
+
+/* ---- soil lab modal ---- */
+.gm-game .sl2-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:4px 0 12px}
+.gm-game .sl2-step{display:flex;align-items:center;gap:6px;padding:6px 8px;border:2px solid #2b2a3a;border-radius:9px;background:#d5d3dc;font-size:11px;font-weight:900}
+.gm-game .sl2-step span{display:grid;place-items:center;flex:none;width:20px;height:20px;border:2px solid #2b2a3a;border-radius:50%;background:#fff;font-size:11px}
+.gm-game .sl2-step.current{background:#ffd84a}
+.gm-game .sl2-step.complete{background:#9bd36a}
+.gm-game .sl2-body{display:grid;grid-template-columns:200px minmax(0,1fr);gap:14px;align-items:stretch}
+.gm-game .sl2-jar{position:relative;min-height:210px;overflow:hidden;border:4px solid #2b2a3a;border-radius:10px 10px 28px 28px;background:linear-gradient(#cfe7ee,#e9f5f8);box-shadow:inset 0 0 0 3px #ffffff80}
+.gm-game .sl2-soil{position:absolute;left:0;right:0;bottom:0;background:radial-gradient(#d0a679 2px,transparent 3px) 0 0/16px 16px,#a65f3f;transition:height .5s}
+.gm-game .sl2-jar.done .sl2-soil{background:radial-gradient(#9ed06a 2px,transparent 3px) 0 0/16px 16px,#6f4c34}
+.gm-game .sl2-jar-tag{position:absolute;left:50%;top:8px;transform:translateX(-50%);padding:2px 8px;border-radius:999px;background:#2b2a3a;color:#fff;font-size:9px;font-weight:900;white-space:nowrap}
+.gm-game .sl2-bug{position:absolute;left:44%;bottom:12%;width:11px;height:11px;border:2px solid #1d5a46;border-radius:50%;background:#7ef0c0;animation:sl2Bug 2.4s ease-in-out infinite alternate;animation-delay:calc(var(--i) * -.3s)}
+.gm-game .sl2-bug:nth-child(3n){left:62%;bottom:22%}
+.gm-game .sl2-bug:nth-child(3n+1){left:26%;bottom:16%}
+.gm-game .sl2-bug:nth-child(3n+2){left:44%;bottom:30%}
+.gm-game .sl2-bug:nth-child(4n){left:34%;bottom:8%}
+.gm-game .sl2-bug:nth-child(5n){left:56%;bottom:10%}
+@keyframes sl2Bug{from{transform:translate(-7px,2px)}to{transform:translate(8px,-9px)}}
+.gm-game .sl2-bubble{position:absolute;bottom:20%;left:calc(12% + var(--i) * 14%);width:9px;height:9px;border:2px solid #fff;border-radius:50%;animation:sl2Up 2.2s linear infinite;animation-delay:calc(var(--i) * -.37s)}
+@keyframes sl2Up{from{transform:translateY(0);opacity:.9}to{transform:translateY(-120px);opacity:0}}
+.gm-game .sl2-panel{display:flex;flex-direction:column;justify-content:center;gap:10px;padding:14px;border:3px solid #2b2a3a;border-radius:10px;background:#283640;color:#fff}
+.gm-game .sl2-hint{margin:0;color:#dfe6ea;font-size:13px;line-height:1.4}
+.gm-game .sl2-dots{display:flex;gap:8px}
+.gm-game .sl2-dots i{width:26px;height:26px;border:3px solid #151521;border-radius:50%;background:#4f5b66}
+.gm-game .sl2-dots i.on{background:#52d5ae}
+.gm-game .sl2-btn{padding:11px 14px;border:3px solid #151521;border-radius:10px;background:#ffd84a;color:#2b2a3a;font:inherit;font-size:14px;font-weight:1000;cursor:pointer;box-shadow:0 4px 0 #a07a22}
+.gm-game .sl2-btn:active{transform:translateY(3px);box-shadow:0 1px 0 #a07a22}
+.gm-game .sl2-btn.alt{background:#ff9068;box-shadow:0 4px 0 #a2482b}
+.gm-game .sl2-btn.small{font-size:12px;padding:8px 10px;text-align:left}
+.gm-game .sl2-timer{display:flex;align-items:center;gap:10px}
+.gm-game .sl2-timer i{flex:1;height:14px;overflow:hidden;border:2px solid #151521;border-radius:8px;background:#4f5b66}
+.gm-game .sl2-timer em{display:block;height:100%;background:#52d5ae;transition:width 1s linear}
+.gm-game .sl2-timer b{min-width:48px;text-align:right;font-size:22px;color:#ffd84a}
+.gm-game .sl2-tests{display:grid;gap:8px}
+.gm-game .sl2-gauge{display:grid;grid-template-columns:130px 1fr 42px;align-items:center;gap:8px;font-size:12px;font-weight:900}
+.gm-game .sl2-gauge i{height:12px;overflow:hidden;border:2px solid #151521;border-radius:7px;background:#4f5b66}
+.gm-game .sl2-gauge em{display:block;height:100%;background:#52d5ae;animation:sl2Fill .8s ease-out}
+@keyframes sl2Fill{from{width:0}}
+.gm-game .sl2-success{display:grid;gap:2px}
+.gm-game .sl2-success b{color:#7ef0c0;font-size:16px}
+.gm-game .sl2-success small{color:#dfe6ea;font-size:12px}
+.gm-game .sl2-perc{font-size:13px;font-weight:900}
+.gm-game .sl2-perc b{color:#ffd84a}
+.gm-game .sl2-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:10px;font-size:11px;font-weight:900;color:#5f5c6d}
+.gm-game .sl2-reset{padding:5px 10px;border:2px solid #2b2a3a;border-radius:7px;background:#fff;font:inherit;font-size:11px;font-weight:900;cursor:pointer}
+@media(max-width:560px){
+  .gm-game .sl2-steps{grid-template-columns:repeat(2,1fr)}
+  .gm-game .sl2-body{grid-template-columns:1fr}
+  .gm-game .sl2-jar{min-height:150px}
+  .gm-game .sl2-gauge{grid-template-columns:100px 1fr 38px}
+}
+@media (prefers-reduced-motion:reduce){
+  .gm-game .sl2-bug,.gm-game .sl2-bubble,.gm-game .sl2-gauge em{animation:none}
+  .gm-game .sl2-soil,.gm-game .sl2-timer em{transition:none}
+}
+
+/* ---- soil lab: drag the scoop / microbe bottle ---- */
+.gm-game .sl2-body.with-source{grid-template-columns:150px 190px minmax(0,1fr)}
+.gm-game .sl2-source{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;padding:10px 6px;border:3px solid #2b2a3a;border-radius:10px;background:#e8c899;text-align:center}
+.gm-game .sl2-source b{font-size:11px;font-weight:1000}
+.gm-game .sl2-source small{font-size:10px;font-weight:800;color:#6b5230}
+.gm-game .sl2-pile{position:relative;width:120px;height:calc(90px * var(--left,1));min-height:34px;margin-top:auto;border-radius:60px 60px 10px 10px/80px 80px 10px 10px;background:radial-gradient(#d0a679 2px,transparent 3px) 0 0/14px 14px,#a65f3f;border:3px solid #2b2a3a;cursor:grab;touch-action:none;user-select:none;transition:height .4s}
+.gm-game .sl2-pile i{position:absolute;width:8px;height:8px;border-radius:50%;background:#7a3a22;top:calc(20% + var(--n,0) * 6%);left:20%}
+.gm-game .sl2-pile i:nth-child(2){left:40%;top:45%}.gm-game .sl2-pile i:nth-child(3){left:62%;top:30%}.gm-game .sl2-pile i:nth-child(4){left:30%;top:62%}.gm-game .sl2-pile i:nth-child(5){left:70%;top:60%}.gm-game .sl2-pile i:nth-child(6){left:50%;top:70%}.gm-game .sl2-pile i:nth-child(7){left:80%;top:44%}
+.gm-game .sl2-pile em{position:absolute;right:-18px;top:-26px;font-style:normal;font-size:34px;animation:sl2Wiggle 1.4s ease-in-out infinite alternate}
+@keyframes sl2Wiggle{from{transform:rotate(-12deg)}to{transform:rotate(12deg)}}
+.gm-game .sl2-bottle{position:relative;display:grid;place-items:center;width:64px;height:96px;margin-top:auto;border:3px solid #2b2a3a;border-radius:14px 14px 10px 10px;background:#e9f5f8;cursor:grab;touch-action:none;user-select:none;overflow:hidden}
+.gm-game .sl2-bottle span{position:relative;z-index:1;font-size:30px}
+.gm-game .sl2-bottle em{position:absolute;left:0;right:0;bottom:0;height:calc(80% * var(--left,1));background:#7ef0c0;transition:height .4s}
+.gm-game .sl2-pile.grabbed,.gm-game .sl2-bottle.grabbed{opacity:.6;cursor:grabbing}
+.gm-game .sl2-jar{transition:box-shadow .15s,transform .15s}
+.gm-game .sl2-jar.hot{box-shadow:inset 0 0 0 3px #ffffff80,0 0 0 4px #ffd84a;transform:scale(1.02)}
+.gm-game .sl2-jar.pour .sl2-soil{animation:sl2Pour .5s ease-out}
+@keyframes sl2Pour{from{filter:brightness(1.5)}}
+.gm-game .sl2-count{color:#ffd84a;font-size:18px}
+.sl2-ghost{position:fixed;z-index:60;transform:translate(-50%,-70%) rotate(-15deg);font-size:44px;pointer-events:none;filter:drop-shadow(0 4px 3px #0006)}
+@media(max-width:560px){.gm-game .sl2-body.with-source{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){.gm-game .sl2-pile em,.gm-game .sl2-jar.pour .sl2-soil{animation:none}.gm-game .sl2-pile,.gm-game .sl2-bottle em{transition:none}}
+
+/* ---- activity notice: pops near the top of the screen, then fades away ---- */
+.gm-game .gm-toast-bar{
+  position:fixed;z-index:40;top:84px;bottom:auto;left:50%;max-width:min(560px,calc(100vw - 32px));
+  padding:14px 26px;border:4px solid #2b2a3a;border-radius:16px;background:#ffd84a;color:#2b2a3a;
+  font-size:17px;font-weight:1000;text-align:center;line-height:1.35;box-shadow:0 6px 0 #2b2a3a,0 14px 30px #0006;
+  opacity:0;transform:translate(-50%,-20px) scale(.95);pointer-events:none;transition:opacity .35s,transform .35s;
+}
+.gm-game .gm-toast-bar.visible{opacity:1;transform:translate(-50%,0) scale(1)}
+.gm-game .gm-toast-bar.fresh{animation:toastPop .45s cubic-bezier(.2,1.5,.4,1)}
+@keyframes toastPop{from{opacity:0;transform:translate(-50%,-30px) scale(.8)}}
+@media (prefers-reduced-motion:reduce){.gm-game .gm-toast-bar,.gm-game .gm-toast-bar.fresh{transition:none;animation:none}}
+
+/* ---- wiring: wires span the full gap between plugs and sockets ---- */
+.gm-game .eb-wires{left:108px;right:auto;width:calc(100% - 216px);height:212px}
+@media(max-width:740px){.gm-game .eb-wires{left:92px;width:calc(100% - 184px)}}
+.gm-game .eb-note{margin-top:6px;padding:7px 10px;border-radius:8px;background:#fff6c7;border:2px solid #2b2a3a;text-align:center;font-size:13px;font-weight:900}
+
+/* ---- shield alignment: turn each shield to face the radiation ---- */
+.gm-game .sh-timer{background:#ff9068}
+.gm-game .sh-source{display:flex;align-items:center;justify-content:center;gap:10px;margin:12px 0;padding:10px;border:3px solid #2b2a3a;border-radius:12px;background:linear-gradient(90deg,#ffd84a,#ff8a5c);font-size:15px;font-weight:1000}
+.gm-game .sh-source span{font-size:30px;animation:shPulse .7s ease-in-out infinite alternate}
+@keyframes shPulse{to{transform:scale(1.25)}}
+.gm-game .sh-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.gm-game .sh-card{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 6px;border:3px solid #2b2a3a;border-radius:12px;background:#fffdf8;color:#2b2a3a;font:inherit;cursor:pointer;box-shadow:0 4px 0 #2b2a3a55;transition:transform .12s,background .2s}
+.gm-game .sh-card:hover{transform:translateY(-3px)}
+.gm-game .sh-card.ok{background:#bdeaa4;cursor:default}
+.gm-game .sh-bed{font-size:12px;font-weight:900}
+.gm-game .sh-dial{position:relative;display:grid;place-items:center;width:84px;height:84px;border:3px solid #151521;border-radius:14px;background:#283640}
+.gm-game .sh-dial i{font-style:normal;font-size:40px;opacity:.55}
+.gm-game .sh-dial em{position:absolute;font-style:normal;font-size:44px;font-weight:1000;color:#ffd84a;text-shadow:0 2px 0 #151521}
+.gm-game .sh-card.ok .sh-dial em{color:#52d5ae}
+.gm-game .sh-card small{font-size:10px;font-weight:1000;color:#6b5230}
+.gm-game .sh-msg{margin-top:12px;padding:9px 12px;border:2px solid #2b2a3a;border-radius:9px;background:#fff6c7;text-align:center;font-size:13px;font-weight:900}
+.gm-game .sh-result{display:grid;justify-items:center;gap:8px;padding:22px 12px;text-align:center}
+.gm-game .sh-result>div{font-size:56px}
+.gm-game .sh-result b{font-size:22px}
+.gm-game .sh-result.ok b{color:#2f8a4f}
+.gm-game .sh-result.bad b{color:#c0392b}
+.gm-game .sh-result p{margin:0;max-width:420px;font-size:14px;line-height:1.4}
+@media (prefers-reduced-motion:reduce){.gm-game .sh-source span{animation:none}.gm-game .sh-card{transition:none}}
+
+/* ---- climate control: arcade catcher ---- */
+.gm-game .cg-timer{background:#4aa3d8}
+.gm-game .cg-gauges{display:grid;gap:10px;margin:10px 0;padding:12px;border:3px solid #2b2a3a;border-radius:12px;background:#283640;color:#fff}
+.gm-game .cg-gauge>span{display:flex;justify-content:space-between;font-size:12px;font-weight:1000}
+.gm-game .cg-gauge>span b{color:#ffd84a;font-size:14px}
+.gm-game .cg-bar{position:relative;height:16px;margin-top:5px;border:2px solid #151521;border-radius:9px;background:#4f5b66}
+.gm-game .cg-band{position:absolute;top:0;bottom:0;border-radius:7px;background:#52d5ae}
+.gm-game .cg-bar em{position:absolute;top:50%;width:20px;height:20px;transform:translate(-50%,-50%);border:3px solid #151521;border-radius:50%;background:#ff9068}
+.gm-game .cg-bar em.ok{background:#ffd84a}
+.gm-game .cg-hold{display:grid;gap:4px;font-size:11px;font-weight:1000;color:#dfe6ea}
+.gm-game .cg-hold i{display:block;height:10px;overflow:hidden;border:2px solid #151521;border-radius:6px;background:#4f5b66}
+.gm-game .cg-hold em{display:block;height:100%;background:#52d5ae}
+.gm-game .cg-legend{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 12px;margin-bottom:6px;font-size:11px;font-weight:900;color:#5f5c6d}
+.gm-game .cg-field{position:relative;height:250px;overflow:hidden;border:4px solid #2b2a3a;border-radius:12px;background:linear-gradient(#1c2740,#2c3d5c 70%,#3a4f72);box-shadow:inset 0 0 0 3px #ffffff22;touch-action:none;cursor:ew-resize;user-select:none}
+.gm-game .cg-field::before{content:"";position:absolute;inset:0;background:radial-gradient(#fff 1px,transparent 1.5px) 0 0/46px 38px;opacity:.18;pointer-events:none}
+.gm-game .cg-paddle{position:absolute;bottom:8px;transform:translateX(-50%);font-size:48px;line-height:1;filter:drop-shadow(0 3px 2px #0008);pointer-events:none}
+.gm-game .cg-item{position:absolute;left:0;top:0;width:36px;height:36px;display:grid;place-items:center;font-size:28px;pointer-events:none;border-radius:50%;background:#ffffff22;box-shadow:0 0 12px #ffffff55}
+.gm-game .cg-item.sun{box-shadow:0 0 14px #ffd84a}.gm-game .cg-item.heat{box-shadow:0 0 14px #ff6d4a}.gm-game .cg-item.cold{box-shadow:0 0 14px #6fd8ff}.gm-game .cg-item.dust{box-shadow:0 0 14px #b99b6a;background:#b99b6a44}
+.gm-game .cg-item.pop{animation:cgPop .22s ease-out forwards}
+@keyframes cgPop{to{opacity:0;filter:brightness(2)}}
+@media (prefers-reduced-motion:reduce){.gm-game .cg-item.pop{animation:none;opacity:0}}
+@media(max-width:560px){.gm-game .cg-field{height:220px}}
+
+/* ---- climate tutorial ---- */
+.gm-game .cgd{display:grid;gap:12px;justify-items:stretch}
+.gm-game .cgd-demo{display:grid;gap:8px;padding:10px;border:3px solid #2b2a3a;border-radius:12px;background:#283640}
+.gm-game .cgd-field{position:relative;height:150px;overflow:hidden;border:3px solid #151521;border-radius:10px;background:linear-gradient(#1c2740,#3a4f72)}
+.gm-game .cgd-item{position:absolute;top:0;font-style:normal;font-size:26px;opacity:0;animation:cgdFall 9s linear infinite}
+.gm-game .cgd-item.a{left:22%;animation-delay:0s}
+.gm-game .cgd-item.b{left:50%;animation-delay:3s}
+.gm-game .cgd-item.c{left:78%;animation-delay:6s}
+@keyframes cgdFall{0%{opacity:1;transform:translate(-50%,-30px)}30%{opacity:1;transform:translate(-50%,86px)}32%{opacity:0;transform:translate(-50%,92px)}100%{opacity:0}}
+.gm-game .cgd-item.b{animation-name:cgdFallMiss}
+@keyframes cgdFallMiss{0%{opacity:1;transform:translate(-50%,-30px)}32%{opacity:1;transform:translate(-50%,150px)}34%{opacity:0}100%{opacity:0}}
+.gm-game .cgd-basket{position:absolute;bottom:6px;left:22%;font-size:42px;transform:translateX(-50%);animation:cgdBasket 9s ease-in-out infinite}
+@keyframes cgdBasket{0%,26%{left:22%}38%,92%{left:78%}100%{left:22%}}
+.gm-game .cgd-hand{position:absolute;bottom:2px;left:22%;font-size:20px;transform:translate(-50%,50%);opacity:.85;animation:cgdBasket 9s ease-in-out infinite}
+.gm-game .cgd-gauge small{display:block;margin-top:5px;color:#dfe6ea;font-size:11px;font-weight:800;text-align:center}
+.gm-game .cgd-mark{position:absolute;top:50%;width:20px;height:20px;transform:translate(-50%,-50%);border:3px solid #151521;border-radius:50%;background:#ff9068;animation:cgdMark 9s ease-in-out infinite}
+@keyframes cgdMark{0%{left:12%}30%,100%{left:55%;background:#ffd84a}}
+.gm-game .cgd-steps{display:grid;gap:6px;margin:0;padding-left:22px;font-size:13px;line-height:1.4}
+.gm-game .cgd-green{color:#1f9d78}
+.gm-game .cgd-target{padding:8px 10px;border:2px solid #2b2a3a;border-radius:9px;background:#fff6c7;text-align:center;font-size:13px;font-weight:1000}
+@media (prefers-reduced-motion:reduce){.gm-game .cgd-item,.gm-game .cgd-basket,.gm-game .cgd-hand,.gm-game .cgd-mark{animation:none}.gm-game .cgd-item{opacity:1;top:30px}}
+
+/* ---- climate settings panel ---- */
+.gm-game .cp-screen{justify-content:center;gap:6px}
+.gm-game .cp-icon{display:block;font-size:20px;line-height:1}
+.gm-game .cp-name{display:none}
+.gm-game .cp-screen{display:grid;grid-template-columns:28px minmax(0,1fr);align-content:center;align-items:center;gap:8px}
+.gm-game .cp-track{margin:0}
+
+/* ---- glass shield station ---- */
+.gm-game .shield-station{display:block;padding:0;gap:0;border:0;border-radius:0;background:transparent;box-shadow:none;top:42%;left:4%;width:72px;height:80px;overflow:visible}
+.gm-game .shield-station .sh-art{position:absolute;inset:0;width:100%;height:100%;overflow:visible;filter:drop-shadow(0 3px 0 #2b2a3a55)}
+.gm-game .shield-station:hover{filter:brightness(1.08)}
+.gm-game .shield-station .st-label{top:auto;left:50%;bottom:calc(var(--lh) / -2 - 4px);transform:translateX(-50%)}
+.gm-game .shield-station .st-warn{top:-12px;bottom:auto;right:-30px}
+.gm-game .shield-station.urgent .sh-art{animation:shGlow .7s ease-in-out infinite alternate}
+@keyframes shGlow{to{filter:drop-shadow(0 0 10px #ff5e5b)}}
+@media (prefers-reduced-motion:reduce){.gm-game .shield-station.urgent .sh-art{animation:none}}
+/* old purple box rules from style.css must not apply */
+.gm-game .shield-station.urgent{animation:none;box-shadow:none}
+.gm-game .sh-result.lk{text-align:center}
+.gm-game .sh-result.lk p{max-width:480px}
+@media(max-width:740px){.gm-game .shield-station{width:60px;height:68px}}
+
+/* ---- "Did you know?" windows: tidy type + spacing ---- */
+.gm-game .sh-result{gap:6px;padding:6px 10px 10px}
+.gm-game .sh-result>div:first-child{font-size:44px;line-height:1}
+.gm-game .sh-result>b{font-size:19px;line-height:1.2}
+.gm-game .sh-result p{margin:0;max-width:500px;font-size:14px;line-height:1.5;font-weight:600}
+.gm-game .sh-result p b{display:inline;font-size:inherit;color:#1f7a4f;font-weight:1000}
+.gm-game .sh-result .sl2-btn{margin-top:6px}
+.gm-game .dyk-list{display:grid;gap:8px;width:100%;max-width:500px;margin:4px 0;padding:0;list-style:none;text-align:left}
+.gm-game .dyk-list li{display:flex;align-items:center;gap:10px;padding:8px 10px;border:2px solid #2b2a3a;border-radius:10px;background:#fffdf8}
+.gm-game .dyk-list li>span{font-size:26px}
+.gm-game .dyk-list b{display:block;font-size:14px}
+.gm-game .dyk-list small{display:block;font-size:12px;line-height:1.35;color:#5f5c6d;font-weight:700}
+
+/* ---- smaller machine-style climate station + smaller shield ---- */
+.gm-game .climate-station{top:9%;left:4%;width:132px;height:100px}
+.gm-game .climate-station .cp-art{position:absolute;inset:0;width:100%;height:100%;overflow:visible;filter:drop-shadow(0 3px 0 #2b2a3a55)}
+.gm-game .climate-station .st-warn{bottom:-12px;right:-26px}
+.gm-game .shield-station{width:56px;height:62px}
+.gm-game .st-num{font-size:13px}
+@media(max-width:740px){.gm-game .climate-station{width:112px;height:86px}.gm-game .shield-station{width:48px;height:54px}}
+
+/* ---- station sizes + positions (final) ---- */
+.gm-game .climate-station{width:112px;height:86px}
+.gm-game .soil-station{top:3%;width:310px;height:72px}
+.gm-game .compost-station{width:190px;height:58px}
+.gm-game .wiring-station{width:72px;height:64px}
+.gm-game .shield-station{left:6%;width:64px;height:70px}
+@media(max-width:740px){
+  .gm-game .climate-station{width:96px;height:74px}
+  .gm-game .soil-station{top:3%;width:250px;height:60px}
+  .gm-game .compost-station{width:160px;height:50px}
+  .gm-game .wiring-station{width:60px;height:54px}
+  .gm-game .shield-station{left:6%;width:54px;height:60px}
+}
+
+/* ---- soil lab label moved below the station ---- */
+.gm-game .soil-station .st-label{top:auto;bottom:calc(var(--lh) / -2)}
+.gm-game .soil-station .sl-row{inset:0 0 calc(var(--lh) * .9) 0}
+
+/* ---- climate a touch smaller ---- */
+.gm-game .climate-station{width:102px;height:78px}
+@media(max-width:740px){.gm-game .climate-station{width:88px;height:68px}}
+
+/* ---- right sidebar: automatic checklist ---- */
+.gm-game .gm-task-group{margin-top:12px;padding:10px;border:1px solid #ffffff30;border-radius:10px;background:#211f2e}
+.gm-game .gm-task-group h3{margin:0 0 6px;color:#ffd84a;font-size:11px;letter-spacing:.1em}
+.gm-game .gm-task-group.emergency{border-color:#ff5e5b66}
+.gm-game .gm-task-group.emergency h3{color:#ff8a85}
+.gm-game .gm-ck{display:grid;grid-template-columns:26px minmax(0,1fr) 12px;gap:9px;align-items:center;width:100%;padding:8px 4px;border:0;border-bottom:1px solid #ffffff1f;background:transparent;color:#fff;font:inherit;text-align:left;cursor:pointer}
+.gm-game .gm-ck:last-child{border-bottom:0}
+.gm-game .gm-ck:hover{background:#ffffff12}
+.gm-game .gm-box{display:grid;place-items:center;width:24px;height:24px;border:3px solid #8f8ca3;border-radius:7px;background:transparent;color:#2b2a3a;font-size:15px;font-weight:1000;font-style:normal}
+.gm-game .gm-ck.done .gm-box{border-color:#52d5ae;background:#52d5ae}
+.gm-game .gm-ck.urgent .gm-box{border-color:#ff5e5b;background:#ff5e5b;color:#fff;animation:ckPulse .7s ease-in-out infinite alternate}
+@keyframes ckPulse{to{box-shadow:0 0 0 4px #ff5e5b66}}
+.gm-game .gm-ck-copy b,.gm-game .gm-ck-copy small{display:block}
+.gm-game .gm-ck-copy b{font-size:13px}
+.gm-game .gm-ck-copy small{margin-top:2px;color:#c9c7d6;font-size:11px;line-height:1.35}
+.gm-game .gm-ck.done .gm-ck-copy b{color:#8fe6cb;text-decoration:line-through;text-decoration-thickness:2px}
+.gm-game .gm-ck.idle{opacity:.55}
+.gm-game .gm-ck.urgent .gm-ck-copy b{color:#ff8a85}
+.gm-game .gm-ck>i{color:#ffd84a;font-style:normal;font-weight:1000}
+@media (prefers-reduced-motion:reduce){.gm-game .gm-ck.urgent .gm-box{animation:none}}
+
+/* ---- wiring station same size as climate settings ---- */
+.gm-game .wiring-station{width:102px;height:78px}
+@media(max-width:740px){.gm-game .wiring-station{width:88px;height:68px}}
+
+/* ---- right sidebar: border ends below the last task ---- */
+.gm-game .gm-tasks{height:auto;align-self:start;overflow:visible;padding-bottom:16px}
+
+/* ---- crop beds centered between the left and right paths ---- */
+.gm-game .gm-bed-grid{left:33.3%}
+@media(max-width:460px){.gm-game .gm-bed-grid{left:31.3%}}
+
+/* soil lab nudged down a tiny bit */
+.gm-game .soil-station{top:4.2%}
+
+/* ---- power outage: the room goes dark until the wiring is fixed ---- */
+.gm-game.has-outage .gm-map::after{
+  content:"";position:absolute;inset:0;z-index:30;pointer-events:none;background:rgba(3,5,18,.9);
+  -webkit-mask-image:radial-gradient(circle 105px at var(--wx,90%) var(--wy,88%),transparent 0,transparent 55%,#000 100%);
+    mask-image:radial-gradient(circle 105px at var(--wx,90%) var(--wy,88%),transparent 0,transparent 55%,#000 100%);
+}
+.gm-game.has-outage.outage-flicker .gm-map::after{animation:blackout 1.1s steps(1,end) 1 both;animation-delay:var(--fx-delay,0s)}
+@keyframes blackout{0%{opacity:0}15%{opacity:1}28%{opacity:.1}40%{opacity:1}52%{opacity:.25}66%,100%{opacity:1}}
+.gm-game.has-outage .gm-map .wiring-station{z-index:31}
+@media (prefers-reduced-motion:reduce){.gm-game.has-outage.outage-flicker .gm-map::after{animation:none}}
+
+/* ---- soil lab status badges (incubating / ready) ---- */
+.gm-game .soil-station .st-timer,.gm-game .soil-station .st-ready{
+  position:absolute;z-index:6;right:-6px;bottom:-12px;padding:3px 10px;border:2px solid #2b2a3a;border-radius:999px;
+  font-size:11px;font-weight:1000;white-space:nowrap;box-shadow:0 2px 0 #00000033;
+}
+.gm-game .soil-station .st-timer{background:#4aa3d8;color:#fff}
+.gm-game .soil-station .st-ready{background:#52d5ae;color:#2b2a3a;animation:stReady .6s ease-in-out infinite alternate}
+@keyframes stReady{from{transform:translateY(0);box-shadow:0 0 0 0 #52d5ae88}to{transform:translateY(-4px);box-shadow:0 0 0 6px #52d5ae44}}
+.gm-game .gm-ck.urgent .gm-ck-copy b{color:#ffd84a}
+@media (prefers-reduced-motion:reduce){.gm-game .soil-station .st-ready{animation:none}}
+
+/* ---- error pop-up (power outage lockouts) ---- */
+.gm-game .gm-toast-bar.err{background:#ff6d67;color:#fff;border-color:#2b2a3a}
+
+/* ---- crop choice menu fits its content ---- */
+.gm-game .gm-crop-choices{grid-template-columns:repeat(auto-fit,minmax(130px,1fr));justify-content:center}
+.gm-game .gm-crop-choices button{padding:14px 10px}
+
+/* ---- bigger stats bar ---- */
+@media(min-width:741px){
+  .gm-game .gm-hud{top:8px;height:68px;padding:6px 10px}
+  .gm-game .gm-hud-title{min-width:70px;font-size:17px}
+  .gm-game .gm-stat{padding:3px 10px 9px}
+  .gm-game .gm-stat>div span{font-size:12px}
+  .gm-game .gm-stat>div b{font-size:17px}
+  .gm-game .gm-stat>small{margin-top:2px;font-size:10px}
+  .gm-game .gm-stat>i{left:10px;right:10px;height:4px}
+}
+@media(min-width:741px) and (max-width:1300px){
+  .gm-game .gm-stat>div span{font-size:10px}
+  .gm-game .gm-stat>div b{font-size:14px}
+  .gm-game .gm-stat>small{font-size:8px}
+  .gm-game .gm-hud-title{font-size:14px}
+}
+
+/* ---- stats bar: stack label above value so nothing overlaps ---- */
+@media(min-width:741px){
+  .gm-game .gm-stat{overflow:hidden;padding:2px 10px 9px}
+  .gm-game .gm-stat>div{display:block;white-space:nowrap}
+  .gm-game .gm-stat>div span,.gm-game .gm-stat>div b,.gm-game .gm-stat>small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.2}
+  .gm-game .gm-stat>div span{font-size:11px}
+  .gm-game .gm-stat>div b{font-size:16px}
+  .gm-game .gm-stat>small{font-size:9px}
+  .gm-game .gm-hud-title{font-size:16px}
+}
+@media(min-width:741px) and (max-width:1300px){
+  .gm-game .gm-stat>div span{font-size:9px}
+  .gm-game .gm-stat>div b{font-size:13px}
+  .gm-game .gm-stat>small{font-size:7px}
+  .gm-game .gm-hud-title{font-size:13px;min-width:56px}
+}
+
+/* ---- shared team avatar inside the greenhouse: keep it above the beds and stations ---- */
+.gm-game .gm-map .avatar{z-index:6}
