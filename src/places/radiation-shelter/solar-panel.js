@@ -429,11 +429,15 @@ const SolarMission = (function () {
   let roverBroken = FORCE_REPAIR;
   const initialGame = getGame();
   setGame({ ...initialGame, roverReady: !roverBroken, power: { ...initialGame.power, panels: 'dusty' } });
+  let previousSol = initialGame.sol;
   onGameChange(game => {
-    if (game.power.panels !== 'dusty' || !allClean()) return;
+    const newSol = game.sol > previousSol;
+    previousSol = game.sol;
+
+    if (game.power.panels !== 'dusty' || (!newSol && !allClean())) return;
     dirt.forEach(panel => panel.fill(1));
     waitPanel = -1;
-    mapPanels.forEach(panel => panel.classList.remove('sd-clean'));
+    draw();
   });
   let repairDone = 0;               // 0..1
   let repairing = false, lastClank = 0;

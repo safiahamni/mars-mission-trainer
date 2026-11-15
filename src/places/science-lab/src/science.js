@@ -9,7 +9,7 @@ export function createDemoController(initialPower = 80, {testMysteryRocks = fals
   let food = 40;
   const resources = () => sharedResources?.read() ?? { power, oxygen, water, food, sol: 1, radiation: null };
   function spendMission(mission, cost = mission.power) {
-    if (sharedResources) return sharedResources.spendMission(cost, mission.supplies);
+    if (sharedResources) return sharedResources.spendMission(mission.id, cost, mission.supplies);
     if (power < cost) return false;
     power -= cost;
     return true;
@@ -24,6 +24,7 @@ export function createDemoController(initialPower = 80, {testMysteryRocks = fals
       if (completed.has(id)) return 'Completed';
       const mission = missions.find(mission => mission.id === id);
       const minimum = mission?.minimumPower;
+      if (sharedResources && resources().phase === 'night') return 'Sleep in Command Center to start the next Sol';
       if (sharedResources && mission && Object.entries(mission.supplies).some(
         ([resource, cost]) => resources()[resource] < cost
       )) return 'Top up mission supplies';
@@ -87,7 +88,7 @@ export function createDemoController(initialPower = 80, {testMysteryRocks = fals
     get samplingTarget() {
       return completed.has('mystery-rocks') ? 'rockytop' : null;
     },
-    get status() { return {...this.snapshot(), ...resources(), maxSols:7}; },
+    get status() { return {...this.snapshot(), maxSols:6, ...resources()}; },
     get food() { return resources().food; },
     harvestFood() {
       if (!completed.has('cosmic-claw') || food >= 50) return false;

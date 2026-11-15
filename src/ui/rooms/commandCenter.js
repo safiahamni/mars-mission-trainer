@@ -20,7 +20,7 @@ import {
 import {
   CC_CONFIG, WATER_CONFIG, SHIRT_COLORS,
   enterShelter, leaveShelter, sleep, isDay, spentToday, setOutfit, setShirt,
-  chapterCheck, endDayEarly,
+  chapterCheck, sleepRequirement, cropPrepTask,
 } from '../../systems/commandCenter.js';
 import { runEndSol } from '../../systems/endSol.js';
 import { makeWalker, isNear } from '../../systems/roomWalk.js';
@@ -141,8 +141,11 @@ export function renderCommandCenter(room, { onExit } = {}) {
     <svg class="cc-svg" viewBox="0 0 ${STAGE_W} ${STAGE_H}" aria-hidden="true">
       <path d="M66 760 H249 M249 640 H120 V178 H340 V222 H372" stroke="#2b2a3a" stroke-width="16" fill="none" stroke-linejoin="round"/>
       <path d="M66 760 H249 M249 640 H120 V178 H340 V222 H372" stroke="#f5c84c" stroke-width="9" fill="none" stroke-linejoin="round"/>
-      <path d="${PATH_D}" stroke="#f7ecd9" stroke-width="${ROOM_PATH_WIDTH + 6}" stroke-dasharray="7 6" fill="none"/>
-      <path d="${PATH_D}" stroke="#e8c49a" stroke-width="${ROOM_PATH_WIDTH}" fill="none"/>
+      <!-- the walkways: the same as the base map's roads (tan, brown dots, dashed white edges) -->
+      <defs><pattern id="cc-road-dots" width="22" height="22" patternUnits="userSpaceOnUse"><rect width="22" height="22" fill="#E8B98A"/><circle cx="11" cy="11" r="3.4" fill="#C98F5E"/></pattern></defs>
+      <path d="${PATH_D}" stroke="#E8B98A" stroke-width="${ROOM_PATH_WIDTH}" fill="none"/>
+      <path d="${PATH_D}" stroke="#FFFFFF" stroke-width="${ROOM_PATH_WIDTH - 8}" stroke-dasharray="10 8" stroke-opacity="0.9" fill="none"/>
+      <path d="${PATH_D}" stroke="url(#cc-road-dots)" stroke-width="${ROOM_PATH_WIDTH - 14}" fill="none"/>
     </svg>
     <div class="cc-chip-dark" style="left:80px;top:772px">From solar field</div>
 
@@ -168,24 +171,26 @@ export function renderCommandCenter(room, { onExit } = {}) {
 
     <!-- ! radiation shelter -->
     <div class="cc-shelter" data-b="shelter">
-      <i class="t" style="left:17px;top:15px;width:65px"></i><i class="t" style="left:95px;top:15px;width:65px"></i>
-      <i class="t" style="left:173px;top:15px;width:65px"></i><i class="t" style="left:251px;top:15px;width:84px"></i>
-      <i class="t" style="left:17px;top:330px;width:65px"></i><i class="t" style="left:95px;top:330px;width:65px"></i>
-      <i class="t" style="left:173px;top:330px;width:65px"></i><i class="t" style="left:251px;top:330px;width:84px"></i>
-      <i class="t v" style="left:15px;top:55px;height:110px"></i><i class="t v" style="left:15px;top:245px;height:75px"></i>
-      <i class="t v" style="left:310px;top:55px;height:80px"></i><i class="t v" style="left:310px;top:150px;height:80px"></i>
-      <i class="t v" style="left:310px;top:243px;height:75px"></i>
-      <div class="cc-bunk" style="left:172px;top:65px"><span></span><em class="cyan"></em></div>
-      <div class="cc-bunk" style="left:172px;top:133px"><span></span><em class="yellow"></em></div>
-      <div class="cc-shield">${icon('shield-check', 70)}</div>
+      <!-- a thick wall of water all round (water blocks radiation); the door is the gap at the top -->
+      <span class="cc-sh-ripple"></span>
+      <div class="cc-sh-floor"></div>
+      <div class="cc-sh-gap"></div>
+      <span class="cc-rug"></span>
+      <!-- three sleeping pods, one for each crew member -->
+      <div class="cc-pod" style="left:48px"><span></span><em class="cyan"></em></div>
+      <div class="cc-pod" style="left:160px"><span></span><em class="yellow"></em></div>
+      <div class="cc-pod" style="left:250px"><span></span><em class="purple"></em></div>
+      <!-- bedside lamp: glows while the crew is inside -->
+      <span class="cc-lamp-table"></span>
       <span class="cc-lamp"></span>
+      <span class="cc-zzz"><b>z</b><b>z</b><b>z</b></span>
     </div>
     <div class="cc-door"></div>
     <div class="cc-tag" style="left:858px;top:528px"><b class="red">!</b> Radiation shelter</div>
     <div class="cc-tip cc-tip-shelter"><strong>Radiation shelter</strong><br>A safe room with thick walls and water tanks that block space radiation. The crew sleeps here.</div>
 
     <!-- mission control: just part of the room now (no pop-up, no checklist) -->
-    <div class="cc-tag" style="left:716px;top:356px">Mission control</div>
+    <div class="cc-tag" style="left:786px;top:356px;transform:translateX(-50%)">Mission control</div>
     <div class="cc-screens" data-b="screens" aria-hidden="true">
       <span class="cc-screen" style="left:0;top:9px;width:96px;height:72px">${EARTH_SVG}</span>
       <span class="cc-screen" style="left:110px;top:0;width:101px;height:82px">
@@ -207,8 +212,12 @@ export function renderCommandCenter(room, { onExit } = {}) {
     <div class="cc-tip cc-tip-mission"><strong>Mission control</strong><br>Screens that talk to Earth. A message takes 4 to 24 minutes to travel between Earth and Mars!</div>
     <!-- four doors: left = Greenhouse, up = Science Lab, right = Life Support, down = Airlock / solar panels -->
     <div class="cc-exit-door cc-exit-down" data-b="exit-down" aria-hidden="true"></div>
-    <div class="cc-suit-lock" data-b="suit-lock" aria-hidden="true">${icon('lock', 22)}</div>
-    <div class="cc-suit-pop" data-b="suit-pop" role="alert" hidden>${icon('shirt', 28)}<div><strong>Wear your spacesuit first!</strong><span>Then you can go outside. The Wardrobe (W) is at the top left.</span></div></div>
+    <span class="cc-door-lock" data-b="door-lock" aria-hidden="true">${icon('lock', 20)}</span>
+    <!-- pop-up: the airlock (down door) only opens in the spacesuit -->
+    <div class="cc-suit-warn" data-b="suit-warn" role="alert" hidden>
+      ${icon('shirt', 30)}
+      <div><strong>Wear your spacesuit first!</strong><p>Then you can go outside. The spacesuit is in the Wardrobe (W).</p></div>
+    </div>
     <div class="cc-exit-door cc-exit-up" data-b="exit-up" aria-hidden="true"></div>
     <div class="cc-exit-door cc-exit-left" data-b="exit-left" aria-hidden="true"></div>
     <div class="cc-exit-door cc-exit-right" data-b="exit-right" aria-hidden="true"></div>
@@ -221,7 +230,7 @@ export function renderCommandCenter(room, { onExit } = {}) {
       <div class="cc-task"><b>1</b><div><h4>Switchboard</h4><p>Shows which machines are on. MOXIE and the water recycler are run in Life Support.</p></div></div>
       <div class="cc-task"><b>2</b><div><h4>Battery bank</h4><p>Your power. Keep <strong>${POWER_CONFIG.nightReserve}</strong> for the night, or the crew gets cold.</p></div></div>
       <div class="cc-task"><b class="purple">W</b><div><h4 class="purple">Wardrobe</h4><p>Put on the spacesuit before going outside.</p></div></div>
-      <div class="cc-task"><b class="teal">Z</b><div><h4 class="teal">Bunks</h4><p>After today's chapter, sleep here to start the next sol. ${icon('star', 16)} for a warm night.</p></div></div>
+      <div class="cc-task"><b class="teal">Z</b><div><h4 class="teal">Bunks</h4><p>Finish today?s tasks, then sleep here to start the next Sol.</p></div></div>
       <div class="cc-goal">${icon('star', 24)}<div><small>TODAY'S GOAL</small><strong data-b="goal"></strong></div></div>
     </aside>
 
@@ -358,9 +367,9 @@ export function renderCommandCenter(room, { onExit } = {}) {
     const p = g.power;
     const day = isDay(g);
     renderHud();
-    $('suit-lock').hidden = g.outfit === 'suit';
-    if (g.outfit === 'suit') $('suit-pop').hidden = true;
     $('goal').textContent = goalText(g);
+    $('door-lock').hidden = g.outfit === 'suit';   // the airlock is locked until the spacesuit is on
+    if (g.outfit === 'suit') $('suit-warn').hidden = true;
 
     // top status
     const ch = chapterCheck(g);
@@ -394,17 +403,20 @@ export function renderCommandCenter(room, { onExit } = {}) {
     $('shelter').classList.toggle('occupied', g.inShelter);
 
     // bunks
-    $('bunks-body').innerHTML = day
-      ? (ch.ok || g.inChapter
-        ? `<p>The sun sets when you finish today's chapter in the Science Lab. Then come back here to sleep.</p>
-           <button class="cc-btn" disabled>${icon('moon', 20)} Sleep · end sol ${g.sol}</button>`
-        : `<p>${ch.reason === 'dust-storm' ? 'A dust storm is blocking the sky, so there is no chapter today.'
-            : ch.reason === 'all-done' ? 'All the chapters are done.'
-            : `Not enough to start Chapter ${ch.chapter.n} (need ${ch.missing.join(', ')}). Rest today and the sun will recharge the battery.`}</p>
-           <p class="cc-dim">Finish your chores first, then end the day.</p>
-           <button class="cc-btn" data-act="rest">${icon('moon', 20)} Rest · end the day early</button>`)
-      : `<p>Tonight the heaters and life support use ${POWER_CONFIG.nightReserve} power${p.battery < POWER_CONFIG.nightReserve ? `, but you only have ${p.battery}. The crew will be cold` : ''}.</p>
-         <button class="cc-btn" data-act="sleep">${icon('moon', 20)} Sleep · end sol ${g.sol}</button>`;
+    const evaUnsafe = window.MarsHUD?.status() === 'nogo';
+    const pendingSleepTask = sleepRequirement(g, { evaUnsafe });
+    $('bunks-body').innerHTML = g.over
+      ? '<p>Mission complete! Earth received your report.</p>'
+      : day
+        ? `<p>Complete today&#8217;s Science Lab chapter before sleeping.</p>
+           <h4>Sol ${g.sol} objectives</h4>
+           <ul><li>${ch.chapter?.name ?? 'Science Lab chapter'}</li>
+           ${ch.missing.map(task => `<li>${task}</li>`).join('')}
+           ${cropPrepTask(g) ? `<li>${cropPrepTask(g)}</li>` : ''}
+           <li>${p.panels === 'clean' ? 'Solar panels cleaned' : evaUnsafe ? 'Solar cleaning deferred for unsafe EVA' : 'Clean all three solar panels'}</li></ul>
+           ${p.battery < 55 ? '<button class="cc-btn" data-act="backup-power">Use backup battery</button>' : ''}`
+        : `<p>${pendingSleepTask || 'Sleep to recharge the battery and grow your crops.'}</p>
+           <button class="cc-btn" data-act="sleep" ${pendingSleepTask ? 'disabled' : ''}>${icon('moon', 20)} Sleep to start Sol ${g.sol + 1}</button>`;
 
     // wardrobe + player outfit
     room.querySelectorAll('[data-outfit]').forEach((b) => b.classList.toggle('picked', b.dataset.outfit === g.outfit));
@@ -460,12 +472,12 @@ export function renderCommandCenter(room, { onExit } = {}) {
 
   // ---- sleeping and the end-of-sol summary ----
   function doSleep() {
-    const r = sleep(getGame());
+    const r = sleep(getGame(), { evaUnsafe: window.MarsHUD?.status() === 'nogo' });
     if (!r.ok) return say(r.message);
     // Member 3's hazard meter: the side-panel HUD (MarsHUD) and, when it's switched on, the shelter game
     const rad = window.RadiationShelter || window.MarsHUD;
     const hazard = rad ? Math.floor(rad.getHazard()) : null;
-    window.MarsHUD?.newSol();                          // a new sol: hazard meter and storm reset
+    window.MarsHUD?.newSol(r.game.sol);                          // a new sol: hazard meter and storm reset
     window.RadiationShelter?.newSol();
     const others = runEndSol({ sol: r.report.sol });   // other stations' end-of-sol steps
     setGame(r.game);
@@ -474,9 +486,11 @@ export function renderCommandCenter(room, { onExit } = {}) {
     const rep = r.report;
     $('summary').innerHTML = `
       <div class="cc-summary-in">
+        <div class="cc-sunrise" aria-hidden="true">${icon('sun', 42)}</div>
+        <p class="cc-new-sol">Good morning! Sol ${g.sol} of ${CC_CONFIG.maxSols}</p>
         <h2>${g.over ? 'Mission complete!' : `Sol ${rep.sol} complete`}</h2>
-        <p class="cc-stars">${icon('star', 34)} ${rep.earned} of ${rep.total} stars</p>
-        ${rep.stars.map((s) => `<p>${icon(s.earned ? 'check' : 'circle', 18)} ${s.text}</p>`).join('')}
+        <p class="cc-stars">${icon('star', 34)} +1 Science Star &middot; ${g.stars} / ${CC_CONFIG.maxSols} total</p>
+
         <p>${icon('moon', 18)} Night: heaters and life support used ${POWER_CONFIG.nightReserve}. Battery ${rep.bedtime} → ${rep.afterNight}.</p>
         ${rep.cold ? '<p class="bad">The battery was below the night line, so the crew got cold.</p>' : ''}
         ${g.over ? '' : `<p>${icon('sun', 18)} Morning: the solar field added +${rep.gained}${rep.dustStorm ? ' (a dust storm is blocking the sun!)' : ''}. Battery ${rep.morning}.</p>`}
@@ -512,10 +526,11 @@ export function renderCommandCenter(room, { onExit } = {}) {
 
     const a = e.target.closest('[data-act]')?.dataset.act;
     if (a === 'sleep') return doSleep();
-    if (a === 'rest') {
-      const r = endDayEarly(getGame());
-      if (!r.ok) return say(r.message);
-      setGame(r.game, r.events);   // sunset: the night line message shows, then the bunks unlock
+    if (a === 'backup-power') {
+      const game = getGame();
+      if (!game.over && game.phase === 'day' && game.power.battery < 55) {
+        setGame({ ...game, power: { ...game.power, battery: 65 } });
+      }
       return;
     }
     if (a === 'wake') {
@@ -563,18 +578,22 @@ export function renderCommandCenter(room, { onExit } = {}) {
   // walking through one of the four doors leaves the Command Center that way
   // (left = Greenhouse road, up = Science Lab road, right = Life Support road, down = airlock / solar panels)
   function leaveRoom(dir) {
+    // the airlock (down) leads outside: only in the spacesuit
+    if (dir === 'down' && getGame().outfit !== 'suit') {
+      pos = { x: pos.x, y: EXITS.down.y - 30 };   // can't go through: step back from the door
+      placePlayer();
+      showSuitWarn();
+      return;
+    }
     if (onExit) return onExit(dir);
     pos = { ...ROOM_SPAWN };   // no base map (testing the room on its own): back to the middle
     placePlayer();
   }
-  // the airlock (▼) leads outside: only in the spacesuit
-  let suitPopTimer = 0;
-  function blockAirlock() {
-    pos = { ...pos, y: EXITS.down.y - 34 };   // step back from the door
-    placePlayer();
-    $('suit-pop').hidden = false;
-    clearTimeout(suitPopTimer);
-    suitPopTimer = setTimeout(() => { $('suit-pop').hidden = true; }, 3500);
+  let suitWarnTimer = 0;
+  function showSuitWarn() {
+    $('suit-warn').hidden = false;
+    clearTimeout(suitWarnTimer);
+    suitWarnTimer = setTimeout(() => { $('suit-warn').hidden = true; }, 3500);
   }
 
   function doorCrossed() {
@@ -615,8 +634,7 @@ export function renderCommandCenter(room, { onExit } = {}) {
       player.faceToward(dx, dy);
       afterMove();
       const door = doorCrossed();
-      if (door === 'down' && getGame().outfit !== 'suit') blockAirlock();
-      else if (door) leaveRoom(door);
+      if (door) leaveRoom(door);   // the airlock (down) checks for the spacesuit in leaveRoom
     }
     player.setWalking(!!(dx || dy));
     requestAnimationFrame(frame);

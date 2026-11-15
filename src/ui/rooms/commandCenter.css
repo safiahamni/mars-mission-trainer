@@ -104,10 +104,10 @@
   height: 740px;
   border: 4px solid var(--ink);
   border-radius: 22px;
-  background-color: #6aaed6;
+  background-color: #9edfc8;   /* mint */
   background-image:
-    linear-gradient(#5b9cc6 2px, transparent 2px),
-    linear-gradient(90deg, #5b9cc6 2px, transparent 2px);
+    linear-gradient(#84cbb2 2px, transparent 2px),
+    linear-gradient(90deg, #84cbb2 2px, transparent 2px);
   background-size: 37px 37px;
   background-position: -2px -2px;
   transition: filter 0.6s;
@@ -280,94 +280,135 @@
 }
 
 /* ---------- ! radiation shelter ---------- */
+/* ===== the radiation shelter: a thick wall of water all round, 3 sleeping pods inside ===== */
 .cc-shelter {
   left: 678px;
   top: 275px;
   width: 352px;
   height: 375px;
-  background: #2a2e3a;
-  border: 4px solid var(--ink);
+  background: #5b8de8;               /* the water wall */
+  border: 5px solid var(--ink);
   border-radius: 30px;
+  box-sizing: border-box;
   transition: box-shadow 0.4s;
 }
-.cc-shelter .t {
+.cc-sh-ripple {                      /* a soft wave line inside the water wall */
   position: absolute;
-  height: 28px;
-  background: #5b8de8;
-  border: 3px solid var(--ink);
-  border-radius: 99px;
+  inset: 16px;
+  border: 3px dashed rgba(191, 224, 255, 0.8);
+  border-radius: 20px;
+}
+.cc-sh-floor, .cc-sh-gap {
+  position: absolute;
+  background-color: #3b3f57;
+  background-image:
+    linear-gradient(#34384e 2px, transparent 2px),
+    linear-gradient(90deg, #34384e 2px, transparent 2px);
+  background-size: 24px 24px;
+}
+.cc-sh-floor {
+  left: 33px;
+  top: 33px;
+  right: 33px;
+  bottom: 33px;
+  border: 4px solid var(--ink);
+  border-radius: 16px;
+}
+.cc-sh-gap {                         /* the doorway through the water wall, under the door */
+  left: 85px;
+  top: -5px;
+  width: 60px;
+  height: 46px;
+  border-left: 4px solid var(--ink);
+  border-right: 4px solid var(--ink);
+}
+.cc-rug {
+  position: absolute;
+  left: 105px;
+  top: 225px;
+  width: 132px;
+  height: 80px;
+  background: #e9a5b4;
+  border: 3.5px solid var(--ink);
+  border-radius: 50%;
   box-sizing: border-box;
 }
-.cc-shelter .t::after {
+.cc-rug::after {
   content: '';
   position: absolute;
-  left: 8px;
-  top: 4px;
-  width: 16px;
-  height: 5px;
-  border-radius: 3px;
-  background: rgba(255, 255, 255, 0.6);
+  inset: 10px 14px;
+  border: 3px dashed #f8d4dc;
+  border-radius: 50%;
 }
-.cc-shelter .t.v {
-  width: 28px;
-}
-.cc-shelter .t.v::after {
-  display: none;
-}
-.cc-bunk {
+.cc-pod {
   position: absolute;
-  width: 115px;
-  height: 50px;
+  top: 47px;
+  width: 54px;
+  height: 122px;
   display: flex;
+  flex-direction: column;
   gap: 5px;
-  padding: 6px;
+  padding: 7px 5px 6px;
   box-sizing: border-box;
   background: #eef0f5;
-  border: 3px solid var(--ink);
+  border: 3.5px solid var(--ink);
+  border-radius: 14px;
+}
+.cc-pod span {                       /* pillow */
+  height: 22px;
+  margin: 0 2px;
+  background: #fff;
+  border: 2.5px solid var(--ink);
   border-radius: 8px;
 }
-.cc-bunk span {
-  width: 28px;
-  background: #f29aa8;
-  border: 3px solid var(--ink);
-  border-radius: 6px;
-}
-.cc-bunk em {
+.cc-pod em {                         /* blanket, with the fold at the top */
   flex: 1;
   border: 3px solid var(--ink);
-  border-radius: 6px;
+  border-radius: 9px;
+  box-shadow: inset 0 12px 0 -9px var(--ink);
 }
-.cc-bunk em.cyan {
-  background: #5ec8dc;
-}
-.cc-bunk em.yellow {
-  background: #f5c84c;
-}
-.cc-shield {
+.cc-pod em.cyan { background: #5ec8dc; }
+.cc-pod em.yellow { background: #f5c84c; }
+.cc-pod em.purple { background: #9b7be8; }
+.cc-lamp-table {
   position: absolute;
-  left: 84px;
-  top: 220px;
-  color: var(--ink);
-}
-.cc-shield .icon {
-  fill: var(--teal);
-  stroke: var(--ink);
+  left: 218px;
+  top: 183px;
+  width: 26px;
+  height: 20px;
+  background: #c98a52;
+  border: 3px solid var(--ink);
+  border-radius: 5px;
+  box-sizing: border-box;
 }
 .cc-lamp {
   position: absolute;
-  left: 217px;
-  top: 252px;
-  width: 20px;
-  height: 20px;
+  left: 222px;
+  top: 172px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
   background: #f6dc8a;
+  border: 3px solid var(--ink);
+  box-sizing: border-box;
 }
+.cc-zzz {
+  position: absolute;
+  left: 58px;
+  top: 262px;
+  color: #bfc6ff;
+  font-weight: 900;
+}
+.cc-zzz b { display: inline-block; }
+.cc-zzz b:nth-child(1) { font-size: 22px; opacity: 0.9; }
+.cc-zzz b:nth-child(2) { font-size: 16px; opacity: 0.7; transform: translateY(-12px); }
+.cc-zzz b:nth-child(3) { font-size: 12px; opacity: 0.5; transform: translateY(-22px); }
 .cc-shelter.occupied {
   box-shadow: 0 0 0 6px rgba(95, 211, 200, 0.75);
 }
 .cc-shelter.occupied .cc-lamp {
   background: var(--yellow);
-  box-shadow: 0 0 16px 6px rgba(255, 210, 63, 0.6);
+  box-shadow: 0 0 16px 8px rgba(255, 210, 63, 0.55);
 }
 .cc-door {
   left: 677px;
@@ -1042,10 +1083,10 @@
   margin-bottom: 4px;
   border: 3px solid var(--ink);
   border-radius: 12px;
-  background-color: #6aaed6;
+  background-color: #9edfc8;   /* mint */
   background-image:
-    linear-gradient(#5b9cc6 2px, transparent 2px),
-    linear-gradient(90deg, #5b9cc6 2px, transparent 2px);
+    linear-gradient(#84cbb2 2px, transparent 2px),
+    linear-gradient(90deg, #84cbb2 2px, transparent 2px);
   background-size: 20px 20px;
   overflow: hidden;
 }
@@ -1282,11 +1323,12 @@
 .cc-tip-shelter { left: 440px; top: 640px; }
 
 /* the airlock (bottom door) only opens in the spacesuit: a lock on it, and a pop-up if you try in the crew shirt */
-.cc-suit-lock {
-  left: 542px;
-  top: 820px;
-  width: 40px;
-  height: 40px;
+/* the airlock (down door) only opens in the spacesuit: a lock on the door + a pop-up */
+.cc-door-lock {
+  left: 546px;
+  top: 806px;
+  width: 32px;
+  height: 32px;
   display: grid;
   place-items: center;
   background: #2b2a3a;
@@ -1294,23 +1336,32 @@
   border-radius: 50%;
   color: #ffd23f;
   z-index: 3;
+  pointer-events: none;
 }
-.cc-suit-lock[hidden] { display: none; }
-.cc-suit-pop {
+.cc-door-lock[hidden] { display: none; }
+.cc-suit-warn {
   left: 612px;
-  top: 760px;
-  width: 360px;
+  top: 740px;
+  width: 380px;
   display: flex;
-  gap: 12px;
+  gap: 14px;
   align-items: center;
-  padding: 14px 16px;
+  padding: 14px 18px;
   background: #2b2a3a;
-  border: 3px solid #ffd23f;
-  border-radius: 16px;
-  color: #fff;
+  border: 4px solid #ffd23f;
+  border-radius: 18px;
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.25);
   z-index: 20;
 }
-.cc-suit-pop[hidden] { display: none; }
-.cc-suit-pop .icon { color: #ffd23f; }
-.cc-suit-pop strong { display: block; color: #ffd23f; font-size: 20px; }
-.cc-suit-pop span { display: block; font-size: 15px; margin-top: 2px; }
+.cc-suit-warn[hidden] { display: none; }
+.cc-suit-warn .icon { color: #c3a8ff; }
+.cc-suit-warn strong { display: block; color: #ffd23f; font-size: 20px; }
+.cc-suit-warn p { margin: 4px 0 0; color: #eef0f5; font-size: 16px; }
+
+.cc-sunrise {color:#ffd54a;animation:cc-sunrise .65s ease-out both}
+.cc-new-sol {color:#ffd54a;font-weight:800}
+@keyframes cc-sunrise {
+  from {opacity:0;transform:translateY(18px) scale(.6)}
+  to {opacity:1;transform:translateY(0) scale(1)}
+}
+@media (prefers-reduced-motion:reduce) {.cc-sunrise {animation:none}}

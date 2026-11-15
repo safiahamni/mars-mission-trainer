@@ -7,7 +7,7 @@ const createAvatar = (container) => {
   return window.createAvatar(container);
 };
 import { climateStation, soilStation, compostStation, wiringStation, shieldStation } from "./stationArt.js";
-import { cropArt, stageName, stageOf } from "./cropArt.js";
+import { cropArt, stageOf } from "./cropArt.js";
 import "./stations.css";
 import "./crops.css";
 
@@ -124,14 +124,9 @@ export function mountGreenhousePanel(root, controller, { onExit, dressAvatar } =
   function resource(name, icon, value, sub, width) {
     return `<div class="gm-stat"><div><span>${icon} ${name}</span><b>${value}</b></div><small>${sub}</small><i><em style="width:${clamp(width)}%"></em></i></div>`;
   }
-  const durText = (sec) => { const m = Math.floor(sec / 60), r = Math.round(sec % 60); return m ? `${m} min${r ? ` ${r} sec` : ""}` : `${r} sec`; };
-  const clock = (sec) => `${Math.floor(sec / 60)}:${String(Math.ceil(sec % 60) % 60).padStart(2, "0")}`;
-  const bedTime = (plot, crop) => {
-    if (plot.growthSols >= crop.growthSols) return "Ready! Tap to harvest";
-    if (snapshot.powerOutage) return "⚡ Stalled · no power";
-    const rate = snapshot.climateHealthy ? 1 : 0.75;
-    return `${stageName(crop.id, plot.growthSols, crop.growthSols)} · ⏳ ${clock(Math.ceil((crop.growthSols - plot.growthSols) / rate))}`;
-  };
+  const bedTime = (plot, crop) => plot.growthSols >= crop.growthSols
+    ? "Ready! Tap to harvest"
+    : `Ready Sol ${snapshot.sol + crop.growthSols - plot.growthSols}`;
   function bed(id, title, cropId) {
     const plot = snapshot.greenhouse.plots[id];
     if ((cropId === "potato" || cropId === "millet") && snapshot.soilPerchlorate >= 30) {
@@ -365,7 +360,7 @@ export function mountGreenhousePanel(root, controller, { onExit, dressAvatar } =
   function plantModal() {
     const hydro = Object.keys(snapshot.greenhouse.plots).indexOf(plantBed) < 2;
     const crops = Object.values(CROP_CATALOG).filter((c) => (c.id === "greens") === hydro);
-    return modalShell("Choose a crop", hydro ? "Plant a seedling in this hydroponic bed." : "Plant a crop in this treated Martian soil.", `<div class="gm-crop-choices">${crops.map(c=>`<button data-action="plant-choice" data-crop="${c.id}"><span>${c.icon}</span><b>${c.name}</b><small>⏳ ${durText(c.growthSols)} · 🥣 ${c.foodReward} meals</small></button>`).join("")}</div><div class="gm-inventory">Water ${snapshot.resources.water} L · Power ${snapshot.resources.power} kWh</div>`, hydro ? 340 : 470);
+    return modalShell("Choose a crop", hydro ? "Plant a seedling in this hydroponic bed." : "Plant a crop in this treated Martian soil.", `<div class="gm-crop-choices">${crops.map(c=>`<button data-action="plant-choice" data-crop="${c.id}" ${snapshot.sol + c.growthSols > snapshot.maxSols ? "disabled" : ""}><span>${c.icon}</span><b>${c.name}</b><small>⏳ ${snapshot.sol + c.growthSols > snapshot.maxSols ? "Too late to harvest" : "Harvest Sol " + (snapshot.sol + c.growthSols)} · 🥣 ${c.foodReward} meals</small></button>`).join("")}</div><div class="gm-inventory">Water ${snapshot.resources.water} L · Power ${snapshot.resources.power} kWh</div>`, hydro ? 340 : 470);
   }
   function shieldFactsModal() {
     const facts = [["🧬", "Damages plant cells", "Radiation can break up the DNA inside plant cells."], ["🐌", "Slows plant growth", "Damaged plants grow more slowly and stay smaller."], ["🥬", "Affects food quality", "Stressed plants can make less food and less nutritious food."], ["🔧", "Damages greenhouse equipment", "Radiation can harm sensors, lights, pumps and computers."]];
@@ -481,6 +476,9 @@ export function mountGreenhousePanel(root, controller, { onExit, dressAvatar } =
     note=r.message;compostWin=win;if(win)compostDoneSol=snapshot.sol;compostStarted=false;compostIndex=0;compostCorrect=0;compostItems=pickCompostItems();modal="compostfacts";render();
   }
   function openStation(id) {
+    if (id === "soil" && !snapshot.soilLabUnlocked) {
+      note = "Earn two Science Stars to unlock the Soil Lab."; render(); return;
+    }
     if (snapshot.powerOutage && ["soil", "compost", "climate"].includes(id)) {
       const nm = { soil: "soil lab", compost: "compost sort", climate: "climate settings" }[id];
       modal = ""; note = `⚠ The power is out! You can't use the ${nm} until you fix the wiring.`; toastForce = true; toastErrForce = true; render(); return;
@@ -607,7 +605,7 @@ export function mountGreenhousePanel(root, controller, { onExit, dressAvatar } =
     if(a==="plant"){plantBed=el.dataset.plot;modal="plant";render();return;}
     if(a==="plant-choice"){const r=doAction({type:"plant",plotId:plantBed,cropId:el.dataset.crop});note=r.message;modal="";render();return;}
     if(a==="harvest"){const r=doAction({type:"harvest",plotId:el.dataset.plot});note=r.message;render();return;}
-    if(a==="inspect-bed"){const p=snapshot.greenhouse.plots[el.dataset.plot];const c=CROP_CATALOG[p.cropId];note=snapshot.powerOutage?`${c.name} stopped growing because the power is out. Fix the wiring!`:`${c.name} will be ready in ${clock(Math.ceil((c.growthSols-p.growthSols)/(snapshot.climateHealthy?1:0.75)))}.`;render();return;}
+    if(a==="inspect-bed"){const p=snapshot.greenhouse.plots[el.dataset.plot];const c=CROP_CATALOG[p.cropId];note=`${c.name} is ready on Sol ${snapshot.sol+c.growthSols-p.growthSols}. Sleep in the Command Center to grow it.`;render();return;}
     if(a==="climate-start"){beginClimatePlay();return;}
     if(a==="climate-hold"){
       doAction({type:"set-climate",climate:{temperature:climateTemperature,light:climateLight}});
@@ -704,7 +702,6 @@ export function mountGreenhousePanel(root, controller, { onExit, dressAvatar } =
   const stageSeen = {};
   const readySeen = new Set();
   function growTick() {
-    doAction({ type: "grow-tick", seconds: 1 });
     snapshot = controller.getSnapshot();
     let renderNow = false;
     for (const [id, plot] of Object.entries(snapshot.greenhouse.plots)) {

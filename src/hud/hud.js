@@ -273,7 +273,7 @@ const MarsHUD = (function () {
     startStorm, endStorm,
     status: () => evaLevel().lvl,
     isFailed: () => failed,
-    newSol() { sol++; gameMinutes = 6 * 60; hazard = 0; stormDone = false; untilStorm = rollStorm(); endStorm(); },
+    newSol(nextSol = sol + 1) { sol = nextSol; gameMinutes = 6 * 60; hazard = 0; stormDone = false; untilStorm = rollStorm(); endStorm(); },
   };
 })();
 window.MarsHUD = MarsHUD;   // shared, so other places can use it: MarsHUD.getHazard(), MarsHUD.endStorm()

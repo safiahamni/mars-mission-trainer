@@ -1,6 +1,7 @@
 import './oxygenroom.css'
 import { createAvatar } from './avatar.js'
 import { initWaterRecycler } from './water-recycling.js'
+import { icon } from './icons.js'
 
 // =====================================================
 // PAGE HTML
@@ -10,163 +11,93 @@ document.querySelector('#app').innerHTML = `
   <main class="air-screen">
     <section class="content">
       <div class="room-column">
-      <header class="top-bar">
-        <div class="header-left">
-          <div class="room-name"><span class="blue-dot">●</span> Life Support (Air)</div>
-        </div>
-
-        <div class="header-right">
-          <div class="air-status">
-            <span class="oxygen-icon">O₂</span>
-            <div class="air-info">
-              <div class="air-label">
-                <strong>Air</strong>
-                <strong class="air-percentage">60%</strong>
-              </div>
-              <div class="air-track">
-                <div class="air-fill"></div>
-              </div>
-            </div>
-            <strong class="sol">Sol 3</strong>
-          </div>
-
-          <div class="status-chip"><span>★</span> Science 1/3</div>
-          <div class="status-chip"><span>▣</span> Power cells 2</div>
-        </div>
-      </header>
+        <header class="room-header">
+          <div class="room-name"><span class="blue-dot"></span> Life Support</div>
+          <div class="status-chip science-chip">${icon('star', '', { fill: true })} Science 1/3</div>
+          <div class="status-chip power-chip">${icon('battery-full')} Power cells 2</div>
+        </header>
 
         <div class="room">
+          <!-- roads: the same as the base map (tan, brown dots, dashed white edges) -->
           <div class="path horizontal"></div>
-          <div class="path vertical"></div>
-          <div class="path left-vertical"></div>
-          <div class="path left-branch"></div>
-          <div class="path right-vertical"></div>
-          <div class="path right-branch"></div>
+          <div class="path branch up co2-branch"></div>
+          <div class="path branch up moxie-branch"></div>
+          <div class="path branch down water-branch"></div>
+          <div class="path branch down power-branch"></div>
 
-          <div class="station co2">
-            <div class="station-title">CO₂ Intake</div>
-            <div class="co2-machine">
-              <div class="co2-slots"><i></i><i></i><i></i></div>
-              <div class="co2-bottom"><span></span><span></span><span></span></div>
-            </div>
+          <!-- pipes with arrows: CO2 Intake -> MOXIE -> oxygen tanks -->
+          <svg class="room-art" viewBox="0 0 764 628" preserveAspectRatio="none" aria-hidden="true">
+            <defs><marker id="ls-arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L10 5L0 10z" fill="#2B2A3A"/></marker></defs>
+            <rect x="210" y="86" width="98" height="30" fill="#AEB7C9" stroke="#2B2A3A" stroke-width="4"/>
+            <path class="pipe-flow" d="M222 101 h56" stroke="#2B2A3A" stroke-width="4" stroke-dasharray="10 8" marker-end="url(#ls-arrow)"/>
+            <rect x="494" y="86" width="92" height="30" fill="#AEB7C9" stroke="#2B2A3A" stroke-width="4"/>
+            <path class="pipe-flow" d="M506 101 h50" stroke="#2B2A3A" stroke-width="4" stroke-dasharray="10 8" marker-end="url(#ls-arrow)"/>
+          </svg>
+
+          <div class="station co2" data-tip="co2">
+            <svg class="machine co2-machine" viewBox="0 0 170 110" aria-hidden="true">
+              <rect x="2.5" y="2.5" width="165" height="105" rx="16" fill="#F4F2EE" stroke="#2B2A3A" stroke-width="5"/>
+              <path d="M24 28h122M24 46h122M24 64h122" stroke="#9AA0AD" stroke-width="5" stroke-linecap="round"/>
+              <g fill="#E0605A" stroke="#2B2A3A" stroke-width="3"><circle cx="58" cy="88" r="8"/><circle cx="85" cy="88" r="8"/><circle cx="112" cy="88" r="8"/></g>
+            </svg>
+            <div class="station-title"><span class="number">1</span> CO₂ Intake</div>
+            <div class="tip"><strong>CO₂ Intake</strong>Sucks in Mars air. Mars air is about 95% carbon dioxide (CO₂), the gas MOXIE needs.</div>
           </div>
 
-          <div class="station moxie">
-            <div class="moxie-outline"></div>
-            <div class="station-title">MOXIE (locked)</div>
-            <div class="moxie-machine">
-              <div class="moxie-top"></div>
-              <div class="moxie-body">
-                <div class="moxie-screen">MOXIE</div>
-                <div class="moxie-yellow"></div>
-                <div class="moxie-buttons"><i></i><i></i><i></i></div>
-                <div class="moxie-side"></div>
-              </div>
-            </div>
-            <div class="locked-label">🔒 Locked</div>
+          <div class="station moxie" data-tip="moxie">
+            <svg class="machine moxie-machine" viewBox="0 0 190 168" aria-hidden="true">
+              <rect x="34" y="2" width="90" height="18" rx="6" fill="#B8BFCB" stroke="#2B2A3A" stroke-width="4"/>
+              <rect class="mx-body" x="2.5" y="16" width="185" height="149" rx="20" fill="#737D91" stroke="#2B2A3A" stroke-width="5"/>
+              <rect x="20" y="34" width="108" height="64" rx="8" fill="#30384A" stroke="#2B2A3A" stroke-width="3"/>
+              <text x="36" y="62" font-size="15" font-weight="900" fill="#EEF0F5" font-family="Nunito, sans-serif">MOXIE</text>
+              <rect x="98" y="46" width="20" height="20" rx="3" fill="#FFD23F" stroke="#2B2A3A" stroke-width="2"/>
+              <rect x="142" y="34" width="34" height="76" rx="10" fill="#9AA3B5" stroke="#2B2A3A" stroke-width="3"/>
+              <g fill="#5B6577" stroke="#2B2A3A" stroke-width="3"><circle cx="36" cy="132" r="9"/><circle cx="62" cy="132" r="9"/><circle cx="88" cy="132" r="9"/></g>
+              <g class="moxie-lock"><circle cx="164" cy="138" r="22" fill="#2B2A3A" stroke="#FFD23F" stroke-width="4"/><rect x="155" y="136" width="18" height="13" rx="3" fill="#FFD23F"/><path d="M158 136 v-5 a6 6 0 0 1 12 0 v5" fill="none" stroke="#FFD23F" stroke-width="3"/></g>
+            </svg>
+            <span class="locked-label"></span>
+            <div class="station-title"><span class="number">2</span> MOXIE</div>
+            <div class="tip"><strong>MOXIE</strong>A real NASA machine that flew to Mars on the Perseverance rover. It splits CO₂ to make oxygen, using electricity.</div>
           </div>
 
-          <div class="station tanks">
-            <div class="station-title">Oxygen Tanks</div>
-            <div class="tank-row">
-              <div class="tank"><span></span><b>O₂</b></div>
-              <div class="tank"><span></span><b>O₂</b></div>
-              <div class="tank"><span></span><b>O₂</b></div>
-            </div>
+          <div class="station tanks" data-tip="tanks">
+            <svg class="machine tank-row" viewBox="0 0 176 162" aria-hidden="true">
+              <g fill="#2B2A3A"><rect x="16" y="0" width="20" height="12" rx="3"/><rect x="78" y="0" width="20" height="12" rx="3"/><rect x="140" y="0" width="20" height="12" rx="3"/></g>
+              <g fill="#FFFFFF" stroke="#2B2A3A" stroke-width="5"><rect x="2.5" y="10" width="47" height="149" rx="23"/><rect x="64.5" y="10" width="47" height="149" rx="23"/><rect x="126.5" y="10" width="47" height="149" rx="23"/></g>
+              <g class="o2-fill" fill="#3EC6F0"><rect x="8" y="40" width="36" height="112" rx="16"/><rect x="70" y="40" width="36" height="112" rx="16"/><rect x="132" y="40" width="36" height="112" rx="16"/></g>
+              <g font-size="17" font-weight="900" fill="#FFFFFF" text-anchor="middle" font-family="Nunito, sans-serif"><text x="26" y="118">O₂</text><text x="88" y="118">O₂</text><text x="150" y="118">O₂</text></g>
+            </svg>
+            <div class="station-title"><span class="number">3</span> Oxygen tanks</div>
+            <div class="air-chip">Mars air ${icon('arrow-right', '', { stroke: 3 })} Oxygen</div>
+            <div class="tip"><strong>Oxygen tanks</strong>Store the oxygen MOXIE makes, so the crew can breathe. They fill up when MOXIE runs.</div>
           </div>
 
-          <div class="pipe pipe-left"></div>
-          <div class="pipe pipe-right"></div>
-          <div class="fact-label">Mars air ≈<br>95% CO₂.</div>
-          <div class="moxie-note">MOXIE uses<br>electricity</div>
-
-          <div class="power-station">
-            <div class="battery">
-              <div class="battery-cell"></div>
-              <div class="battery-cell"></div>
-              <div class="battery-cell"></div>
-            </div>
-            <div class="power-callout">1 Power Cell → +20% Air</div>
-            <div class="station-label">
-              <div class="station-footer">Power Cell Slot</div>
-            </div>
+          <div class="station power" data-tip="power">
+            <svg class="machine power-cell" viewBox="0 0 124 88" aria-hidden="true">
+              <rect x="40" y="2" width="44" height="14" rx="4" fill="#B8BFCB" stroke="#2B2A3A" stroke-width="3"/>
+              <rect x="2.5" y="12" width="119" height="73" rx="12" fill="#F4F2EE" stroke="#2B2A3A" stroke-width="5"/>
+              <g fill="#FFD23F" stroke="#2B2A3A" stroke-width="3"><rect x="18" y="26" width="24" height="46" rx="5"/><rect x="50" y="26" width="24" height="46" rx="5"/><rect x="82" y="26" width="24" height="46" rx="5"/></g>
+            </svg>
+            <div class="station-title">Power cell</div>
+            <div class="tip"><strong>Power cell</strong>Spare power for the base. Machines like MOXIE need electricity to run.</div>
           </div>
 
-          <div class="science-station">
-            <div class="science-card">
-              <strong>MOXIE UNLOCK</strong>
-              <div class="stars"><span class="earned">★</span></div>
-            </div>
-            <div class="station-label">
-              <div class="station-footer">Science Link · 1 Star</div>
-            </div>
-            <small>Stars come from Science Lab</small>
-          </div>
-
-          <button class="exit-button">Exit to base</button>
+          <!-- the door back to the base (the Life Support road leaves to the left) -->
+          <button class="exit-button" aria-label="Exit to base"></button>
         </div>
       </div>
 
       <aside class="instructions">
-        <h2>Your Air Mission</h2>
-
-        <h3 class="mission-phase">PHASE 1: UNLOCK MOXIE</h3>
-
-        <div class="instruction">
-          <span class="number">1</span>
-          <div>
-            <strong>Find the CO₂ machine</strong>
-            <p>Walk to the CO₂ intake machine to start your mission.</p>
-          </div>
-        </div>
-
-        <div class="instruction">
-          <span class="number">2</span>
-          <div>
-            <strong>Make oxygen</strong>
-            <p>Tap all 5 CO₂ molecules within 20 seconds.</p>
-          </div>
-        </div>
-
-        <div class="instruction">
-          <span class="number">3</span>
-          <div>
-            <strong>Pass the science quiz</strong>
-            <p>Answer the question correctly to unlock MOXIE.</p>
-          </div>
-        </div>
-
-        <div class="panel-divider"></div>
-
-        <h3 class="mission-phase">PHASE 2: ACTIVATE MOXIE</h3>
-
-        <div class="instruction">
-          <span class="number">4</span>
-          <div>
-            <strong>Find MOXIE</strong>
-            <p>Walk to the unlocked MOXIE machine.</p>
-          </div>
-        </div>
-
-        <div class="instruction">
-          <span class="number">5</span>
-          <div>
-            <strong>Power up MOXIE</strong>
-            <p>Click Activate MOXIE. It uses 1 power cell to increase Air by 20%.</p>
-          </div>
-        </div>
-
-        <div class="panel-divider"></div>
-
-        <h3>YOUR GOAL</h3>
-        <p class="loop-text">
-          Activate MOXIE to spend 1 power cell and raise your Air level by 20%.
-        </p>
-
-        <div class="sol-action">
-          <p id="sol-status">Complete one MOXIE run before ending this Sol.</p>
-          <button class="end-sol-button" id="end-sol-button" disabled>End Sol</button>
-        </div>
+        <h2>Tasks in this room</h2>
+        <div class="instruction"><span class="number">1</span><div><strong>CO₂ Intake</strong>
+          <p>Catch 5 CO₂ molecules and answer the quiz.</p></div></div>
+        <div class="instruction"><span class="number">2</span><div><strong>MOXIE</strong>
+          <p>Turns Mars air into oxygen. Uses power.</p></div></div>
+        <div class="instruction"><span class="number">3</span><div><strong>Oxygen tanks</strong>
+          <p>Store the crew's air.</p></div></div>
+        <div class="instruction"><span class="number">4</span><div><strong>Water recycler</strong>
+          <p>Fix it so it cleans water.</p></div></div>
+        <div class="today-goal"><span class="goal-star">${icon('star', '', { fill: true })}</span><div><small>TODAY'S GOAL</small><strong id="goal-text">Unlock MOXIE</strong></div></div>
       </aside>
     </section>
   </main>
@@ -340,13 +271,25 @@ function publishLifeResource(resource, value) {
   }
 }
 
+// Size everything like the Command Center: it fits a 1512 x 1032 design to the screen,
+// so --s is the same scale here (the room sits in the same space next to the cards).
+function setScale() {
+  const s = Math.min(window.innerWidth / 1512, window.innerHeight / 1032)
+  document.documentElement.style.setProperty('--s', s)
+}
+setScale()
+window.addEventListener('resize', setScale)
+
 const room = document.querySelector('.room')
+const roomUnit = () => room.clientHeight / 628    // the room is drawn on a 764 x 628 plan (sized by its height)
 const player = createAvatar(room)
 const water = initWaterRecycler(room, {          // Add Water Recycling to this same room
-  onFull: () => publishLifeResource('water', 100),
+  onFull: () => { publishLifeResource('water', 100); updateAirDisplay() },
   onClose: () => { dismissedStation = 'water'; currentNearbyStation = 'water' }   // don't reopen until you walk away
 })
 const waterStation = water.station
+waterStation.insertAdjacentHTML('beforeend',
+  '<div class="tip"><strong>Water recycler</strong>Cleans used water so the crew can drink it again. On the space station, about 98% of the water is recycled.</div>')
 
 const co2Machine = room.querySelector('.co2-machine')
 const moxieStation = room.querySelector('.moxie')
@@ -355,8 +298,8 @@ const moxieLabel = moxieStation.querySelector('.locked-label')
 const moxieTitle = moxieStation.querySelector('.station-title')
 
 // Player position
-let playerX = room.clientWidth / 2
-let playerY = room.clientHeight * 0.85
+let playerX = 100                        // just inside the door on the left wall (not so close that the exit pop-up opens)
+let playerY = room.clientHeight * 0.55
 
 const WALK_SPEED = 200
 const paths = [...room.querySelectorAll('.path')]
@@ -371,6 +314,7 @@ let timeLeft = 20
 let challengeTimer = null
 
 // MOXIE state
+let co2Caught = false        // the 5 CO2 molecules were caught (step 1 of unlocking MOXIE)
 let moxieUnlocked = false
 let oxygenProduced = false
 const sharedLifeSupport = window.parent !== window ? window.parent.MarsLifeSupport : undefined
@@ -378,11 +322,15 @@ let powerCells = 2
 let airLevel = 60
 window.addEventListener('message', event => {
   if (event.source !== window.parent || event.origin !== location.origin || event.data?.type !== 'mars-life:sync') return
+  currentSol = event.data.sol
+  scienceStars = event.data.scienceStars
+  moxieActivatedThisSol = event.data.moxieRan
   airLevel = event.data.oxygen
   water.syncLevel(event.data.water)
   updateAirDisplay()
 })
 let currentSol = 3
+let scienceStars = 0
 let moxieActivatedThisSol = false
 const AIR_DEMAND_PER_SOL = 10 // Simplified gameplay value, not a NASA measurement
 
@@ -407,30 +355,20 @@ function getMachinePosition(machine) {
   }
 }
 
+// near = at the end of the short road that leads up (or down) to the machine
 function isNearCo2() {
   const target = getMachinePosition(co2Machine)
-
-  return Math.hypot(
-    playerX - target.x,
-    playerY - target.y
-  ) < 85
+  return Math.hypot(playerX - target.x, playerY - target.y) < 130 * roomUnit()
 }
 
 function isNearMoxie() {
-  const walkway = room.querySelector('.path.horizontal')
-  const stationX = moxieStation.offsetLeft + moxieStation.offsetWidth / 2
-  const walkwayY = walkway.offsetTop + walkway.offsetHeight / 2
-  return Math.abs(playerX - stationX) < 55
-    && Math.abs(playerY - walkwayY) <= walkway.offsetHeight / 2
+  const target = getMachinePosition(moxieStation.querySelector('.moxie-machine'))
+  return Math.hypot(playerX - target.x, playerY - target.y) < 140 * roomUnit()
 }
 
 function isNearWater() {
-  const target = getMachinePosition(waterStation)
-
-  return Math.hypot(
-    playerX - target.x,
-    playerY - target.y
-  ) < 85
+  const target = getMachinePosition(waterStation.querySelector('.ls-mini-rack') || waterStation)
+  return Math.hypot(playerX - target.x, playerY - target.y) < 120 * roomUnit()
 }
 
 function isNearExit() {
@@ -452,49 +390,60 @@ function closeMissionPopup() {
   }
 }
 
+const MOXIE_ICON = (locked) => `<span class="pop-moxie${locked ? ' locked' : ''}"><i></i>${locked ? `<b>${icon('lock')}</b>` : ''}</span>`
+const CO2_ICON = '<span class="pop-co2"><i></i><i></i><i></i></span>'
+
 function showMissionPopup(station) {
+  if (sharedLifeSupport && scienceStars < 1) {
+    showMessagePopup('MOXIE needs one Science Star', 'Finish Rover Rescue in the Science Lab to unlock the oxygen challenge.')
+    return
+  }
   closeMissionPopup()
 
   const popup = document.createElement('div')
   popup.className = 'mission-overlay'
-
   const isCo2 = station === 'co2'
+  const cost = sharedLifeSupport ? `${icon('zap', '', { fill: true })} −${sharedLifeSupport.moxieCost} power` : `${icon('battery-full')} −1 power cell`
+  const ranToday = !isCo2 && moxieUnlocked && moxieActivatedThisSol
 
-  const title = isCo2
-    ? 'Make Oxygen!'
-    : (moxieUnlocked ? 'Activate MOXIE!' : 'MOXIE is Locked')
-
-  const description = isCo2
-    ? "Mars' atmosphere contains about 95% carbon dioxide (CO₂). Help your base produce oxygen!"
-    : (moxieUnlocked
-      ? 'MOXIE uses electricity to turn carbon dioxide into breathable oxygen.'
-      : 'First, complete the CO₂ challenge and answer the science quiz to unlock MOXIE.')
-
-  const objective = isCo2
-    ? 'PHASE 1: Tap all 5 CO₂ molecules within 20 seconds, then answer the science quiz to unlock MOXIE.'
-    : (moxieUnlocked
-      ? `PHASE 2: Click Activate MOXIE. It will increase Air by up to 20%. ${sharedLifeSupport ? 'Cost: ' + sharedLifeSupport.moxieCost + ' Power.' : 'Cost: 1 power cell. You have ' + powerCells + ' cells.'}`
-      : 'First complete the CO₂ challenge and science quiz. Then return here to activate MOXIE.')
-
-  const buttonText = isCo2
-    ? 'Start Mission'
-    : (moxieUnlocked ? 'Activate MOXIE' : 'Got it!')
+  let picture, title, body, main, later = true
+  if (isCo2) {
+    picture = CO2_ICON
+    title = moxieUnlocked ? 'CO₂ Intake' : 'Catch the CO₂!'
+    body = moxieUnlocked
+      ? '<p class="pop-text">MOXIE is already unlocked. Go to MOXIE to make oxygen.</p>'
+      : `<p class="pop-text">Mars air is about 95% carbon dioxide (CO₂). Catch 5 CO₂ molecules in 20 seconds, then answer one science question to unlock MOXIE.</p>`
+    main = moxieUnlocked ? 'OK' : 'Start'
+    later = !moxieUnlocked
+  } else if (!moxieUnlocked) {
+    picture = MOXIE_ICON(true)
+    title = 'MOXIE is locked'
+    body = `<p class="pop-text">MOXIE turns Mars air into oxygen. Unlock it first:</p>
+      <div class="pop-steps">
+        <div class="pop-step${co2Caught ? ' done' : ''}"><span class="pop-dot">${co2Caught ? icon('check', '', { stroke: 3.5 }) : ''}</span>Catch 5 CO₂ molecules at the CO₂ Intake</div>
+        <div class="pop-step"><span class="pop-dot"></span>Answer the science quiz</div>
+      </div>`
+    main = 'Go to the CO₂ Intake'
+  } else if (ranToday) {
+    picture = MOXIE_ICON(false)
+    title = 'MOXIE already ran today'
+    body = '<p class="pop-text">The oxygen tanks are filling. MOXIE can run again tomorrow, after you sleep in the Command Center.</p>'
+    main = 'OK'
+    later = false
+  } else {
+    picture = MOXIE_ICON(false)
+    title = 'Activate MOXIE'
+    body = `<p class="pop-text">MOXIE uses electricity to turn carbon dioxide into oxygen for the crew.</p>
+      <div class="pop-chips"><div class="pop-chip uses"><small>uses</small>${cost}</div><div class="pop-chip makes"><small>makes</small>+20 oxygen</div></div>`
+    main = 'Activate MOXIE'
+  }
 
   popup.innerHTML = `
     <div class="mission-card">
-      <span class="mission-tag">${isCo2 ? 'NEW MISSION' : 'LIFE SUPPORT'}</span>
-
-      <h2>${title}</h2>
-
-      <p>${description}</p>
-
-      <div class="mission-objective">
-        <strong>Your objective</strong>
-        <p>${objective}</p>
-      </div>
-
-      <button class="mission-start">${buttonText}</button>
-      <button class="mission-close">Not now</button>
+      <div class="pop-head">${picture}<h2>${title}</h2><button class="pop-x mission-close" aria-label="Close">${icon('x', '', { stroke: 3 })}</button></div>
+      ${body}
+      <button class="mission-start">${main}</button>
+      ${later ? '<button class="mission-later mission-close">Not now</button>' : ''}
     </div>
   `
 
@@ -503,20 +452,15 @@ function showMissionPopup(station) {
 
   popup.querySelector('.mission-start').addEventListener('click', () => {
     closeMissionPopup()
-
-    if (isCo2) {
-      startCo2Challenge()
-    } else if (moxieUnlocked) {
-      activateMoxie()
-    } else {
-      dismissedStation = 'moxie'
-    }
+    if (isCo2 && !moxieUnlocked) startCo2Challenge()
+    else if (!isCo2 && moxieUnlocked && !ranToday) activateMoxie()
+    else dismissedStation = station
   })
 
-  popup.querySelector('.mission-close').addEventListener('click', () => {
+  popup.querySelectorAll('.mission-close').forEach(button => button.addEventListener('click', () => {
     dismissedStation = station
     closeMissionPopup()
-  })
+  }))
 }
 
 function showMessagePopup(title, message) {
@@ -540,6 +484,18 @@ function showMessagePopup(title, message) {
   popup.querySelector('.mission-start').addEventListener('click', () => {
     closeMissionPopup()
   })
+}
+
+function walkOut() {
+  Object.keys(keys).forEach(key => { keys[key] = false })
+  player.setWalking(false)
+  // next time you come in, you start just inside the door again
+  playerX = 100
+  const corridor = room.querySelector('.path.horizontal')
+  playerY = corridor.offsetTop + corridor.offsetHeight / 2
+  player.moveTo(playerX, playerY)
+  player.faceToward(1, 0)
+  if (window.parent !== window) window.parent.postMessage({ type: 'mars-life:leave' }, location.origin)
 }
 
 function showExitPopup() {
@@ -650,10 +606,11 @@ function showCo2Challenge() {
     })
 
     if (success) {
+      co2Caught = true
       const gameCard = overlay.querySelector('.co2-game-card')
 
       gameCard.innerHTML = `
-        <h2>🌟 Did You Know?</h2>
+        <h2>${icon('lightbulb')} Did You Know?</h2>
 
         <p>
           Mars' atmosphere is about 95% carbon dioxide (CO₂)!
@@ -713,8 +670,9 @@ function showCo2Challenge() {
             oxygenProduced = true
             moxieUnlocked = true
 
-            moxieLabel.textContent = '✓ Unlocked'
-            moxieTitle.textContent = 'MOXIE (unlocked)'
+            moxieLabel.textContent = ''
+            moxieStation.classList.add('unlocked')
+            updateAirDisplay()
 
             overlay.remove()
             challengeOpen = false
@@ -786,24 +744,20 @@ function showCo2Challenge() {
 // AIR DISPLAY AND MOXIE ACTIVATION
 // =====================================================
 
+// The left column of cards (outside this room) shows the sol, power and oxygen.
+// Here we only update the oxygen tanks and "Today's goal".
 function updateAirDisplay() {
-  document.querySelector('.air-fill').style.width = `${airLevel}%`
-
-  document.querySelector('.air-percentage').textContent =
-    `${airLevel}%`
-
-  document.querySelectorAll('.status-chip')[1].innerHTML =
-    `<span>▣</span> Power cells ${powerCells}`
-
-  document.querySelector('.sol').textContent = `Sol ${currentSol}`
-
-  const endSolButton = document.querySelector('#end-sol-button')
-  const solStatus = document.querySelector('#sol-status')
-
-  endSolButton.disabled = !moxieActivatedThisSol
-  solStatus.textContent = moxieActivatedThisSol
-    ? 'MOXIE run complete. You can now end this Sol.'
-    : 'Complete one MOXIE run before ending this Sol.'
+  room.style.setProperty('--o2n', Math.max(0.05, Math.min(1, airLevel / 100)))   // tank fill (0 to 1)
+  const goal = document.querySelector('#goal-text')
+  if (goal) {
+    goal.textContent = !moxieUnlocked ? 'Unlock MOXIE'
+      : !moxieActivatedThisSol ? 'Run MOXIE'
+      : !water.isFixed() ? 'Fix the water recycler'
+      : 'All done here!'
+  }
+  moxieStation.classList.toggle('unlocked', moxieUnlocked)
+  const cells = document.querySelector('.power-chip')
+  if (cells) cells.innerHTML = `${icon('battery-full')} Power cells ${powerCells}`
 }
 
 function activateMoxie() {
@@ -855,12 +809,11 @@ function activateMoxie() {
   // Update Air bar and percentage
   updateAirDisplay()
 
-  // Animate the Air bar
-  const airFill = document.querySelector('.air-fill')
-
-  airFill.classList.remove('air-increase')
-  void airFill.offsetWidth
-  airFill.classList.add('air-increase')
+  // the oxygen tanks glow as they fill
+  const tankRow = room.querySelector('.tank-row')
+  tankRow.classList.remove('air-increase')
+  void tankRow.offsetWidth
+  tankRow.classList.add('air-increase')
 
   // Show floating +20% message
   const airGain = document.createElement('div')
@@ -912,7 +865,7 @@ function endCurrentSol() {
   )
 }
 
-document.querySelector('#end-sol-button').addEventListener('click', endCurrentSol)
+// (no End Sol button here: sleeping in the Command Center ends the sol)
 
 // =====================================================
 // AUTOMATIC POPUP WHEN PLAYER APPROACHES A MACHINE
@@ -926,9 +879,12 @@ function updateInteractionPrompt() {
 
   let nearbyStation = null
 
+  // walking onto the door on the left wall: straight back out to the base map (no pop-up)
   if (isNearExit()) {
-    nearbyStation = 'exit'
-  } else if (isNearWater()) {
+    walkOut()
+    return
+  }
+  if (isNearWater()) {
     nearbyStation = 'water'
   } else if (isNearCo2()) {
     nearbyStation = 'co2'
@@ -986,9 +942,9 @@ function measurePaths() {
     bottom: path.offsetTop + path.offsetHeight
   }))
   if (!isOnPath(playerX, playerY)) {
-    const entry = pathBounds[1]
-    playerX = (entry.left + entry.right) / 2
-    playerY = room.clientHeight * 0.85
+    const entry = pathBounds[0]                // the corridor, next to the door
+    playerX = entry.left + 100
+    playerY = (entry.top + entry.bottom) / 2
     player.moveTo(playerX, playerY)
   }
 }

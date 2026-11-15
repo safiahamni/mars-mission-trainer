@@ -15,6 +15,7 @@ const RouteChooser = (function () {
   const BASE_RATE = 0.5;   // hazard points per game minute outside (kid-friendly)
   const CLIFF_X   = 0.9;   // cliffs block some radiation: 10% less (real Curiosity measurement ~4%)
   const STORM_X   = 1.5;   // solar storm: 1.5x faster
+  const FAST = 2.2;        // the automatic walk is 2.2x faster: time is fast-forwarded too, so the cards' minutes and hazard stay true
   const stormX = () => (hud()?.isStorm() ? STORM_X : 1);
 
   const ROUTES = {
@@ -121,6 +122,7 @@ const RouteChooser = (function () {
     auto = { route, next: 1, inTail: false, startHazard: hud()?.getHazard() ?? 0, routeHazard: 0 };
     map.setAutopilot(true);
     hud()?.setRouteShade?.(route.shade);   // the whole route gets its shade (like the cards say)
+    hud()?.setTimeScale?.(FAST);           // fast-forward the clock + hazard while walking by itself
     banner.textContent = tripMode === 'lab'
       ? `Following the ${route.name.toLowerCase()} to the Science Lab…`
       : `Heading back on the ${route.name.toLowerCase()}…`;
@@ -131,6 +133,7 @@ const RouteChooser = (function () {
     auto = null;
     map.setAutopilot(false);
     hud()?.setRouteShade?.(null);
+    hud()?.setTimeScale?.(1);
     banner.hidden = true;
   }
 
@@ -138,7 +141,7 @@ const RouteChooser = (function () {
   // so the route takes exactly its minutes)
   function autoWalk(dt) {
     let { x, y } = map.getPos();
-    let left = (auto.inTail ? map.SPEED : auto.route.speed) * dt;   // how far to walk this frame
+    let left = (auto.inTail ? map.SPEED : auto.route.speed) * dt * FAST;   // how far to walk this frame (fast-forwarded)
     while (auto && left > 0) {
       const pts = auto.inTail ? auto.route.tail : auto.route.points;
       const [tx, ty] = pts[auto.next];
