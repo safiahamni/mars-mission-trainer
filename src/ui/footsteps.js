@@ -5,8 +5,8 @@
 //  for that class (on the base map, in the Command Center room, the shelter game, the solar panel yard,
 //  and inside the Science Lab / Life Support / Greenhouse) and plays one step per foot.
 //
-//   • OUTSIDE on the Mars roads: a soft dusty crunch (gravel and red dust)
-//   • INSIDE a building: a lighter tap on the metal floor
+//   • OUTSIDE on the Mars roads: soft ground, a muffled step in sand and red dust
+//   • INSIDE a building: the same soft step, a little lighter
 //   • The sounds are made by the browser (Web Audio), no sound files.
 //   • Press M to switch the footsteps off / on (remembered in this browser).
 //
@@ -15,7 +15,7 @@
 
 (function () {
   const STEP_EVERY = 0.225;      // seconds between steps = half of the avatar's 0.45 s leg animation (one per foot)
-  const VOLUME = 0.45;           // loud enough to hear over the other sounds
+  const VOLUME = 0.6;            // soft-ground steps are low sounds: they need a bit more volume to be heard
   const KEY = 'mars-footsteps-muted';
 
   let muted = false;
@@ -40,6 +40,8 @@
   window.addEventListener('pointerdown', unlock, true);
 
   let foot = 0;
+  // one step on SOFT GROUND: a muffled "pff" of sand/dust (low-passed noise that swells in and fades out
+  // slowly, no sharp click) plus a soft low thump of the boot sinking in. Indoors it is a bit lighter.
   function step(outside) {
     const c = ctx;
     if (!c || c.state !== 'running') return;
@@ -47,32 +49,34 @@
     foot = 1 - foot;
     const vary = 0.9 + Math.random() * 0.2;            // no two steps sound exactly the same
 
-    // the crunch / tap: a short burst of filtered noise
+    // the sand: noise through a low-pass filter that closes as the foot settles
     const src = c.createBufferSource();
     src.buffer = noise;
     const filter = c.createBiquadFilter();
-    filter.type = 'bandpass';
-    filter.frequency.value = (outside ? 900 : 2200) * vary * (foot ? 1 : 0.88);
-    filter.Q.value = outside ? 0.9 : 2.5;
+    filter.type = 'lowpass';
+    filter.Q.value = 0.5;
+    const top = (outside ? 650 : 1100) * vary * (foot ? 1 : 0.9);
+    filter.frequency.setValueAtTime(top, t);
+    filter.frequency.exponentialRampToValueAtTime(top * 0.35, t + 0.16);
     const g = c.createGain();
-    const len = outside ? 0.11 : 0.06;
+    const len = outside ? 0.2 : 0.13;
     g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(VOLUME * (outside ? 1 : 0.7), t + 0.008);
+    g.gain.exponentialRampToValueAtTime(VOLUME * (outside ? 1 : 0.7), t + 0.025);   // soft start: no click
     g.gain.exponentialRampToValueAtTime(0.0001, t + len);
     src.connect(filter).connect(g).connect(c.destination);
-    src.start(t, Math.random() * 0.3, len + 0.02);
+    src.start(t, Math.random() * 0.25, len + 0.03);
 
-    // the boot landing: a little low thump
+    // the boot sinking in: a gentle low thump
     const o = c.createOscillator();
     o.type = 'sine';
-    o.frequency.setValueAtTime((outside ? 95 : 140) * vary, t);
-    o.frequency.exponentialRampToValueAtTime(50, t + 0.08);
+    o.frequency.setValueAtTime((outside ? 70 : 90) * vary, t);
+    o.frequency.exponentialRampToValueAtTime(40, t + 0.12);
     const og = c.createGain();
     og.gain.setValueAtTime(0.0001, t);
-    og.gain.exponentialRampToValueAtTime(VOLUME * 0.8, t + 0.005);
-    og.gain.exponentialRampToValueAtTime(0.0001, t + 0.09);
+    og.gain.exponentialRampToValueAtTime(VOLUME * 0.6, t + 0.02);
+    og.gain.exponentialRampToValueAtTime(0.0001, t + 0.14);
     o.connect(og).connect(c.destination);
-    o.start(t); o.stop(t + 0.1);
+    o.start(t); o.stop(t + 0.16);
   }
 
   // ---- who is walking? ----
