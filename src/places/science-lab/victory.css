@@ -1,0 +1,88 @@
+.science-victory {
+  position: fixed;
+  inset: 0;
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  box-sizing: border-box;
+  border: 0;
+  padding: 2rem 1rem;
+  background: radial-gradient(ellipse at top, #65469b, #292238 65%);
+  color: #fff5e5;
+  text-align: center;
+  overflow: auto;
+}
+.science-victory[open] {display: flex; flex-direction: column; align-items: center; justify-content: safe center; gap: .9rem;}
+.science-victory h2 {font-size: clamp(2rem, 6vw, 4.4rem); line-height: 1.06; margin: 0;}
+.science-victory p {margin: 0; font-size: clamp(1rem, 2.4vw, 1.35rem);}
+.science-victory-stars {font-size: clamp(1.5rem, 5vw, 3rem); color: #ffd858; animation: science-victory-rise .55s ease-out both;}
+.science-victory .science-victory-badge {background: #b8f3de; color: #254a41; padding: .45rem 1rem; border-radius: 999px; font-weight: 800;}
+.science-victory-actions {display: flex; flex-wrap: wrap; justify-content: center; gap: .8rem; margin-top: .75rem;}
+.science-victory-actions button {font: inherit; font-weight: 800; color: #292238; background: #ffd858; border: 2px solid #292238; border-radius: .85rem; padding: .75rem 1rem; cursor: pointer;}
+.science-victory-actions [data-victory-restart] {background: #eee0ff;}
+.science-victory-actions button:focus-visible {outline: 3px solid #b8f3de; outline-offset: 3px;}
+@keyframes science-victory-rise {from {opacity: 0; transform: translateY(1rem) scale(.8);} to {opacity: 1; transform: none;}}
+@media (prefers-reduced-motion: reduce) {.science-victory-stars {animation: none;}}
+
+.science-victory {background:radial-gradient(circle,#cfb8f5 1px,transparent 2px) 0 0/30px 30px, radial-gradient(ellipse at top,#7956a9,#2b233a 75%);}
+.science-victory-card {
+  position:relative; width:min(100%,38rem); padding:clamp(1rem,4vmin,2rem);
+  border:3px solid #2b2a3a; border-radius:1.45rem; color:#2b2a3a;
+  background:#fff7e9; box-shadow:0 8px #2b2a3a,0 0 0 7px #d9c3f3;
+  display:grid; justify-items:center; gap:.7rem;
+}
+.science-victory h2 {font-size:clamp(1.9rem,6vw,3.6rem);color:#442d68;}
+.science-victory .science-victory-message {background:#ddf8ef;border-radius:1rem;padding:.35rem .8rem;font-weight:800;font-size:1rem;}
+.science-victory .science-victory-badge {background:#e9dbfb;color:#442d68;border:1px solid #a688cb;}
+.science-victory-pip {
+  position:relative;width:3.5rem;height:2.65rem;border:3px solid #2b2a3a;border-radius:.95rem;
+  background:radial-gradient(circle at 34% 49%,#2b2a3a 0 .16rem,transparent .19rem),radial-gradient(circle at 66% 49%,#2b2a3a 0 .16rem,transparent .19rem),#91ece0;
+  box-shadow:inset 0 -.32rem #56baae;margin-top:.35rem;
+}
+.science-victory-pip::before {content:'';position:absolute;left:calc(50% - .23rem);top:-.58rem;width:.46rem;height:.73rem;border:2px solid #2b2a3a;border-radius:1rem;background:#ffd858;}
+.science-victory-stars {display:flex;flex-wrap:wrap;justify-content:center;gap:.3rem;animation:none;}
+.science-victory-stars span {display:grid;place-items:center;width:1.9rem;height:1.9rem;background:#fff0ac;border:1.5px solid #a46e1d;border-radius:50%;font-size:1.23rem;color:#805410;animation:science-victory-rise .4s ease-out both;animation-delay:calc(var(--star-index) * .08s);}
+.science-victory-actions button {box-shadow:0 3px #2b2a3a;}
+@media (prefers-reduced-motion: reduce) {.science-victory-stars span {animation:none;}}
+
+.science-victory {
+  margin:auto; width:min(40rem,calc(100% - 2rem)); height:auto;
+  max-height:calc(100dvh - 2rem); padding:.6rem;
+  background:transparent; overflow:auto;
+}
+.science-victory[open] {display:block;}
+.science-victory::backdrop {background:#241a32a8;}
+.science-victory-card {width:100%; margin:0 auto; box-sizing:border-box;}
+
+.science-victory-card {
+  background:#fff6ec; border:4px solid #2b2a3a; box-shadow:0 8px #2b2a3a;
+  font-family:'Nunito',system-ui,sans-serif;
+}
+.science-victory h2 {font-family:'Fredoka','Nunito',system-ui,sans-serif;color:#2b2a3a;}
+.science-victory .science-victory-message {background:#e8f7ff;border:2px solid #2b2a3a;color:#245573;}
+.science-victory .science-victory-badge {background:none;border:0;color:#a94726;font-size:.88rem;letter-spacing:.09em;text-transform:uppercase;}
+.science-victory-stars {gap:clamp(.2rem,1.5vw,.65rem);}
+.science-victory-stars span {
+  width:auto;height:auto;background:none;border:0;border-radius:0;
+  font-size:clamp(1.7rem,6vw,3.15rem);line-height:1.12;color:#ffd447;
+  -webkit-text-stroke:1.5px #694018; text-shadow:0 3px #a76521;
+}
+.science-victory-actions button {border:3px solid #2b2a3a;background:#bf4f29;color:white;}
+.science-victory-actions [data-victory-restart] {background:#fff;color:#2b2a3a;}
+
+.science-victory-confetti {position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:2;}
+.science-victory-confetti span {
+  position:absolute;top:0;left:var(--x);width:.45rem;height:.7rem;border-radius:2px;
+  background:#ffcf47;opacity:0;
+}
+.science-victory-confetti span:nth-child(3n) {background:#64dfc3;}
+.science-victory-confetti span:nth-child(3n + 1) {background:#f18161;}
+.science-victory[open] .science-victory-confetti span {animation:science-confetti 1.55s var(--delay) ease-out both;}
+@keyframes science-confetti {
+  0% {opacity:0;transform:translateY(-1rem);}
+  12%,65% {opacity:1;}
+  100% {opacity:0;transform:translate(var(--drift),55dvh) rotate(420deg);}
+}
+@media (prefers-reduced-motion: reduce) {.science-victory-confetti {display:none;}}

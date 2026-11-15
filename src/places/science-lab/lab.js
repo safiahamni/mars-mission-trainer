@@ -1,3 +1,4 @@
+import './victory.css';
 import { getGame, setGame } from '../../state/gameStore.js';
 import { CC_CONFIG, startChapter, finishChapter } from '../../systems/commandCenter.js';
 
@@ -85,6 +86,60 @@ Object.assign(frame.style, {
 });
 document.body.append(frame);
 
+const victory = document.createElement('dialog');
+victory.className = 'science-victory';
+victory.setAttribute('aria-labelledby', 'science-victory-title');
+victory.innerHTML = `
+  <div class="science-victory-confetti" aria-hidden="true">
+    ${Array.from({ length: 84 }, (_, i) => `<span style="--x:${i * 37 % 100}%;--delay:${i % 19 * 37}ms;--drift:${(i % 2 ? 1 : -1) * (20 + i % 5 * 13)}px"></span>`).join('')}
+  </div>
+  <div class="science-victory-card">
+    <div class="science-victory-pip" aria-hidden="true"></div>
+    <p class="science-victory-message">Earth received your report!</p>
+    <h2 id="science-victory-title">Congratulations,<br> Martianaut!</h2>
+    <p class="science-victory-badge">Junior Mars Scientist</p>
+    <div class="science-victory-stars" role="img" aria-label="Six Science Stars">
+      ${Array.from({ length: 6 }, (_, i) => `<span style="--star-index:${i}">&#9733;</span>`).join('')}
+    </div>
+    <p>All six Mars missions complete.</p>
+    <div class="science-victory-actions">
+      <button type="button" data-victory-journal>View Discovery Journal</button>
+      <button type="button" data-victory-restart>Start over</button>
+    </div>
+  </div>
+`;
+document.body.append(victory);
+
+function showVictory() {
+  map.pause(true);
+  pauseClock?.(true);
+  if (!victory.open) victory.showModal();
+}
+
+victory.addEventListener('cancel', event => event.preventDefault());
+victory.querySelector('[data-victory-journal]').addEventListener('click', () => {
+  const journalButton = frame.contentDocument?.getElementById('science-collection');
+  const journal = frame.contentDocument?.getElementById('keepsakes');
+  if (!journalButton || !journal) return;
+  victory.close();
+  frame.hidden = false;
+  journal.addEventListener('close', () => {
+    frame.hidden = true;
+    showVictory();
+  }, { once: true });
+  frame.focus();
+  journalButton.click();
+});
+victory.querySelector('[data-victory-restart]').addEventListener('click', () => {
+  try {
+    for (const key of ['mars-keepsakes', 'mars-rock-collection', 'mars-skinner-ridge']) {
+      localStorage.removeItem(key);
+    }
+  } finally {
+    location.reload();
+  }
+});
+
 map.on('enter', place => {
   if (place !== 'lab' || !frame.hidden) return;
   map.releaseKeys();
@@ -106,9 +161,13 @@ window.addEventListener('message', event => {
   frame.hidden = true;
   map.leave('down');
   map.releaseKeys();
-  map.pause(false);
-  pauseClock?.(false);
-  window.focus();
+  if (getGame().over && getGame().chapter > 6) {
+    showVictory();
+  } else {
+    map.pause(false);
+    pauseClock?.(false);
+    window.focus();
+  }
 });
 
 

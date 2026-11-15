@@ -1690,7 +1690,15 @@ function startPanorama(next) {
   board.className = 'panorama-board';
   const progress = element('p', '0 of 4 pieces placed');
   progress.setAttribute('role', 'status');
-  safariStage.append(element('h4', 'Numbered slots'), board, progress, element('h4', 'Photo pieces'), tray);
+  progress.className = 'panorama-progress';
+  const puzzle = element('div', '');
+  puzzle.className = 'panorama-workspace';
+  const piecesPanel = element('section', '');
+  piecesPanel.append(element('h4', 'Photo pieces'), tray);
+  const slotsPanel = element('section', '');
+  slotsPanel.append(element('h4', 'Numbered slots'), board);
+  puzzle.append(piecesPanel, slotsPanel);
+  safariStage.append(puzzle, progress);
   addPhotoCredit(safariStage, mosaic);
   const order = [0,1,2,3];
   shuffle(order);
@@ -1719,7 +1727,7 @@ function startPanorama(next) {
   for (let slot = 0; slot < 4; slot++) {
     const square = action(String(slot + 1), () => {
       if (selected === undefined) {
-        safariHint.textContent = 'PIP: Pick a photo piece below the numbered slots first.';
+        safariHint.textContent = 'PIP: Pick a photo piece on the left, then tap a numbered slot.';
         return;
       }
       if (selected !== slot) {
@@ -1735,8 +1743,8 @@ function startPanorama(next) {
       progress.textContent = placed + ' of 4 pieces placed';
       safariHint.textContent = 'PIP: That piece fits! Choose another from Photo pieces.';
       if (placed === 4) {
-        tray.previousElementSibling.hidden = true;
-        tray.hidden = true;
+        piecesPanel.hidden = true;
+        puzzle.classList.add('panorama-complete');
         safariHint.textContent = 'PIP: Picture restored! Ready to start the photo hunt?';
         const fact = element('p', '');
         fact.className = 'safari-fact';

@@ -364,7 +364,6 @@ dialog#discovery{margin:auto;background:#fff4e6;color:#2b2a3a;border:3px solid #
 #greenhouse-prep[hidden]{display:none}
 .safari-frame{position:relative;overflow:hidden;border:3px solid #2b2a3a;border-radius:.7rem;background:#302545}
 .safari-frame img,#safari-stage article img{display:block;width:100%;height:auto}
-.safari-frame img{transform:scale(var(--zoom,1))}
 .safari-grid{position:absolute;inset:0;display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr)}
 #safari .safari-grid button{background:transparent;border:1px solid #fff7;border-radius:0}
 #safari .safari-grid [aria-pressed=true]{background:#ffe87533;box-shadow:inset 0 0 0 3px #ffd84a}
@@ -391,8 +390,16 @@ dialog#discovery{margin:auto;background:#fff4e6;color:#2b2a3a;border:3px solid #
 #safari .match-rock{display:grid;gap:.35rem;background:#eee0ff;text-align:left}
 #safari .match-rock small{font-weight:600}
 
-.safari-frame{aspect-ratio:16/10}
-.safari-frame img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.safari-frame{width:min(100%,38rem);margin-inline:auto;aspect-ratio:16/10;max-height:42dvh}
+.safari-frame img{
+  position:absolute;
+  top:calc((1 - var(--zoom,1)) * 50%);
+  left:calc((1 - var(--zoom,1)) * 50%);
+  width:calc(var(--zoom,1) * 100%);
+  height:calc(var(--zoom,1) * 100%);
+  max-width:none;
+  object-fit:cover;
+}
 .camera-display{position:absolute;top:.45rem;right:.5rem;background:#2b2a3a;color:white;padding:.15rem .45rem;border-radius:.75rem;pointer-events:none;font-size:.82rem;font-weight:800}
 #safari-stage .safari-zoom{padding:.4rem .7rem;background:#efe2ff;border-radius:.7rem;font-weight:800}
 .safari-zoom input{height:1.75rem}
@@ -899,3 +906,10 @@ dialog:not(#mission) {max-height: calc(100dvh - 1rem); overflow: auto;}
 #pixel-options button {width: 100%; align-content: center; text-align: center;}
 #pixel-feedback {text-align: center;}
 #pixel-feedback:empty {display: none;}
+
+.panorama-workspace {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(.45rem,2vw,1rem)}
+.panorama-workspace section {min-width:0}
+.panorama-workspace h4 {margin:0 0 .35rem;font-size:1rem}
+.panorama-workspace :is(.panorama-board,.panorama-tray) {margin:0;min-height:5.2rem}
+.panorama-workspace.panorama-complete {grid-template-columns:minmax(0,30rem);justify-content:center}
+.panorama-progress {margin:.5rem 0 .25rem;text-align:center}
