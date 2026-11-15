@@ -263,3 +263,15 @@
 .ls-water-station .ls-station-state { color: #29283c; font-size: 9px; font-weight: bold; }
 .ls-water-station.ls-water-broken .ls-mini-rack { filter: drop-shadow(0 0 6px #FF5A5A); }
 .ls-water-station.ls-water-fixed .ls-station-state { color: #176b55; }
+
+/* ===== Lucide icons (they replaced the emojis) ===== */
+.lucide { display: inline-block; vertical-align: -0.14em; flex: none; }
+.ls-alarm .lucide { margin-right: 4px; }
+.ls-emoji .lucide { color: #2B2A3A; }
+.ls-popup .ls-germ { color: #3E9F4A; }
+.ls-popup .ls-germ .lucide, .ls-germ-icon .lucide { width: 100%; height: 100%; }
+.ls-germ-icon { display: block; width: 64px; height: 64px; margin: 0 auto; color: #3E9F4A; }
+.ls-confetti span .lucide { stroke: #2B2A3A; stroke-width: 1.5; }
+.ls-c-star { color: #FFD23F; }
+.ls-c-drop { color: #3EC6F0; }
+.ls-c-spark { color: #FFFFFF; }
