@@ -14,6 +14,7 @@ export function createGreenhouseDemoController({ readResources, chargeSupplies }
     organicMatter: 24,
     cropHealth: 0,
     soilPerchlorate: 100,
+    advancedCropHarvested: false,
     climate: { temperature: 20, light: 45 },
     climateHealthy: false,
     powerOutage: false,
@@ -143,10 +144,11 @@ export function createGreenhouseDemoController({ readResources, chargeSupplies }
     }
 
     if (action.type === "harvest") {
+      const cropId = state.greenhouse.plots[action.plotId]?.cropId;
       const result = harvestCrop(state.greenhouse, action.plotId);
       if (!result.ok) return result;
       if (state.resources.food + result.foodReward > 100) return fail("Food storage is full.", "food-full");
-      state = { ...state, resources: { ...state.resources, food: state.resources.food + result.foodReward }, greenhouse: result.nextState };
+      state = { ...state, resources: { ...state.resources, food: state.resources.food + result.foodReward }, advancedCropHarvested: state.advancedCropHarvested || cropId === 'potato' || cropId === 'millet', greenhouse: result.nextState };
       notify();
       return result;
     }

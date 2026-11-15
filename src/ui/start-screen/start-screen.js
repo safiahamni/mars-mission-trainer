@@ -184,8 +184,6 @@
       placed = true;
       if (map.isInside && map.isInside() === 'shelter' && map.leave) map.leave('up');
     };
-    const hoverY = Math.max(90, ty - 190);
-    const W = window.innerWidth;
 
     const box = document.createElement('div');
     box.className = 'st-intro';
@@ -197,6 +195,11 @@
       <div class="st-ship">${SHIP}</div>
       <div class="st-skip">click or press Enter to skip</div>`;
     document.body.appendChild(box);
+    const bounds = box.getBoundingClientRect();
+    const W = box.clientWidth;
+    tx = (tx - bounds.left) * W / bounds.width;
+    ty = (ty - bounds.top) * box.clientHeight / bounds.height;
+    const hoverY = Math.max(90, ty - 190);
     const q = c => box.querySelector(c);
     const at = (x, y) => `translate(${x}px, ${y}px)`;
     const anims = [];
@@ -349,7 +352,7 @@
     let step = -1;           // -1 = the welcome card
 
     function placeCard(r, side) {
-      const W = window.innerWidth, H = window.innerHeight, cw = card.offsetWidth, ch = card.offsetHeight, gap = 26;
+      const W = wrap.clientWidth, H = wrap.clientHeight, cw = card.offsetWidth, ch = card.offsetHeight, gap = 26;
       const fits = { right: r.x + r.w + gap + cw < W - 12, left: r.x - gap - cw > 12, top: r.y - gap - ch > 12, bottom: r.y + r.h + gap + ch < H - 12 };
       const order = [side, 'right', 'left', 'top', 'bottom'];
       const sd = order.find(o => fits[o]) || side;
@@ -379,7 +382,16 @@
       q('.tt-place .tt-fact').innerHTML = pl.fact;
       wrap.querySelectorAll('.tt-dots i').forEach((d, i) => d.classList.toggle('on', i === step));
       q('.tt-place .tt-next').textContent = step === N - 1 ? 'Let’s go! 🚀' : 'Next →';
-      const r = placeRect(pl) || { x: window.innerWidth / 2 - 60, y: window.innerHeight / 2 - 60, w: 120, h: 120 };
+      const bounds = wrap.getBoundingClientRect();
+      const sx = wrap.clientWidth / bounds.width;
+      const sy = wrap.clientHeight / bounds.height;
+      const target = placeRect(pl);
+      const r = target ? {
+        x: (target.x - bounds.left) * sx,
+        y: (target.y - bounds.top) * sy,
+        w: target.w * sx,
+        h: target.h * sy
+      } : { x: wrap.clientWidth / 2 - 60, y: wrap.clientHeight / 2 - 60, w: 120, h: 120 };
       hole.hidden = false;
       Object.assign(hole.style, { left: r.x + 'px', top: r.y + 'px', width: r.w + 'px', height: r.h + 'px' });
       card.classList.remove('tt-pop'); void card.offsetWidth; card.classList.add('tt-pop');

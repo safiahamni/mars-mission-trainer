@@ -1,3 +1,4 @@
+import { greenhouseRequirement } from '../places/science-lab/src/missions.js';
 // COMMAND CENTER (Member 1): the sol clock, water, stars,
 // the wardrobe, the radiation shelter's bunks, and sleeping to end the sol.
 // Power rules live in power.js (Power Budget).
@@ -164,6 +165,8 @@ export function chapterCheck(game) {
   const missing = Object.entries(chapter.needs)
     .filter(([k, v]) => have[k] < v)
     .map(([k, v]) => `${k} ${v}`);
+  const greenhouseTask = greenhouseRequirement(chapter.id, game.greenhouseProgress);
+  if (greenhouseTask) missing.push(greenhouseTask);
   return { ok: missing.length === 0, chapter, missing, reason: missing.length ? 'not-enough' : null };
 }
 
