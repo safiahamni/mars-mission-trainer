@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import './style.css';
 import { createGreenhouseDemoController } from './features/greenhouse/greenhouseDemoController.js';
 import { mountGreenhousePanel } from './features/greenhouse/GreenhousePanel.js';
+import "./features/greenhouse/greenhouse.css";
 
 class HabitatBackdrop extends Phaser.Scene {
   constructor() {

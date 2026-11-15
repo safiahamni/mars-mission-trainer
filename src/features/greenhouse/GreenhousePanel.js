@@ -416,7 +416,7 @@ export function mountGreenhousePanel(root, controller, { onExit } = {}) {
         ${shieldStation({urgent:radiation})}
         ${compostStation()}
         ${wiringStation({outage})}
-        <div class="gm-exit-door">EXIT TO BASE</div>
+        <div class="gm-exit-door">EXIT TO BASE ▼</div>
       </div><div class="gm-playbar"><span>🎯 Walk to a station and press E · keep the crew growing</span><div class="gm-stock-mini">🧬 Nutrients ${s.nutrients}　 ·　🌱 Organic matter ${s.organicMatter}</div><button class="gm-end-sol" data-action="end-sol">END SOL <b>➜</b></button></div></main>
       <aside class="gm-tasks"><div class="gm-task-head"><span>✅</span><div><b>TASK CHECKLIST</b><small>${basicDone} of 3 basic tasks done</small></div></div>
         <div class="gm-task-group"><h3>BASIC TASKS</h3>
@@ -477,6 +477,7 @@ export function mountGreenhousePanel(root, controller, { onExit } = {}) {
   }
   function interact() {
     const nearest=Object.entries(stationMap).map(([id,[x,y]])=>({id,d:Math.hypot(player.x-PATH.width*x/100,player.y-PATH.height*y/100)})).sort((a,b)=>a.d-b.d)[0];
+    if(onExit&&nearExit()){onExit();return;}
     if(nearest&&nearest.d<45){openStation(nearest.id);return;}
     note="Walk along the dotted paths and get closer to a station; press E to use it.";render();
   }
@@ -623,6 +624,8 @@ export function mountGreenhousePanel(root, controller, { onExit } = {}) {
   function onDragStart(event){const shield=event.target.closest("[data-shield-panel]");if(shield&&event.dataTransfer){event.dataTransfer.setData("text/plain",`shield:${shield.dataset.shieldPanel}`);event.dataTransfer.effectAllowed="move";return;}const item=event.target.closest('[data-action="drag-item"]');if(item&&event.dataTransfer){event.dataTransfer.setData("text/plain","compost-item");event.dataTransfer.effectAllowed="move";}}
   function onDragOver(event){if(event.target.closest("[data-drop], [data-shield-target]")){event.preventDefault();if(event.dataTransfer)event.dataTransfer.dropEffect="move";}}
   function onDrop(event){const target=event.target.closest("[data-shield-target]");if(target){event.preventDefault();const payload=event.dataTransfer?.getData("text/plain")||"";const id=target.dataset.shieldTarget;if(payload===`shield:${id}`){const rect=target.getBoundingClientRect();panels[id].placed=true;panels[id].position=clamp((event.clientX-rect.left)/rect.width*100,5,95);note="Shield moved. Check the marker and adjust its distance if needed.";render();}else if(payload.startsWith("shield:")){note="That shield belongs to a different bed. Match each shield to its marked bed.";render();}return;}const bin=event.target.closest("[data-drop]");if(!bin)return;event.preventDefault();bin.click();}
+  let exitArmed=false;
+  function nearExit(){return Math.hypot(player.x-PATH.width*.5,player.y-PATH.height*.98)<50;}
   function movePlayerFrame(time){
     if(modal||movementKeys.size===0){movementFrame=0;previousFrameTime=0;avatar?.setWalking(false);return;}
     const elapsed=previousFrameTime?Math.min((time-previousFrameTime)/1000,.05):0;previousFrameTime=time;
@@ -630,6 +633,7 @@ export function mountGreenhousePanel(root, controller, { onExit } = {}) {
     const up=movementKeys.has("w")||movementKeys.has("arrowup");const down=movementKeys.has("s")||movementKeys.has("arrowdown");
     let dx=(Number(right)-Number(left))*250*elapsed;let dy=(Number(down)-Number(up))*250*elapsed;
     if(dx&&dy){dx*=Math.SQRT1_2;dy*=Math.SQRT1_2;}
+    if(onExit&&down&&!up&&nearExit()){movementKeys.clear();movementFrame=0;previousFrameTime=0;avatar?.setWalking(false);onExit();return;}
     if(dx||dy){const previous=player;player=moveOnPath({...player},dx,dy);avatar?.faceToward(dx,dy);const scene=root.querySelector(".gm-map");avatar?.moveTo(player.x/PATH.width*scene.clientWidth,player.y/PATH.height*scene.clientHeight);avatar?.setWalking(Math.abs(player.x-previous.x)+Math.abs(player.y-previous.y)>.1);}
     movementFrame=requestAnimationFrame(movePlayerFrame);
   }
