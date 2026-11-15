@@ -1,49 +1,24 @@
-import Phaser from 'phaser';
-import './style.css';
-import { createGreenhouseDemoController } from './features/greenhouse/greenhouseDemoController.js';
-import { mountGreenhousePanel } from './features/greenhouse/GreenhousePanel.js';
+// main.js — starts the game: loads the shared map first, then every place.
+// The map drawing is in index.html, and every CSS file is linked there too.
 
-class HabitatBackdrop extends Phaser.Scene {
-  constructor() {
-    super('HabitatBackdrop');
-  }
+// ===== THE SHARED MAP (everyone uses it; please don't change without telling the team) =====
+import './map/avatar.js';   // the player character (createAvatar)
+import './map/map.js';      // roads, walking, doors, keyboard (MarsMap)
+import './map/mars-scenery.js'; // the ground (mesa, craters, dunes, tracks) + cliff zone / clear zone
+import './hud/hud.js';           // side panel: clock, hazard meter, solar storm, EVA, red alarm, Mission failed (MarsHUD)
 
-  create() {
-    this.cameras.main.setBackgroundColor('#b9573f');
-    const art = this.add.graphics();
-    art.fillStyle(0x9e4938, 0.45);
-    art.fillCircle(190, 160, 260);
-    art.fillCircle(1230, 740, 320);
-    art.lineStyle(4, 0xf7d6ac, 0.25);
-    art.strokeRoundedRect(85, 70, 1238, 700, 44);
-    art.lineStyle(2, 0xffe1b6, 0.2);
-    for (let x = 130; x < 1320; x += 72) {
-      art.lineBetween(x, 88, x, 752);
-    }
-    for (let y = 130; y < 760; y += 72) {
-      art.lineBetween(105, y, 1300, y);
-    }
-    this.add.text(102, 100, 'MARS HABITAT  ·  GREENHOUSE', {
-      fontFamily: 'Trebuchet MS, sans-serif',
-      fontSize: '14px',
-      color: '#ffe1c7',
-      letterSpacing: 2,
-    }).setAlpha(0.45);
-  }
-}
+// ===== PLACES: each teammate adds their place here (take away the // in front of your lines) =====
+// (your CSS goes in index.html, in the <head>)
+// Radiation Shelter + Command Center (Member 3)
+// import './places/radiation-shelter/shelter.js';
+// import './places/radiation-shelter/shelter-game.js';
+import './places/radiation-shelter/solar-panel.js';   // solar panels yard + rover (outside the airlock: ▼)
 
-new Phaser.Game({
-  type: Phaser.AUTO,
-  parent: 'game',
-  width: 1408,
-  height: 840,
-  backgroundColor: '#b9573f',
-  scene: [HabitatBackdrop],
-  scale: {
-    mode: Phaser.Scale.FIT,
-    autoCenter: Phaser.Scale.CENTER_BOTH,
-  },
-});
+// Greenhouse
+// import './places/greenhouse/greenhouse.js';
 
-const demoController = createGreenhouseDemoController();
-mountGreenhousePanel(document.querySelector('#ui-root'), demoController);
+// Science Lab
+// import './places/science-lab/lab.js';
+
+// Life Support
+// import './places/life-support/life.js';
