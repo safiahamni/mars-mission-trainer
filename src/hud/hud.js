@@ -50,7 +50,8 @@ const MarsHUD = (function () {
   const outside = () => !map.isInside();
   let routeShade = null;                   // set by the route chooser while the avatar walks a route by itself
   function rate() {
-    if (!outside()) return 0;
+    // inside a building the radiation stops, except in the Greenhouse (glass walls): it follows the outside rate
+    if (!outside() && map.isInside() !== 'greenhouse') return 0;
     const shade = routeShade !== null ? routeShade : (inCanyon(map.getPos()) ? CLIFF_X : 1);
     return BASE_RATE * (storm ? STORM_X : 1) * shade;
   }

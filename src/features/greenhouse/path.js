@@ -4,10 +4,10 @@ export const PATH = Object.freeze({
   width: 880,
   height: 472,
   half: 14,
-  start: Object.freeze({ x: 440, y: 448 }),
+  start: Object.freeze({ x: 836, y: 240 }),                // just inside the door on the right wall
   lines: Object.freeze([
-    [[440, 472], [440, 380]],                              // base exit to lower corridor
-    [[440, 380], [200, 380], [200, 100]],                 // left corridor and vertical aisle
+    [[880, 240], [760, 240]],                              // door on the right wall to the right aisle
+    [[200, 380], [200, 100]],                              // left corridor and vertical aisle
     [[200, 100], [120, 100]],                             // climate console branch
     [[200, 100], [686, 100]],                             // soil lab branch
     [[200, 240], [80, 240]],                              // shield console

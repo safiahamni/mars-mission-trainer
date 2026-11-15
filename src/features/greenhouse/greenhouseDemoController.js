@@ -5,7 +5,7 @@ const definedOnly = (o = {}) => Object.fromEntries(Object.entries(o).filter(([, 
 const cap = (n) => Math.max(0, Math.min(100, n));
 const fail = (message, code = "invalid-action") => ({ ok: false, code, message });
 
-export function createGreenhouseDemoController({ readResources, chargeSupplies, readSol, readRadiation, readChapterStars, maxSols = 6 } = {}) {
+export function createGreenhouseDemoController({ readResources, chargeSupplies, readSol, readRadiation, readChapterStars, maxSols = 6, onEvent } = {}) {
   let state = {
     sol: 1,
     resources: { water: 67, power: 64, food: 30 },
@@ -15,19 +15,31 @@ export function createGreenhouseDemoController({ readResources, chargeSupplies, 
     organicMatter: 24,
     cropHealth: 0,
     soilPerchlorate: 100,
-    advancedCropHarvested: false,
     climate: { temperature: 20, light: 45 },
     climateHealthy: false,
     powerOutage: false,
     radiationAlert: false,
+    radiationOn: false,
+    radiationLevel: 0,
+    hazard: 0,
     pests: false,
     greenhouse: createGreenhouseState(),
   };
   const listeners = new Set();
+  const hasCrops = () => Object.values(state.greenhouse.plots).some((p) => p.cropId);
 
   // ---- things that come from the shared game (the base map) ----
   // readSol(): the shared game's sol.  readRadiation(): true while a solar storm / radiation warning is on outside.
-  let outageTriggered = false;   // the Sol 3 power outage happens once
+  // The wiring emergency is a random event: once or twice during the mission, some seconds after a sol starts.
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  const firstOutage = 2 + Math.floor(Math.random() * (maxSols - 1));    // sol 2..last sol
+  const outageSols = new Set([firstOutage]);
+  if (Math.random() < 0.5) {                                          // sometimes a second one, not on the next sol
+    const others = [2, 3, 4, 5, 6, 7].filter((n) => n <= maxSols && Math.abs(n - firstOutage) > 1);
+    if (others.length) outageSols.add(others[Math.floor(Math.random() * others.length)]);
+  }
+  let outageDueAt = 0;           // when the next scheduled outage hits (ms)
+  let dirty = false;             // something changed that the panel has not drawn yet
   let shielded = false;          // shields locked during the current storm
   let radiationSeconds = 0;      // seconds of unshielded radiation (hurts the plants)
   function syncExternal() {
@@ -41,24 +53,47 @@ export function createGreenhouseDemoController({ readResources, chargeSupplies, 
       }));
       state = { ...state, sol, greenhouse: { ...state.greenhouse, plots } };
       changed = true;
-      if (sol >= 3 && !outageTriggered) {
-        outageTriggered = true;
+      if (outageSols.has(sol)) outageDueAt = Date.now() + rnd(8000, 30000);
+    }
+    if (outageDueAt && Date.now() >= outageDueAt) {
+      outageDueAt = 0;
+      if (!state.powerOutage) {
         state = { ...state, powerOutage: true, climateHealthy: false, climate: { ...state.climate, light: 0 } };
+        changed = true;
+        onEvent?.("Power outage in the Greenhouse! The lights and pumps are off: fix the wiring before your plants get hurt.");
       }
     }
     if (readRadiation) {
-      const on = !!readRadiation();
+      const raw = readRadiation();                       // false/0 none · 1 caution (yellow) · true/2 danger (red)
+      const level = raw === true ? 2 : Math.max(0, Math.min(2, Number(raw) || 0));
+      const on = level > 0;
+      if (level !== state.radiationLevel) { state = { ...state, radiationLevel: level }; changed = true; }
       if (!on) shielded = false;
       const alert = on && !shielded;
       if (alert !== state.radiationAlert) { state = { ...state, radiationAlert: alert }; changed = true; }
       if (on !== state.radiationOn) { state = { ...state, radiationOn: on }; changed = true; }   // the warning outside, even after the shields are up
     }
+    if (changed) dirty = true;
     return changed;
   }
 
+  // Crop health drops ONCE per problem (only when something is planted):
+  //   · power outage: the climate can't be controlled           -5, once per outage
+  //   · RED radiation (hazard 80+ / storm), shields not up      -8, once per red warning
+  // Runs from refresh() every second, so it also works while the player is away from the greenhouse.
+  let outageHit = false, radHit = false;
+  function tickDamage() {
+    let loss = 0;
+    if (!state.powerOutage) outageHit = false;
+    else if (!outageHit && hasCrops()) { outageHit = true; loss += 5; }
+    if (state.radiationLevel !== 2) radHit = false;
+    else if (!radHit && state.radiationAlert && hasCrops()) { radHit = true; loss += 8; }
+    if (loss && state.cropHealth > 0) { state = { ...state, cropHealth: cap(state.cropHealth - loss) }; dirty = true; }
+  }
+
   const snapshot = () => (syncExternal(), { ...state, maxSols, soilLabUnlocked: !readChapterStars || readChapterStars() >= 2, resources: { ...state.resources, ...definedOnly(readResources?.()), food: state.resources.food }, climate: { ...state.climate }, greenhouse: { ...state.greenhouse, plots: Object.fromEntries(Object.entries(state.greenhouse.plots).map(([id, plot]) => [id, { ...plot }])) } });
-  const notify = () => listeners.forEach((listener) => listener(snapshot()));
-  const refresh = () => { if (syncExternal()) notify(); };
+  const notify = () => { dirty = false; listeners.forEach((listener) => listener(snapshot())); };
+  const refresh = () => { syncExternal(); tickDamage(); if (dirty) notify(); };   // dirty: a change another call already picked up
   const charge = ({ water = 0, power = 0, nutrients = 0 } = {}) => {
     if (state.resources.water < water || state.resources.power < power || state.nutrients < nutrients) return false;
     if (chargeSupplies && !chargeSupplies({ water, power })) return false;
@@ -83,7 +118,7 @@ export function createGreenhouseDemoController({ readResources, chargeSupplies, 
       const bands = { greens: [16, 24, 35, 65], potato: [14, 22, 30, 60], millet: [20, 30, 40, 80] };
       const [tMin, tMax, lMin, lMax] = bands[cropId] || bands.greens;
       const good = !state.powerOutage && state.climate.temperature >= tMin && state.climate.temperature <= tMax && state.climate.light >= lMin && state.climate.light <= lMax;
-      state = { ...state, climateHealthy: good, cropHealth: good ? cap(state.cropHealth + 10) : state.cropHealth };
+      state = { ...state, climateHealthy: good, cropHealth: good && hasCrops() ? cap(state.cropHealth + 10) : state.cropHealth };
       notify();
       return { ok: true, success: good, message: good ? "Climate locked in! Crop health +10." : "Outside the crop's target band. Growth will be 25% slower until climate is fixed." };
     }
@@ -98,7 +133,8 @@ export function createGreenhouseDemoController({ readResources, chargeSupplies, 
       if (!result.ok) return result;
       if (!charge(result.resourceCost)) return fail("There is not enough water or power for that seedling.", "low-resources");
       const hadCrops = Object.values(state.greenhouse.plots).some((p) => p.cropId);
-      state = { ...state, greenhouse: result.nextState, cropHealth: hadCrops ? state.cropHealth : 70 };
+      // crop health starts at 0; the first seedling gives it a small start
+      state = { ...state, greenhouse: result.nextState, cropHealth: hadCrops ? state.cropHealth : Math.max(state.cropHealth, 10) };
       notify();
       return result;
     }
@@ -118,9 +154,9 @@ export function createGreenhouseDemoController({ readResources, chargeSupplies, 
       return { ok: true, unlocked, message: unlocked ? "Perchlorate is below 30. Potato and millet beds unlocked!" : `Soil treated. Perchlorate −20 to ${state.soilPerchlorate}.` };
     }
     if (action.type === "compost-success") {
-      state = { ...state, organicMatter: cap(state.organicMatter + 20), nutrients: cap(state.nutrients + 20), pests: false, soilPerchlorate: cap(state.soilPerchlorate - 2) };
+      state = { ...state, organicMatter: cap(state.organicMatter + 20), nutrients: cap(state.nutrients + 20), pests: false, soilPerchlorate: cap(state.soilPerchlorate - 2), cropHealth: hasCrops() ? cap(state.cropHealth + 4) : state.cropHealth };
       notify();
-      return { ok: true, message: "Great sorting! Organic matter +20, nutrients +20." };
+      return { ok: true, message: hasCrops() ? "Great sorting! Organic matter +20, nutrients +20, crop health +4." : "Great sorting! Organic matter +20, nutrients +20." };
     }
     if (action.type === "compost-fail") {
       state = { ...state, soilPerchlorate: cap(state.soilPerchlorate + 10), pests: true, cropHealth: cap(state.cropHealth - 5) };
@@ -142,7 +178,7 @@ export function createGreenhouseDemoController({ readResources, chargeSupplies, 
       if (!action.covered) return fail("Every panel needs to cover its bed from the beam.", "shield-open");
       shielded = true;
       radiationSeconds = 0;
-      state = { ...state, radiationAlert: false, cropHealth: cap(state.cropHealth + 10) };
+      state = { ...state, radiationAlert: false, cropHealth: hasCrops() ? cap(state.cropHealth + 10) : state.cropHealth };
       notify();
       return { ok: true, message: "All beds shielded. Radiation blocked; crop health +10." };
     }
@@ -152,7 +188,7 @@ export function createGreenhouseDemoController({ readResources, chargeSupplies, 
       if (state.sol >= maxSols) return fail("The greenhouse mission has reached its final Sol.", "final-sol");
       const growing = Object.values(state.greenhouse.plots).some((plot) => plot.cropId && plot.growthSols < CROP_CATALOG[plot.cropId].growthSols);
       const lightCost = state.powerOutage ? 0 : Math.ceil(state.climate.light / 25);
-      // Crops now grow in real time (see grow-tick). End Sol only charges the daily upkeep and triggers events.
+      // End Sol charges the daily upkeep and triggers events.
       const result = advanceGreenhouseSol(state.greenhouse, { sol: state.sol, waterAvailable: state.resources.water, powerAvailable: state.resources.power, nutrientAvailable: state.nutrients, climateOkay: !state.powerOutage, growthRate: 1, extraPower: lightCost });
       if (!result.ok) return result;
       const fullCost = result.resourceCost;
@@ -160,7 +196,7 @@ export function createGreenhouseDemoController({ readResources, chargeSupplies, 
       let cropHealth = state.cropHealth;
       if (state.powerOutage) cropHealth -= 8;
       if (state.pests) cropHealth -= 6;
-      if (state.radiationAlert) cropHealth -= 12;
+      if (state.radiationLevel === 2 && state.radiationAlert) cropHealth -= 12;
       else if (growing && !state.powerOutage) cropHealth += 1;
       const stalled = state.powerOutage && growing;
       const nextSol = state.sol + 1;
@@ -173,11 +209,10 @@ export function createGreenhouseDemoController({ readResources, chargeSupplies, 
     }
 
     if (action.type === "harvest") {
-      const cropId = state.greenhouse.plots[action.plotId]?.cropId;
       const result = harvestCrop(state.greenhouse, action.plotId);
       if (!result.ok) return result;
       if (state.resources.food + result.foodReward > 100) return fail("Food storage is full.", "food-full");
-      state = { ...state, resources: { ...state.resources, food: state.resources.food + result.foodReward }, advancedCropHarvested: state.advancedCropHarvested || cropId === 'potato' || cropId === 'millet', greenhouse: result.nextState };
+      state = { ...state, resources: { ...state.resources, food: state.resources.food + result.foodReward }, greenhouse: result.nextState };
       notify();
       return result;
     }
