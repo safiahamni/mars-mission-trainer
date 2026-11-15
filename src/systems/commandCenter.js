@@ -15,34 +15,34 @@ export const CC_CONFIG = {
 };
 
 // SCIENCE LAB CHAPTERS: one per day. The day ends (sunset) when today's chapter is finished.
-// Chapters never fail. The only thing that can stop one is the gate:
-//   needs = what you must HAVE to start it, cost = power it uses when it starts.
-// Numbers follow the Science Lab's missions.js (id = the Lab's mission id).
+// Chapters never fail. Numbers are the Science Lab's (its chapter screens):
+//   needs = what you must HAVE to start it
+//   uses  = what it uses up when it is completed
 export const CHAPTERS = [
-  { n: 1, id: 'rover-rescue',    name: 'Rover Rescue',     needs: { power: 15 },                                   cost: 10 },
-  { n: 2, id: 'mystery-rocks',   name: 'Mystery Rocks',    needs: { power: 25, oxygen: 60 },                       cost: 15 },
-  { n: 3, id: 'cosmic-claw',     name: 'Cosmic Claw',      needs: { power: 35, water: 40 },                        cost: 20 },
-  { n: 4, id: 'snapshot-safari', name: 'Snapshot Safari',  needs: { power: 30, food: 50 },                         cost: 15 },
-  { n: 5, id: 'lost-lake',       name: 'The Lost Lake',    needs: { power: 45, oxygen: 65, water: 50 },            cost: 25 },
-  { n: 6, id: 'message-earth',   name: 'Message to Earth', needs: { power: 50, oxygen: 60, food: 40, water: 40 },  cost: 30 },
+  { n: 1, id: 'rover-rescue',    name: 'Rover Rescue',     needs: { power: 15, oxygen: 10, water: 5,  food: 5 },  uses: { power: 10, oxygen: 10, water: 5,  food: 5 } },
+  { n: 2, id: 'mystery-rocks',   name: 'Mystery Rocks',    needs: { power: 25, oxygen: 60, water: 4,  food: 4 },  uses: { power: 15, oxygen: 8,  water: 4,  food: 4 } },
+  { n: 3, id: 'cosmic-claw',     name: 'Cosmic Claw',      needs: { power: 35, oxygen: 6,  water: 40, food: 5 },  uses: { power: 20, oxygen: 6,  water: 10, food: 5 } },
+  { n: 4, id: 'snapshot-safari', name: 'Snapshot Safari',  needs: { power: 30, oxygen: 5,  water: 5,  food: 50 }, uses: { power: 15, oxygen: 5,  water: 5,  food: 10 } },
+  { n: 5, id: 'lost-lake',       name: 'The Lost Lake',    needs: { power: 45, oxygen: 65, water: 50, food: 6 },  uses: { power: 25, oxygen: 12, water: 8,  food: 6 } },
+  { n: 6, id: 'message-earth',   name: 'Message to Earth', needs: { power: 50, oxygen: 60, water: 40, food: 40 }, uses: { power: 30, oxygen: 8,  water: 6,  food: 6 } },
 ];
 
 export const WATER_CONFIG = {
   start: 48,
   recycler: 15,        // water gained when the recycler runs
-  crewPerNight: 10,    // water the crew uses every night
+  crewPerNight: 0,     // 0: the chapters use water (night only uses power)
   target: 40,          // Science Lab chapters need water 40+
 };
 
 // Air and food work like water: systems add them during the day, the crew uses some every night.
 export const OXYGEN_CONFIG = {
-  start: 55,
+  start: 60,           // same as the Science Lab
   moxie: 15,           // oxygen MOXIE makes when it runs (once per sol)
-  crewPerNight: 10,    // oxygen the crew breathes every night
+  crewPerNight: 0,     // 0: the chapters use oxygen (night only uses power)
 };
 export const FOOD_CONFIG = {
-  start: 40,
-  crewPerNight: 10,    // food the crew eats every night (packaged food + greenhouse harvests)
+  start: 30,           // same as the Science Lab
+  crewPerNight: 0,     // 0: the chapters use food (night only uses power)
 };
 
 export const SHIRT_COLORS = ['blue', 'teal', 'purple', 'orange', 'red'];
@@ -183,15 +183,24 @@ export function startChapter(game) {
     }[check.reason];
     return { ok: false, game, message: why };
   }
-  const r = spendPower(game.power, check.chapter.cost, `Chapter ${check.chapter.n}`);
-  if (!r.ok) return { ok: false, game, message: r.message };
-  return { ok: true, game: { ...game, power: r.power, inChapter: true }, chapter: check.chapter, message: r.message };
+  // nothing is paid yet: like the Lab, the chapter uses its resources when it is completed
+  return { ok: true, game: { ...game, inChapter: true }, chapter: check.chapter, message: `Chapter ${check.chapter.n} started.` };
 }
 
-// The chapter is complete (chapters never fail): tick it off and the sun sets.
-export function finishChapter(game) {
+// The chapter is complete (chapters never fail): it uses its resources, then the sun sets.
+// uses: optional, e.g. { power: 8 } when the Lab's route choice made it cheaper.
+export function finishChapter(game, uses = {}) {
   if (!game.inChapter) return { ok: false, game, events: [], message: 'No chapter is being played.' };
-  const g = { ...game, inChapter: false, chapter: game.chapter + 1, done: { ...game.done, chapter: true } };
+  const ch = CHAPTERS.find((c) => c.n === game.chapter);
+  const u = { ...ch.uses, ...uses };
+  const power = { ...game.power, battery: clamp(game.power.battery - u.power, 0, 100) };
+  const g = {
+    ...game, power,
+    oxygen: clamp(game.oxygen - u.oxygen, 0, 100),
+    water: clamp(game.water - u.water, 0, 100),
+    food: clamp(game.food - u.food, 0, 100),
+    inChapter: false, chapter: game.chapter + 1, done: { ...game.done, chapter: true },
+  };
   const r = sunset(g);
   return { ok: true, game: r.game, events: r.events, message: `Chapter ${game.chapter} complete!` };
 }

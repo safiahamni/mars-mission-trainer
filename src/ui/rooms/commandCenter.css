@@ -1242,3 +1242,75 @@
 .cc-shelter:hover {
   outline: 5px solid rgba(255, 224, 120, 0.9);
 }
+
+/* wardrobe: pointing shows this bubble; the wardrobe only opens when the player walks up to it */
+.cc-tip-wardrobe { left: 250px; top: 468px; width: 270px; }
+.cc-wardrobe { cursor: default; }
+.cc-wardrobe:hover ~ .cc-tip-wardrobe { opacity: 1; }
+
+/* the resources card in the left column shows power and water now, so the room's own bar and status line are hidden */
+.cc-hud,
+.cc-status {
+  display: none;
+}
+
+/* ---------- four-door layout: a cross corridor, a door on each side, stations around the middle ---------- */
+.cc-prop { left: 367px; top: 200px; }
+.cc-mount { left: 376px; top: 186px; }
+.cc-wardrobe { left: 198px; top: 205px; }
+.cc-screens { left: 625px; top: 192px; }
+.cc-console { left: 618px; top: 284px; }
+.cc-bank { left: 249px; top: 590px; }
+.cc-shelter {
+  left: 740px;
+  top: 572px;
+  transform: scale(0.75);        /* a bit smaller, so its label stays inside the room */
+  transform-origin: 0 0;
+}
+.cc-door { left: 808px; top: 566px; width: 44px; height: 14px; }   /* the shelter's door, on its top wall */
+.cc-exit-down { left: 523px; top: 858px; width: 78px; height: 18px; }
+.cc-exit-up { left: 523px; top: 120px; width: 78px; height: 18px; }
+.cc-exit-left { left: 50px; top: 464px; width: 18px; height: 78px; }
+.cc-exit-right { left: 1056px; top: 464px; width: 18px; height: 78px; }
+.cc-pop-switch { left: 500px; top: 170px; }
+.cc-pop-wardrobe { left: 310px; top: 160px; }
+.cc-pop-bunks { left: 1062px; top: 520px; }
+.cc-tip-battery { left: 410px; top: 600px; }
+.cc-tip-switch { left: 490px; top: 190px; }
+.cc-tip-wardrobe { left: 60px; top: 520px; }
+.cc-tip-mission { left: 640px; top: 410px; }
+.cc-tip-shelter { left: 440px; top: 640px; }
+
+/* the airlock (bottom door) only opens in the spacesuit: a lock on it, and a pop-up if you try in the crew shirt */
+.cc-suit-lock {
+  left: 542px;
+  top: 820px;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  background: #2b2a3a;
+  border: 3px solid #ffd23f;
+  border-radius: 50%;
+  color: #ffd23f;
+  z-index: 3;
+}
+.cc-suit-lock[hidden] { display: none; }
+.cc-suit-pop {
+  left: 612px;
+  top: 760px;
+  width: 360px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 14px 16px;
+  background: #2b2a3a;
+  border: 3px solid #ffd23f;
+  border-radius: 16px;
+  color: #fff;
+  z-index: 20;
+}
+.cc-suit-pop[hidden] { display: none; }
+.cc-suit-pop .icon { color: #ffd23f; }
+.cc-suit-pop strong { display: block; color: #ffd23f; font-size: 20px; }
+.cc-suit-pop span { display: block; font-size: 15px; margin-top: 2px; }
