@@ -141,8 +141,11 @@ export function renderCommandCenter(room, { onExit } = {}) {
     <svg class="cc-svg" viewBox="0 0 ${STAGE_W} ${STAGE_H}" aria-hidden="true">
       <path d="M66 760 H249 M249 640 H120 V178 H340 V222 H372" stroke="#2b2a3a" stroke-width="16" fill="none" stroke-linejoin="round"/>
       <path d="M66 760 H249 M249 640 H120 V178 H340 V222 H372" stroke="#f5c84c" stroke-width="9" fill="none" stroke-linejoin="round"/>
-      <path d="${PATH_D}" stroke="#f7ecd9" stroke-width="${ROOM_PATH_WIDTH + 6}" stroke-dasharray="7 6" fill="none"/>
-      <path d="${PATH_D}" stroke="#e8c49a" stroke-width="${ROOM_PATH_WIDTH}" fill="none"/>
+      <!-- the walkways: the same as the base map's roads (tan, brown dots, dashed white edges) -->
+      <defs><pattern id="cc-road-dots" width="22" height="22" patternUnits="userSpaceOnUse"><rect width="22" height="22" fill="#E8B98A"/><circle cx="11" cy="11" r="3.4" fill="#C98F5E"/></pattern></defs>
+      <path d="${PATH_D}" stroke="#E8B98A" stroke-width="${ROOM_PATH_WIDTH}" fill="none"/>
+      <path d="${PATH_D}" stroke="#FFFFFF" stroke-width="${ROOM_PATH_WIDTH - 8}" stroke-dasharray="10 8" stroke-opacity="0.9" fill="none"/>
+      <path d="${PATH_D}" stroke="url(#cc-road-dots)" stroke-width="${ROOM_PATH_WIDTH - 14}" fill="none"/>
     </svg>
     <div class="cc-chip-dark" style="left:80px;top:772px">From solar field</div>
 
@@ -168,24 +171,26 @@ export function renderCommandCenter(room, { onExit } = {}) {
 
     <!-- ! radiation shelter -->
     <div class="cc-shelter" data-b="shelter">
-      <i class="t" style="left:17px;top:15px;width:65px"></i><i class="t" style="left:95px;top:15px;width:65px"></i>
-      <i class="t" style="left:173px;top:15px;width:65px"></i><i class="t" style="left:251px;top:15px;width:84px"></i>
-      <i class="t" style="left:17px;top:330px;width:65px"></i><i class="t" style="left:95px;top:330px;width:65px"></i>
-      <i class="t" style="left:173px;top:330px;width:65px"></i><i class="t" style="left:251px;top:330px;width:84px"></i>
-      <i class="t v" style="left:15px;top:55px;height:110px"></i><i class="t v" style="left:15px;top:245px;height:75px"></i>
-      <i class="t v" style="left:310px;top:55px;height:80px"></i><i class="t v" style="left:310px;top:150px;height:80px"></i>
-      <i class="t v" style="left:310px;top:243px;height:75px"></i>
-      <div class="cc-bunk" style="left:172px;top:65px"><span></span><em class="cyan"></em></div>
-      <div class="cc-bunk" style="left:172px;top:133px"><span></span><em class="yellow"></em></div>
-      <div class="cc-shield">${icon('shield-check', 70)}</div>
+      <!-- a thick wall of water all round (water blocks radiation); the door is the gap at the top -->
+      <span class="cc-sh-ripple"></span>
+      <div class="cc-sh-floor"></div>
+      <div class="cc-sh-gap"></div>
+      <span class="cc-rug"></span>
+      <!-- three sleeping pods, one for each crew member -->
+      <div class="cc-pod" style="left:48px"><span></span><em class="cyan"></em></div>
+      <div class="cc-pod" style="left:160px"><span></span><em class="yellow"></em></div>
+      <div class="cc-pod" style="left:250px"><span></span><em class="purple"></em></div>
+      <!-- bedside lamp: glows while the crew is inside -->
+      <span class="cc-lamp-table"></span>
       <span class="cc-lamp"></span>
+      <span class="cc-zzz"><b>z</b><b>z</b><b>z</b></span>
     </div>
     <div class="cc-door"></div>
     <div class="cc-tag" style="left:858px;top:528px"><b class="red">!</b> Radiation shelter</div>
     <div class="cc-tip cc-tip-shelter"><strong>Radiation shelter</strong><br>A safe room with thick walls and water tanks that block space radiation. The crew sleeps here.</div>
 
     <!-- mission control: just part of the room now (no pop-up, no checklist) -->
-    <div class="cc-tag" style="left:716px;top:356px">Mission control</div>
+    <div class="cc-tag" style="left:786px;top:356px;transform:translateX(-50%)">Mission control</div>
     <div class="cc-screens" data-b="screens" aria-hidden="true">
       <span class="cc-screen" style="left:0;top:9px;width:96px;height:72px">${EARTH_SVG}</span>
       <span class="cc-screen" style="left:110px;top:0;width:101px;height:82px">
@@ -207,8 +212,12 @@ export function renderCommandCenter(room, { onExit } = {}) {
     <div class="cc-tip cc-tip-mission"><strong>Mission control</strong><br>Screens that talk to Earth. A message takes 4 to 24 minutes to travel between Earth and Mars!</div>
     <!-- four doors: left = Greenhouse, up = Science Lab, right = Life Support, down = Airlock / solar panels -->
     <div class="cc-exit-door cc-exit-down" data-b="exit-down" aria-hidden="true"></div>
-    <div class="cc-suit-lock" data-b="suit-lock" aria-hidden="true">${icon('lock', 22)}</div>
-    <div class="cc-suit-pop" data-b="suit-pop" role="alert" hidden>${icon('shirt', 28)}<div><strong>Wear your spacesuit first!</strong><span>Then you can go outside. The Wardrobe (W) is at the top left.</span></div></div>
+    <span class="cc-door-lock" data-b="door-lock" aria-hidden="true">${icon('lock', 20)}</span>
+    <!-- pop-up: the airlock (down door) only opens in the spacesuit -->
+    <div class="cc-suit-warn" data-b="suit-warn" role="alert" hidden>
+      ${icon('shirt', 30)}
+      <div><strong>Wear your spacesuit first!</strong><p>Then you can go outside. The spacesuit is in the Wardrobe (W).</p></div>
+    </div>
     <div class="cc-exit-door cc-exit-up" data-b="exit-up" aria-hidden="true"></div>
     <div class="cc-exit-door cc-exit-left" data-b="exit-left" aria-hidden="true"></div>
     <div class="cc-exit-door cc-exit-right" data-b="exit-right" aria-hidden="true"></div>
@@ -358,9 +367,9 @@ export function renderCommandCenter(room, { onExit } = {}) {
     const p = g.power;
     const day = isDay(g);
     renderHud();
-    $('suit-lock').hidden = g.outfit === 'suit';
-    if (g.outfit === 'suit') $('suit-pop').hidden = true;
     $('goal').textContent = goalText(g);
+    $('door-lock').hidden = g.outfit === 'suit';   // the airlock is locked until the spacesuit is on
+    if (g.outfit === 'suit') $('suit-warn').hidden = true;
 
     // top status
     const ch = chapterCheck(g);
@@ -563,18 +572,22 @@ export function renderCommandCenter(room, { onExit } = {}) {
   // walking through one of the four doors leaves the Command Center that way
   // (left = Greenhouse road, up = Science Lab road, right = Life Support road, down = airlock / solar panels)
   function leaveRoom(dir) {
+    // the airlock (down) leads outside: only in the spacesuit
+    if (dir === 'down' && getGame().outfit !== 'suit') {
+      pos = { x: pos.x, y: EXITS.down.y - 30 };   // can't go through: step back from the door
+      placePlayer();
+      showSuitWarn();
+      return;
+    }
     if (onExit) return onExit(dir);
     pos = { ...ROOM_SPAWN };   // no base map (testing the room on its own): back to the middle
     placePlayer();
   }
-  // the airlock (▼) leads outside: only in the spacesuit
-  let suitPopTimer = 0;
-  function blockAirlock() {
-    pos = { ...pos, y: EXITS.down.y - 34 };   // step back from the door
-    placePlayer();
-    $('suit-pop').hidden = false;
-    clearTimeout(suitPopTimer);
-    suitPopTimer = setTimeout(() => { $('suit-pop').hidden = true; }, 3500);
+  let suitWarnTimer = 0;
+  function showSuitWarn() {
+    $('suit-warn').hidden = false;
+    clearTimeout(suitWarnTimer);
+    suitWarnTimer = setTimeout(() => { $('suit-warn').hidden = true; }, 3500);
   }
 
   function doorCrossed() {
@@ -615,8 +628,7 @@ export function renderCommandCenter(room, { onExit } = {}) {
       player.faceToward(dx, dy);
       afterMove();
       const door = doorCrossed();
-      if (door === 'down' && getGame().outfit !== 'suit') blockAirlock();
-      else if (door) leaveRoom(door);
+      if (door) leaveRoom(door);   // the airlock (down) checks for the spacesuit in leaveRoom
     }
     player.setWalking(!!(dx || dy));
     requestAnimationFrame(frame);

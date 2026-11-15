@@ -16,3 +16,14 @@
     opacity: 0.35;
   }
 }
+/* the airlock is drawn by ccBuilding.js now (attached to the building), so hide
+   the separate one that solar-panel.js would add */
+#sd-airlock {
+  display: none;
+}
+
+/* the glass tunnel's top part: over the player, never blocks walking or clicks */
+.mm-art.cc-tunnel-top {
+  z-index: 3;
+  pointer-events: none;
+}

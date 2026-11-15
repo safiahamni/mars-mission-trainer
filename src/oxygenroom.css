@@ -1593,21 +1593,26 @@ body {
    here is "Command Center pixels × --s". The room is drawn on a 764 × 628 plan:
    positions are % of the room, sizes use --k (plan pixels → screen pixels).
    ===================================================================== */
-:root { --s: 0.75; --k: calc(var(--s) * 1040 / 764); --ink: #2b2a3a; --navy: #262a35; --yellow: #ffd23f; }
+:root { --s: 0.75; --k: calc(var(--s) * 646 / 628); --ink: #2b2a3a; --navy: #262a35; --yellow: #ffd23f; }
 body {
+  margin: 0;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;          /* the stage sits in the middle, like the Command Center */
+  overflow: hidden;
   font-family: 'Nunito', 'Arial Rounded MT Bold', system-ui, sans-serif;
   font-weight: 700;
   background-color: #c65a2e;
   background-image: radial-gradient(#ad4b24 1.4px, transparent 1.6px);
   background-size: 22px 22px;
 }
-.air-screen { max-width: none; margin: 0; padding: calc(30px * var(--s)) calc(30px * var(--s)); }
-.content {
-  grid-template-columns: calc(1068px * var(--s)) calc(357px * var(--s));
-  gap: calc(34px * var(--s));
-  align-items: start;
-}
-.room-column { gap: calc(18px * var(--s)); min-width: 0; }
+/* The same 1512 x 1032 stage as the Command Center, with the name tag, room and task panel
+   in the same places (so nothing jumps when you walk from one room to the other).
+   The Life Support room box is a little smaller than the Command Center's. */
+.air-screen { position: relative; width: calc(1512px * var(--s)); height: calc(1032px * var(--s)); max-width: none; margin: 0; padding: 0; }
+.content { display: block; }
+.room-column { display: block; }
+.room-header { position: absolute; left: calc(46px * var(--s)); top: calc(40px * var(--s)); }
 
 /* ---------- top: room name + Science + Power cells (like the Command Center title) ---------- */
 .room-header { display: flex; align-items: center; gap: calc(12px * var(--s)); flex-wrap: wrap; }
@@ -1624,9 +1629,13 @@ body {
 
 /* ---------- the room: light wall + light tiled floor ---------- */
 .room {
-  box-sizing: content-box;
-  width: calc(1040px * var(--s));
-  aspect-ratio: 764 / 628;
+  position: absolute;
+  left: calc(54px * var(--s));
+  top: calc(120px * var(--s));
+  box-sizing: border-box;
+  width: calc(894px * var(--s));
+  height: calc(674px * var(--s));
+  aspect-ratio: auto;
   min-height: 0;
   background-color: #dceefa;
   background-image:
@@ -1664,7 +1673,7 @@ body {
 .path.branch.down::before { border-top: none; border-bottom: none; top: calc(5px * var(--k)); }
 .path.co2-branch   { left: 12.4%; top: 32.8%; height: 22.6%; }   /* reaches into the main road to cover its edge line */
 .path.moxie-branch { left: 48.3%; top: 31.2%; height: 24.2%; }
-.path.water-branch { left: 68.3%; top: 61.8%; height: 17.7%; }
+.path.water-branch { left: 68.3%; top: 61.8%; height: 13.2%; }
 .path.power-branch { left: 14.7%; top: 61.8%; height: 14.7%; }
 
 /* ---------- stations ---------- */
@@ -1724,7 +1733,7 @@ body {
 .ls-water-station .tip { right: 100%; bottom: 0; margin-right: calc(10px * var(--s)); }
 
 /* the water recycler (water-recycling.js) */
-.room .ls-water-station { left: 61.5%; top: 78%; z-index: 3; display: flex; flex-direction: column; align-items: center; gap: 0; cursor: pointer; }
+.room .ls-water-station { left: 61.5%; top: 73.5%; z-index: 3; display: flex; flex-direction: column; align-items: center; gap: 0; cursor: pointer; }
 .room .ls-water-station .ls-mini-rack { width: calc(168px * var(--k)); order: 1; }
 .room .ls-water-station .station-title { order: 2; }
 .room .ls-water-station .ls-station-state {
@@ -1744,7 +1753,8 @@ body {
 
 /* ---------- right panel: exactly the Command Center's "Tasks in this room" ---------- */
 .instructions {
-  width: calc(357px * var(--s)); max-width: none; margin-top: calc(70px * var(--s));
+  position: absolute; left: calc(1110px * var(--s)); top: calc(113px * var(--s));
+  width: calc(357px * var(--s)); max-width: none; margin: 0; box-sizing: border-box;
   padding: calc(22px * var(--s)) calc(24px * var(--s));
   background: var(--navy); border-radius: calc(22px * var(--s)); box-shadow: 0 6px 0 rgba(0, 0, 0, 0.2);
   align-self: start; justify-self: start;
