@@ -16,7 +16,7 @@
 
 (function () {
   const STEP_EVERY = 0.5;        // seconds between steps: about 2 a second, a calm walking pace
-  const VOLUME = 0.15;           // the steps play a lot: loud enough to hear, not too loud
+  const VOLUME = 0.12;           // the steps play a lot: loud enough to hear, not too loud
   const KEY = 'mars-footsteps-muted';
 
   let muted = false;
@@ -45,9 +45,9 @@
     }
     let grain = 0;
     for (let i = 0; i < n; i++) {
-      if (Math.random() < 0.03) grain = 0.6 + Math.random() * 0.9;   // crackles: leaves snapping
+      if (Math.random() < 0.02) grain = 0.2 + Math.random() * 0.3;   // gentle crackles: soft leaves
       grain *= 0.97;
-      const fade = Math.min(1, i / (sr * 0.002)) * Math.pow(1 - i / n, 1.5);   // no click, then dies away
+      const fade = Math.min(1, i / (sr * 0.015)) * Math.pow(1 - i / n, 1.5);   // no click, then dies away
       d[i] = (Math.random() * 2 - 1) * (0.15 + grain) * (0.12 + env[i]) * fade;
     }
     return buf;
@@ -85,11 +85,11 @@
     const peak = c.createBiquadFilter();                      // the dry, papery middle of the crunch
     peak.type = 'peaking';
     peak.frequency.value = 2400;
-    peak.gain.value = 3;
+    peak.gain.value = 0;
     peak.Q.value = 0.8;
-    const lp = c.createBiquadFilter();                        // soft: the sharp top is taken off
+    const lp = c.createBiquadFilter();                        // very soft: only the low, muffled part of the crunch
     lp.type = 'lowpass';
-    lp.frequency.value = outside ? 4500 : 3800;
+    lp.frequency.value = outside ? 2400 : 2000;
     const g = c.createGain();
     g.gain.value = VOLUME * (outside ? 1 : 0.6);
     src.connect(hp).connect(peak).connect(lp).connect(g).connect(c.destination);
