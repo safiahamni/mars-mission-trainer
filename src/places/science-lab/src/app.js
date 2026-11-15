@@ -850,7 +850,9 @@ function showSpecimen(sample) {
     focus.min = '0';
     focus.max = '100';
     focus.value = '0';
-    label.append(focus);
+    const instruction = element('small', 'Drag the yellow knob left or right. You can also use the arrow keys.');
+    instruction.className = 'control-hint';
+    label.append(focus, instruction);
     answerTray.append(label);
     const capture = action('Capture observation', record);
     const adjust = () => {
@@ -859,7 +861,7 @@ function showSpecimen(sample) {
       const ready = distance <= 7;
       stage.classList.toggle('aligned', ready);
       byId('specimen-art').style.filter = 'blur(' + (ready ? 0 : Math.min(9, (distance - 7) / 5)) + 'px)';
-      pipHint.textContent = ready ? 'Click! Those layers look sharp. Grab your first clue!' : 'PIP: Slide slowly until you can see the stripes!';
+      pipHint.textContent = ready ? 'Click! Those layers look sharp. Grab your first clue!' : 'PIP: Drag the yellow knob left or right until the stripes look sharp.';
       capture.disabled = !ready;
     };
     focus.oninput = adjust;
@@ -879,7 +881,7 @@ function showSpecimen(sample) {
       marker.title = label;
       return marker;
     }));
-    pipHint.textContent = 'Time a pulse as the beam enters each colored zone. ' + pulses + ' left!';
+    pipHint.textContent = 'Tap Fire pulse when the beam crosses a colored zone. ' + pulses + ' left!';
     if (readings.size === 2) {
       action('Save the readings', record);
       return;
@@ -906,7 +908,7 @@ function showSpecimen(sample) {
     return;
   }
 
-  pipHint.textContent = mapped.size + '/16 mapped. Flip the tiles, then spot the symbol that shows up most!';
+  pipHint.textContent = mapped.size + '/16 mapped. Tap each tile to reveal it, then count which symbol appears most.';
   const grid = element('div', '');
   grid.className = 'element-grid';
   answerTray.append(grid);
@@ -1256,7 +1258,7 @@ function startClaw() {
   ];
   shuffle(patterns);
   const [sample] = patterns;
-  clawStep('1 / 3 - Rock Target Rush', 'PIP: Find the ' + sample.label + ' rock! Tap it when it pops up.');
+  clawStep('1 / 3 - Rock Target Rush', 'PIP: Find the ' + sample.label + ' rock! Tap the matching rock each time it appears.');
   const grid = element('div', '');
   grid.className = 'claw-grid';
   clawStage.append(grid);
@@ -1294,7 +1296,7 @@ function startClaw() {
 }
 
 function coreRock(sample) {
-  clawStep('2 / 3 - Cosmic Claw', 'PIP: Line up the drill. Tap Lower drill when the pointer enters the mint zone!');
+  clawStep('2 / 3 - Cosmic Claw', 'PIP: Line up the drill. Watch the moving drill. Tap Lower drill when it enters the mint zone!');
   const track = element('div', '');
   track.className = 'claw-track';
   const arm = element('span', '');
@@ -1320,7 +1322,7 @@ function coreRock(sample) {
 }
 
 function sortCore() {
-  clawStep('3 / 3 - Sample Sorter', 'PIP: Inspect the tubes, then match their symbols to the storage rack.');
+  clawStep('3 / 3 - Sample Sorter', 'PIP: Tap a tube, then tap the slot with the same symbol.');
   const tubes = [['A', '\u25c6'], ['B', '\u2605'], ['C', '\u25cf']];
   const slots = [...tubes];
   shuffle(tubes);
@@ -1469,7 +1471,7 @@ function startSafari() {
     const scene = itinerary[index];
     safariStage.replaceChildren(element('h3', '2 / 3 - Mars I-Spy | Shot ' + (index + 1) + ' of ' + safariScenes.length));
     safariActions.replaceChildren();
-    safariHint.textContent = 'PIP: ' + scene.hint;
+    safariHint.textContent = 'PIP: ' + scene.hint + ' Zoom in first, tap the outlined box, then take your photo.';
     const checklist = element('p', '');
     checklist.className = 'safari-checklist';
     checklist.append(element('strong', 'Photo checklist'), element('span', scene.name));
@@ -1487,11 +1489,12 @@ function startSafari() {
     lens.setAttribute('aria-hidden', 'true');
     const display = element('span', '1.0x');
     display.className = 'camera-display';
+    display.textContent = '1.00x';
     frame.append(photo, grid, lens, display);
     safariStage.append(frame);
     addPhotoCredit(safariStage, scene);
     let selected = -1;
-    const zoomLabel = element('label', 'Zoom lens');
+    const zoomLabel = element('label', '1. Drag the zoom slider right to 1.25x or higher');
     zoomLabel.className = 'safari-zoom';
     const zoom = element('input', '');
     zoom.type = 'range';
@@ -1499,7 +1502,9 @@ function startSafari() {
     zoom.max = 180;
     zoom.value = 100;
     zoomLabel.append(zoom);
-    safariStage.append(zoomLabel);
+    const aimStep = element('p', '2. Tap the outlined box on the photo.');
+    aimStep.className = 'safari-zoom';
+    frame.before(zoomLabel, aimStep);
     const cells = Array.from({length:9}, (_, cell) => {
       const button = action('', () => {
         selected = cell;
@@ -1514,12 +1519,15 @@ function startSafari() {
     });
     zoom.oninput = () => {
       frame.style.setProperty('--zoom', Number(zoom.value) / 100);
-      display.textContent = (Number(zoom.value) / 100).toFixed(1) + 'x';
+      display.textContent = (Number(zoom.value) / 100).toFixed(2) + 'x';
     };
     cells[scene.target].classList.add('hint-cell');
-    action('\u25ce  Take photo', () => {
+    action('\u25ce  3. Take photo', () => {
       if (selected !== scene.target || Number(zoom.value) < 125) {
-        safariHint.textContent = 'PIP: ' + scene.hint + ' Frame that area and zoom in a little before taking the shot.';
+        const tip = Number(zoom.value) < 125
+          ? 'First, drag the zoom slider right to 1.25x or higher.'
+          : 'Now tap the outlined box on the photo.';
+        safariHint.textContent = 'PIP: ' + tip;
         return;
       }
       frame.classList.add('photo-captured');
@@ -1533,6 +1541,7 @@ function startSafari() {
       addPhotoCredit(print, scene);
       frame.replaceWith(print);
       zoomLabel.remove();
+      aimStep.remove();
       const fact = element('p', '');
       fact.className = 'safari-fact';
       fact.append(element('strong', 'Did you know?'), element('span', scene.fact));
@@ -1543,7 +1552,7 @@ function startSafari() {
         else showPhotoDetective(photos);
       }, safariActions).focus();
     }, safariActions);
-    cells[0].focus();
+    zoom.focus();
   }
   safari.showModal();
   startPanorama(() => frameScene(0));
@@ -1592,7 +1601,7 @@ function showSafariAlbum() {
 function startPanorama(next) {
   safariStage.replaceChildren(element('h3', '1 / 3 - Fix the panorama'));
   safariActions.replaceChildren();
-  safariHint.textContent = 'PIP: Oops, our pictures are jumbled! Pick a piece, then tap the square where it fits.';
+  safariHint.textContent = 'PIP: Put all four photo pieces in the numbered slots. Drag a piece into a slot, or tap a piece first and then tap a number. Use Peek at the panorama to see the finished picture.';
   const mosaics = [
     {photo:'PIA24921', slug:'detailed-panorama-of-mars-jezero-crater-delta', credit:'NASA/JPL-Caltech/ASU/MSSS', note:'NASA stitched 1,118 Mastcam-Z frames to make this mosaic.'},
     {...safariScenes.find(scene => scene.id === 'ripples'), note:'The Curiosity Mastcam team combined several photos to show these wind-shaped ripples.'},
@@ -1604,7 +1613,9 @@ function startPanorama(next) {
   const board = element('div', '');
   tray.className = 'panorama-tray';
   board.className = 'panorama-board';
-  safariStage.append(board, tray);
+  const progress = element('p', '0 of 4 pieces placed');
+  progress.setAttribute('role', 'status');
+  safariStage.append(element('h4', 'Numbered slots'), board, progress, element('h4', 'Photo pieces'), tray);
   addPhotoCredit(safariStage, mosaic);
   const order = [0,1,2,3];
   shuffle(order);
@@ -1632,6 +1643,10 @@ function startPanorama(next) {
   }
   for (let slot = 0; slot < 4; slot++) {
     const square = action(String(slot + 1), () => {
+      if (selected === undefined) {
+        safariHint.textContent = 'PIP: Pick a photo piece below the numbered slots first.';
+        return;
+      }
       if (selected !== slot) {
         safariHint.textContent = 'PIP: Try another spot. Match the lines where the pieces meet!';
         return;
@@ -1642,7 +1657,11 @@ function startPanorama(next) {
       pieces.get(slot).hidden = true;
       selected = undefined;
       placed += 1;
+      progress.textContent = placed + ' of 4 pieces placed';
+      safariHint.textContent = 'PIP: That piece fits! Choose another from Photo pieces.';
       if (placed === 4) {
+        tray.previousElementSibling.hidden = true;
+        tray.hidden = true;
         safariHint.textContent = 'PIP: Picture restored! Ready to start the photo hunt?';
         const fact = element('p', '');
         fact.className = 'safari-fact';
@@ -1672,10 +1691,13 @@ function showPhotoDetective(photos) {
   const selected = new Set();
   safariStage.replaceChildren(element('h3', '3 / 3 - Photo Detective'));
   safariActions.replaceChildren();
-  safariHint.textContent = 'PIP: Which TWO photos help explain how ancient water shaped Jezero?';
+  safariHint.textContent = 'PIP: Tap two photos that show what ancient water left behind at Jezero. Read the captions for clues, then tap Check my picks. Tap a selected photo again to swap it out.';
   const board = element('div', '');
   board.className = 'match-photos';
   safariStage.append(board);
+  const count = element('p', '0 of 2 photos selected');
+  count.setAttribute('role', 'status');
+  safariStage.insertBefore(count, board);
   const evidence = [...safariScenes];
   shuffle(evidence);
   for (const scene of evidence) {
@@ -1685,7 +1707,9 @@ function showPhotoDetective(photos) {
     const button = action(scene.name, () => {
       if (selected.has(scene.id)) selected.delete(scene.id);
       else if (selected.size < 2) selected.add(scene.id);
+      else safariHint.textContent = 'PIP: You already picked two. Tap one of your picks again to make room.';
       button.setAttribute('aria-pressed', String(selected.has(scene.id)));
+      count.textContent = selected.size + ' of 2 photos selected';
       submit.disabled = selected.size !== 2;
     }, card);
     button.className = 'match-rock';
@@ -1697,7 +1721,7 @@ function showPhotoDetective(photos) {
     button.append(element('small', scene.id === 'ripples' ? 'Wind-shaped sand at Gale Crater' : scene.id === 'layers' ? 'Sedimentary layers at Jezero' : 'River deposits at Jezero'));
     addPhotoCredit(card, scene);
   }
-  const submit = action('Submit evidence', () => {
+  const submit = action('Check my picks', () => {
     if (!selected.has('delta') || !selected.has('layers')) {
       safariHint.textContent = 'PIP: Wind made the ripples. Try the Jezero photos that show sediment piling up.';
       return;
@@ -1711,7 +1735,7 @@ function showPhotoDetective(photos) {
 function explainWaterEvidence(photos) {
   safariStage.replaceChildren(element('h3', 'Connect the clues'));
   safariActions.replaceChildren();
-  safariHint.textContent = 'PIP: You spotted the layers at Kodiak and the delta ledge! What could have carried the sand and mud there?';
+  safariHint.textContent = 'PIP: Kodiak and the delta ledge show layers of sand and mud. Tap one answer that explains what carried the sand and mud to Jezero and where it settled.';
   const choices = [['Wind pushed sand into ripples', false], ['A river carried sediment into a lake', true], ['The rover piled up the rocks', false]];
   shuffle(choices);
   for (const [label, correct] of choices) {
@@ -2023,7 +2047,7 @@ function startLake() {
       action('Connect the evidence',lakeEvidence,lakeActions).focus();
     }
   }
-  lakeHint.textContent = 'PIP: We can map from indoors during the solar alert. Turn the two yellow bends to guide water from the inlet arrow to the basin.';
+  lakeHint.textContent = 'PIP: We can map from indoors during the solar alert. Tap the two yellow bends to rotate them and guide water from the inlet arrow to the basin.';
   pipes.forEach((_,i) => {
     const tile = action('', () => { turns[i] = (turns[i]+1)%4; redraw(); },grid);
     tile.className = 'river-tile';
@@ -2392,7 +2416,7 @@ function repairEarth() {
 }
 
 function packEarth() {
-  const page = earthRound('3 / 3 - Catch the satellite', 'PIP: Move the dish under the satellite. Keep them lined up to send your report!');
+  const page = earthRound('3 / 3 - Catch the satellite', 'PIP: Drag the slider left or right to follow the satellite. Keep the dish underneath it to upload!');
   const sky = element('div', '');
   sky.className = 'relay-sky';
   const satellite = element('span', '\u{1f6f0}');

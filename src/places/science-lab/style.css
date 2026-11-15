@@ -773,3 +773,4 @@ header.mission-hud h1{align-self:start;margin:.1rem 0;font-size:1rem;white-space
 #chapter-requirements [data-ready=true] progress{accent-color:#24836e}
 #chapter-requirements .readiness-track:after{background:#4c3b62;box-shadow:0 0 0 1px #fff}
 .journal-launcher .lab-sound{border:2px solid #2b2a3a;border-radius:.75rem;background:#fff0b5;color:#2b2a3a;box-shadow:0 4px #2b2a3a}
+.control-hint{font-size:.78rem;font-weight:600;color:#583589;line-height:1.35}
