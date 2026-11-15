@@ -39,11 +39,11 @@ const SolarMission = (function () {
     document.getElementById('place-shelter').insertAdjacentHTML('beforeend', `
 <g id="sd-airlock" transform="translate(319 287) scale(0.7) translate(-319 -287)">
   <rect x="180" y="384" width="56" height="20" rx="7" fill="#2B2A3A"/><text x="208" y="398" font-size="11" text-anchor="middle" fill="#FFFFFF">Airlock</text>
-  <rect x="240" y="368" width="56" height="48" rx="9" fill="#E6E4EA" stroke="#2B2A3A" stroke-width="3"/>
-  <rect x="244" y="378" width="7" height="24" rx="3" fill="#F28C3A" stroke="#2B2A3A" stroke-width="1.5"/><rect x="285" y="378" width="7" height="24" rx="3" fill="#F28C3A" stroke="#2B2A3A" stroke-width="1.5"/>
+  <rect x="240" y="368" width="56" height="56" rx="9" fill="#E6E4EA" stroke="#2B2A3A" stroke-width="3"/>
+  <rect x="244" y="378" width="7" height="28" rx="3" fill="#F28C3A" stroke="#2B2A3A" stroke-width="1.5"/><rect x="285" y="378" width="7" height="28" rx="3" fill="#F28C3A" stroke="#2B2A3A" stroke-width="1.5"/>
   <rect x="255" y="380" width="26" height="16" rx="4" fill="#F4F2EE" stroke="#2B2A3A" stroke-width="2"/><rect x="260" y="386" width="16" height="4" rx="2" fill="#5CE0B5" stroke="#2B2A3A" stroke-width="1"/>
-  <rect x="250" y="404" width="36" height="7" rx="1.5" fill="#FFD84A" stroke="#2B2A3A" stroke-width="1.5"/>
-  <path d="M255 411 l4 -7 M263 411 l4 -7 M271 411 l4 -7 M279 411 l4 -7" stroke="#2B2A3A" stroke-width="2.2"/>
+  <rect x="250" y="411" width="36" height="7" rx="1.5" fill="#FFD84A" stroke="#2B2A3A" stroke-width="1.5"/>
+  <path d="M255 418 l4 -7 M263 418 l4 -7 M271 418 l4 -7 M279 418 l4 -7" stroke="#2B2A3A" stroke-width="2.2"/>
 </g>`);
   }
   // the drawing goes into the Command Center's group on the map (shelter.js has already drawn the building)

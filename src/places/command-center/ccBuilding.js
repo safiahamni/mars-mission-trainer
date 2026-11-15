@@ -36,7 +36,7 @@ const BUILDING = `
   ${MINI_TANK(342, 302)}${MINI_TANK(354, 302)}${MINI_TANK(366, 302)}
   <text x="366" y="336" font-size="11" text-anchor="middle" fill="#FFFFFF">Storm shelter core</text>
   <rect x="228" y="350" width="182" height="22" rx="7" fill="#FFE38A" stroke="#2B2A3A" stroke-width="2"/>
-  <text x="319" y="365" font-size="12" text-anchor="middle" fill="#2B2A3A">Missions · switches · sleep</text>
+  <text x="319" y="365" font-size="12" text-anchor="middle" fill="#2B2A3A">missions · switches · sleep</text>
   <!-- "Crew safe" badge (shows while the crew is inside) -->
   <g class="cc-badge"><rect x="384" y="226" width="56" height="18" rx="7" fill="#5CE0B5" stroke="#2B2A3A" stroke-width="2"/><text x="412" y="239" font-size="10" text-anchor="middle" fill="#2B2A3A">Crew safe</text></g>
 </g>`;
