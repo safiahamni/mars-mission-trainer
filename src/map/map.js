@@ -8,7 +8,7 @@ const MarsMap = (function () {
   // =========================================================
   const scene    = document.getElementById('mm-scene');
   const statusEl = document.getElementById('mm-status');
-  const SPEED    = 140;    // walking speed, pixels per second
+  const SPEED    = 180;    // walking speed, pixels per second (faster = less time outside)
 
   // =========================================================
   //  THE MAP
@@ -243,7 +243,8 @@ const MarsMap = (function () {
   //  KEYBOARD + ON-SCREEN ARROWS
   // =========================================================
   const KEYMAP = { ArrowUp: 'up', w: 'up', ArrowDown: 'down', s: 'down',
-                   ArrowLeft: 'left', a: 'left', ArrowRight: 'right', d: 'right' };
+                   ArrowLeft: 'left', a: 'left', ArrowRight: 'right', d: 'right',
+                   KeyW: 'up', KeyS: 'down', KeyA: 'left', KeyD: 'right' };   // W A S D also work with Caps Lock or a Korean keyboard
   function press(dir) {
     for (const fn of listeners.key) if (fn(dir)) return;   // a teammate's game used this key
     if (insideOf) {
@@ -256,12 +257,12 @@ const MarsMap = (function () {
 
   document.addEventListener('keydown', e => {
     if (paused) return;                    // a pop-up is open: no walking
-    const dir = KEYMAP[e.key];
+    const dir = (KEYMAP[e.key] || KEYMAP[e.code]);
     if (!dir) return;
     e.preventDefault();
     press(dir);
   });
-  document.addEventListener('keyup', e => { const dir = KEYMAP[e.key]; if (dir) unpress(dir); });
+  document.addEventListener('keyup', e => { const dir = (KEYMAP[e.key] || KEYMAP[e.code]); if (dir) unpress(dir); });
   document.querySelectorAll('[data-dir]').forEach(btn => {
     const dir = btn.dataset.dir;
     btn.addEventListener('pointerdown', () => { if (!paused) press(dir); });
@@ -273,7 +274,7 @@ const MarsMap = (function () {
   // =========================================================
   let last = performance.now();
   function loop(now) {
-    const dt = Math.min(0.1, (now - last) / 1000);   // seconds since last frame
+    const dt = Math.max(0, Math.min(0.1, (now - last) / 1000));   // seconds since last frame (never backwards)
     last = now;
     if (paused) { requestAnimationFrame(loop); return; }
 
