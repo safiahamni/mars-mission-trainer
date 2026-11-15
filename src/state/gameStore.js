@@ -3,7 +3,7 @@
 // delete this file and read/write the game through their controller instead.
 import { createGame, tick, startChapter, finishChapter, endDayEarly, spend, changeResource } from '../systems/commandCenter.js';
 
-let game = createGame();
+let game = { ...createGame(), oxygen: 60, food: 30 };
 const listeners = [];
 
 export function getGame() { return game; }

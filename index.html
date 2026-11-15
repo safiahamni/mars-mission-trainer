@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="/src/map/map.css">
   <link rel="stylesheet" href="/src/map/mars-scenery.css">
   <link rel="stylesheet" href="/src/hud/hud.css">
+  <link rel="stylesheet" href="/src/map/route-chooser.css">
   <!-- PLACES: each teammate adds their CSS here (take away the comment marks around your line) -->
   <!-- <link rel="stylesheet" href="/src/places/radiation-shelter/shelter.css"> -->
   <link rel="stylesheet" href="/src/places/radiation-shelter/solar-panel.css">
@@ -52,9 +53,44 @@
 
         <!-- ===== PLACES: each teammate draws their building inside their own group ===== -->
         <!-- Greenhouse: empty spot, straight left of the Command Center (its road ends at the right side of the spot) -->
-                <g id="place-greenhouse" transform="translate(-50 260) scale(0.75) translate(-44 -36)">
+        <g id="place-greenhouse" transform="translate(-50 260) scale(0.75) translate(-44 -36)">
           <rect x="44" y="36" width="122" height="26" rx="7" fill="#2B2A3A"/><text x="105" y="54" font-size="14" text-anchor="middle" fill="#FFFFFF">Greenhouse</text>
-          <rect class="mm-spot" x="44" y="68" width="156" height="92" rx="14"/>
+          <rect class="mm-spot" x="44" y="68" width="160" height="94" rx="14"/>
+          <g id="gh-topdown">
+            <defs><pattern id="gh-dots" width="6" height="6" patternUnits="userSpaceOnUse"><rect width="6" height="6" fill="#C65A30"/><circle cx="3" cy="3" r="1" fill="#963F2B"/></pattern></defs>
+            <rect x="55" y="79" width="138" height="74" rx="7" fill="#000" opacity=".18"/>
+            <!-- the floor, laid out like the inside of the greenhouse -->
+            <rect x="52" y="76" width="138" height="74" rx="7" fill="url(#gh-dots)" stroke="#2B2A3A" stroke-width="3"/>
+            <rect x="93.4" y="97.5" width="59.3" height="28.9" rx="2" fill="#E8B98A" stroke="#2B2A3A" stroke-width="1.6"/>
+            <rect x="93.4" y="97.5" width="2.6" height="28.9" rx="1" fill="#6B9FB1"/><rect x="150.1" y="97.5" width="2.6" height="28.9" rx="1" fill="#6B9FB1"/>
+            <rect x="96.8" y="99.5" width="25.2" height="11.4" rx="1.8" fill="#8B563B" stroke="#2B2A3A" stroke-width="1.3"/>
+            <circle cx="101.8" cy="104.6" r="2.1" fill="#9BD36A" stroke="#2B2A3A" stroke-width="1"/>
+            <circle cx="109.4" cy="105.7" r="2.1" fill="#6FBF5A" stroke="#2B2A3A" stroke-width="1"/>
+            <circle cx="116.9" cy="104.6" r="2.1" fill="#9BD36A" stroke="#2B2A3A" stroke-width="1"/>
+            <rect x="124.2" y="99.5" width="25.2" height="11.4" rx="1.8" fill="#777581" stroke="#2B2A3A" stroke-width="1.3"/>
+            <path d="M134.8 105.2h4M136.8 103.2v4" stroke="#B3B1BD" stroke-width="1.2"/>
+            <rect x="96.8" y="112.9" width="25.2" height="11.4" rx="1.8" fill="#777581" stroke="#2B2A3A" stroke-width="1.3"/>
+            <path d="M107.4 118.6h4M109.4 116.6v4" stroke="#B3B1BD" stroke-width="1.2"/>
+            <rect x="124.2" y="112.9" width="25.2" height="11.4" rx="1.8" fill="#777581" stroke="#2B2A3A" stroke-width="1.3"/>
+            <path d="M134.8 118.6h4M136.8 116.6v4" stroke="#B3B1BD" stroke-width="1.2"/>
+            <rect x="57.5" y="80.4" width="29.0" height="11.8" rx="2.5" fill="#E6E4EA" stroke="#2B2A3A" stroke-width="1.6"/>
+            <rect x="60.5" y="82.9" width="23.0" height="6.8" rx="1.5" fill="#283640"/><path d="M62.5 85.4H81.5M62.5 88.4H81.5" stroke="#444B59" stroke-width="1.6" stroke-linecap="round"/><circle cx="74.9" cy="85.4" r="1.5" fill="#3EC6F0"/><circle cx="67.7" cy="88.4" r="1.5" fill="#FFD84A"/>
+            <rect x="134.8" y="80.4" width="49.7" height="11.8" rx="2.5" fill="#E8C899" stroke="#2B2A3A" stroke-width="1.6"/>
+            <rect x="137.8" y="83.4" width="9.4" height="5.8" rx="1.2" fill="#8B563B" stroke="#2B2A3A" stroke-width="1"/><rect x="148.7" y="83.4" width="9.4" height="5.8" rx="1.2" fill="#9BD36A" stroke="#2B2A3A" stroke-width="1"/><rect x="159.6" y="83.4" width="9.4" height="5.8" rx="1.2" fill="#FFF2DC" stroke="#2B2A3A" stroke-width="1"/><rect x="170.6" y="83.4" width="9.4" height="5.8" rx="1.2" fill="#3EC6F0" stroke="#2B2A3A" stroke-width="1"/>
+            <rect x="56.1" y="107.8" width="20.7" height="13.3" rx="2.5" fill="#D5C8F2" stroke="#2B2A3A" stroke-width="1.6"/>
+            <path d="M66.5 110.3 L73.8 112.3 V114.5 Q73.8 118.6 66.5 119.3 Q59.1 118.6 59.1 114.5 V112.3 Z" fill="#9FD3F2" stroke="#2B2A3A" stroke-width="1.3" stroke-linejoin="round"/>
+            <rect x="56.1" y="133.7" width="33.1" height="12.6" rx="2.5" fill="#CDA875" stroke="#2B2A3A" stroke-width="1.6"/>
+            <rect x="59.1" y="136.7" width="7.5" height="6.6" rx="1.2" fill="#76BB64" stroke="#2B2A3A" stroke-width="1"/><rect x="68.2" y="136.7" width="7.5" height="6.6" rx="1.2" fill="#3D9BC4" stroke="#2B2A3A" stroke-width="1"/><rect x="77.2" y="136.7" width="7.5" height="6.6" rx="1.2" fill="#888895" stroke="#2B2A3A" stroke-width="1"/>
+            <rect x="156.9" y="132.2" width="29.0" height="14.1" rx="2.5" fill="#F2C95A" stroke="#2B2A3A" stroke-width="1.6"/>
+            <rect x="159.9" y="135.2" width="23.0" height="8.1" rx="1.5" fill="#202331"/><path d="M161.9 139.3 q3 -4 5 0 t5 0 t5 0" stroke="#F28C3A" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+            <!-- glass roof -->
+            <rect x="52" y="76" width="138" height="74" rx="7" fill="#CFEAF8" fill-opacity=".14"/>
+            <path d="M86.5 76V150M121.0 76V150M155.5 76V150" stroke="#CFEAF8" stroke-width="1.4" opacity=".5"/>
+            <g fill="#2B2A3A"><rect x="49" y="73" width="7" height="7" rx="2"/><rect x="186" y="73" width="7" height="7" rx="2"/><rect x="49" y="146" width="7" height="7" rx="2"/><rect x="186" y="146" width="7" height="7" rx="2"/></g>
+            <!-- door on the right wall (the road ends here) -->
+            <rect x="187" y="101" width="13" height="24" rx="4" fill="#F28C3A" stroke="#2B2A3A" stroke-width="3"/>
+            <rect x="191" y="108" width="5" height="10" rx="1.5" fill="#F4F2EE" stroke="#2B2A3A" stroke-width="1.2"/>
+          </g>
         </g>
         <!-- Science Lab: empty spot, top-right corner (the normal path ends at its bottom, the cliff route at its left side) -->
         <g id="place-lab" transform="translate(540 10) scale(0.75) translate(-476 -12)">
