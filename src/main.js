@@ -1,8 +1,24 @@
-import './style.css';
-import { renderCommandCenter } from './ui/rooms/commandCenter.js';
+// main.js — starts the game: loads the shared map first, then every place.
+// The map drawing is in index.html, and every CSS file is linked there too.
 
-// For now the game opens straight into the Command Center.
-// The base map is being rebuilt; when it's ready it can open the Command Center as a room instead.
-const root = document.createElement('div');
-document.body.appendChild(root);
-renderCommandCenter(root);
+// ===== THE SHARED MAP (everyone uses it; please don't change without telling the team) =====
+import './map/avatar.js';   // the player character (createAvatar)
+import './map/map.js';      // roads, walking, doors, keyboard (MarsMap)
+
+// ===== PLACES: each teammate adds their place here (take away the // in front of your lines) =====
+// (your CSS goes in index.html, in the <head>)
+// Command Center room: switchboard, Mission control, battery, wardrobe, storm shelter core (Member 1)
+import './places/command-center/commandCenterPlace.js';
+
+// Radiation Shelter + Command Center (Member 3)
+import './places/radiation-shelter/shelter.js';
+import './places/radiation-shelter/shelter-game.js';
+
+// Greenhouse
+// import './places/greenhouse/greenhouse.js';
+
+// Science Lab
+// import './places/science-lab/lab.js';
+
+// Life Support
+// import './places/life-support/life.js';

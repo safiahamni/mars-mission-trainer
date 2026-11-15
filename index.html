@@ -1,14 +1,95 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Mars Mission Trainer</title>
-  </head>
-  <body>
-    <div id="game"></div>
-    <div id="panel-root"></div>
-    <script type="module" src="/src/main.js"></script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mars Mission Trainer</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@800;900&display=swap">
+  <!-- THE SHARED MAP's look -->
+  <link rel="stylesheet" href="/src/map/map.css">
+  <!-- PLACES: each teammate adds their CSS here (take away the comment marks around your line) -->
+  <link rel="stylesheet" href="/src/places/radiation-shelter/shelter.css">
+  <!-- <link rel="stylesheet" href="/src/places/greenhouse/greenhouse.css"> -->
+  <!-- <link rel="stylesheet" href="/src/places/science-lab/lab.css"> -->
+  <!-- <link rel="stylesheet" href="/src/places/life-support/life.css"> -->
+</head>
+<body>
+<div class="mm-page">
+
+  <!-- Top bar: teammates' meters / info go here (the Radiation Shelter adds the hazard meter) -->
+  <div class="mm-topbar" id="mm-topbar"></div>
+
+  <div class="mm-scene" id="mm-scene">
+    <!-- THE MAP: one drawing. Everything inside the big group uses small "design" numbers,
+         scaled up 1.6x (src/map/map.js uses the same numbers: ART, ROADS). -->
+    <svg class="mm-art" viewBox="0 0 1160 880" aria-hidden="true">
+      <defs>
+        <pattern id="mm-dots" width="18" height="18" patternUnits="userSpaceOnUse"><rect width="18" height="18" fill="#E8B98A"/><circle cx="9" cy="9" r="2.6" fill="#C98F5E"/></pattern>
+        <pattern id="ctile" width="14" height="14" patternUnits="userSpaceOnUse"><rect width="14" height="14" fill="#9FD3F2"/><path d="M0 0H14M0 0V14" stroke="#86C2E6" stroke-width="1.5"/></pattern>
+      </defs>
+      <g transform="translate(90 7) scale(1.6)">
+
+        <!-- rocks -->
+        <g fill="#A9471F" stroke="#2B2A3A" stroke-width="2" stroke-linejoin="round">
+          <polygon points="612,232 626,224 636,236 628,248 614,246"/><polygon points="20,152 32,144 42,154 34,164 22,162"/>
+          <polygon points="420,520 434,514 442,526 432,534 420,530"/><polygon points="640,330 650,324 658,334 650,342 642,340"/>
+          <polygon points="200,40 212,34 220,44 212,52 202,50"/><polygon points="470,330 482,324 490,334 482,342 472,340"/>
+        </g>
+
+        <!-- ROADS: drawn here by src/map/map.js (from its ROADS list) -->
+        <g id="mm-roads" fill="none" stroke-linejoin="round" stroke-linecap="round"></g>
+
+        <!-- CLIFF ROUTE: the shaded canyon between two cliff walls -->
+                <path d="M318 144 L384 78" stroke="#2B2A3A" stroke-opacity="0.22" stroke-width="40" stroke-linecap="round" fill="none"/>
+        <polygon points="292,120 364,48 356,40 346,46 338,42 330,56 320,60 314,72 302,78 296,90 286,96 282,110" fill="#9C3E22" stroke="#2B2A3A" stroke-width="2.5" stroke-linejoin="round"/>
+        <polygon points="292,120 364,48 360,44 352,52 346,50 338,64 330,66 324,78 314,82 308,94 298,100 294,110" fill="#E07A52"/>
+        <polygon points="338,170 410,98 420,106 412,116 404,120 396,132 386,136 378,148 368,152 360,164 350,170 344,180" fill="#9C3E22" stroke="#2B2A3A" stroke-width="2.5" stroke-linejoin="round"/>
+        <polygon points="338,170 410,98 414,104 408,112 400,116 392,128 382,132 374,144 364,148 356,160 346,166" fill="#E07A52"/>
+
+        <!-- ===== PLACES: each teammate draws their building inside their own group ===== -->
+        <!-- Greenhouse: empty spot, straight left of the Command Center (its road ends at the right side of the spot) -->
+                <g id="place-greenhouse" transform="translate(-50 260) scale(0.75) translate(-44 -36)">
+          <rect x="44" y="36" width="122" height="26" rx="7" fill="#2B2A3A"/><text x="105" y="54" font-size="14" text-anchor="middle" fill="#FFFFFF">Greenhouse</text>
+          <rect class="mm-spot" x="44" y="68" width="156" height="92" rx="14"/>
+        </g>
+        <!-- Science Lab: empty spot, top-right corner (the normal path ends at its bottom, the cliff route at its left side) -->
+        <g id="place-lab" transform="translate(540 10) scale(0.75) translate(-476 -12)">
+          <rect x="476" y="12" width="118" height="26" rx="7" fill="#2B2A3A"/><text x="535" y="30" font-size="14" text-anchor="middle" fill="#FFFFFF">Science Lab</text>
+          <rect class="mm-spot" x="476" y="44" width="160" height="94" rx="14"/>
+        </g>
+        <!-- Life Support: empty spot, bottom-right corner (its road ends at its left side) -->
+        <g id="place-life" transform="translate(540 440) scale(0.75) translate(-476 -398)">
+          <rect x="476" y="398" width="124" height="26" rx="7" fill="#2B2A3A"/><text x="538" y="416" font-size="14" text-anchor="middle" fill="#FFFFFF">Life Support</text>
+          <rect class="mm-spot" x="476" y="430" width="160" height="94" rx="14"/>
+        </g>
+        <!-- Command Center (Member 3): this simple spot is a placeholder.
+             radiation-shelter/shelter.js REPLACES everything inside this group with the real
+             Command Center, airlock, solar panel and rover. -->
+        <g id="place-shelter">
+          <rect x="262" y="226" width="114" height="22" rx="7" fill="#2B2A3A"/><text x="319" y="242" font-size="12" text-anchor="middle" fill="#FFFFFF">Command Center</text>
+          <rect class="mm-spot" x="240" y="252" width="158" height="90" rx="14"/>
+        </g>
+      </g>
+    </svg>
+
+    <div class="mm-toast" id="mm-toast"></div>
+    <!-- the player avatar is added here by src/map/map.js -->
+  </div>
+
+  <!-- right side: mission text + arrow buttons -->
+  <div class="mm-side">
+  <div class="mm-status" id="mm-status" role="status">Walk with the arrow keys or WASD.</div>
+
+  <div class="mm-dpad" aria-label="Move">
+    <span></span><button type="button" data-dir="up" aria-label="Up">▲</button><span></span>
+    <button type="button" data-dir="left" aria-label="Left">◀</button><button type="button" data-dir="down" aria-label="Down">▼</button><button type="button" data-dir="right" aria-label="Right">▶</button>
+  </div>
+  </div>
+
+</div>
+
+  <!-- All the code (the map + every place) is loaded from src/main.js -->
+  <script type="module" src="/src/main.js"></script>
+</body>
 </html>

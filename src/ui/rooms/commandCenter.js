@@ -1,9 +1,10 @@
 // COMMAND CENTER ROOM (Member 1)
 // Follows the "Command Center · room interior" design + the team's Power Budget:
 //   top HUD: battery cells with the night line, power to spend, water tank
-//   1 Switchboard (levers with prices), 2 Mission control (checklist + storm warnings),
-//   3 Battery bank, W Wardrobe (crew shirt / spacesuit), ! Storm shelter core (bunks to sleep,
-//   and Member 3's "Shield the Shelter" water-tank game during a solar storm).
+//   1 Switchboard (levers with prices), 2 Mission control (today's checklist),
+//   3 Battery bank, W Wardrobe (crew shirt / spacesuit), ! Storm shelter core (bunks to sleep).
+// Radiation (hazard meter, solar storm, Shield the Shelter) is Member 3's, on the base map:
+//   src/places/radiation-shelter/  (window.RadiationShelter)
 // The player walks on the tan paths with WASD or the arrow keys.
 // The room is drawn on a fixed 1512 x 1032 stage that scales to fit any screen.
 //
@@ -14,15 +15,13 @@ import './commandCenter.css';
 import { icon } from '../icons.js';
 import { createAvatar } from '../avatar.js';
 import { dressAvatar } from '../outfit.js';
-import { createShieldGame } from './shieldGame.js';
 import {
   SWITCHES, POWER_CONFIG, COSTS, spendable, shortForNight, leverCost, powerStatus,
 } from '../../systems/power.js';
 import {
-  CC_CONFIG, WATER_CONFIG, SHIRT_COLORS, todaysMissions, pullLever, stormActive, currentHazardRate,
+  CC_CONFIG, WATER_CONFIG, SHIRT_COLORS, todaysMissions, pullLever,
   enterShelter, leaveShelter, sleep, isDay, spentToday, setOutfit, setShirt,
 } from '../../systems/commandCenter.js';
-import { RAD_CONFIG, hazardLevel } from '../../systems/radiation.js';
 import { runEndSol } from '../../systems/endSol.js';
 import { makeWalker, isNear } from '../../systems/roomWalk.js';
 import {
@@ -210,10 +209,10 @@ export function renderCommandCenter(room, { onExit } = {}) {
     <aside class="cc-side">
       <h2>Tasks in this room</h2>
       <div class="cc-task"><b>1</b><div><h4>Switchboard</h4><p>Run the systems you need. Each one shows its power price.</p></div></div>
-      <div class="cc-task"><b>2</b><div><h4>Mission control</h4><p>Get today's missions and storm warnings from Earth.</p></div></div>
+      <div class="cc-task"><b>2</b><div><h4>Mission control</h4><p>Get today's missions from Earth.</p></div></div>
       <div class="cc-task"><b>3</b><div><h4>Battery bank</h4><p>Keep ${POWER_CONFIG.nightReserve} power for the night. The sun adds more every morning.</p></div></div>
       <div class="cc-task"><b class="purple">W</b><div><h4 class="purple">Wardrobe</h4><p>Put on the spacesuit before you go outside for an EVA.</p></div></div>
-      <div class="cc-task"><b class="red">!</b><div><h4 class="red">Storm shelter core</h4><p>When a solar storm comes, get inside and shield it with water tanks.</p></div></div>
+      <div class="cc-task"><b class="red">!</b><div><h4 class="red">Storm shelter core</h4><p>Water tanks around the core block radiation. In a solar storm, shield it with water tanks.</p></div></div>
       <div class="cc-task"><b class="teal">Z</b><div><h4 class="teal">Sleep</h4><p>Use the bunks in the core to end the sol and get your stars.</p></div></div>
       <hr>
       <div class="cc-legend"><span></span> Walkable path (one avatar)</div>
@@ -289,8 +288,8 @@ export function renderCommandCenter(room, { onExit } = {}) {
 
   // ---- scale the stage to fit the screen ----
   function fit() {
-    const w = room.clientWidth;
-    const h = room.clientHeight;
+    const w = window.innerWidth;    // the room covers the whole window
+    const h = window.innerHeight;
     const s = Math.min(w / STAGE_W, h / STAGE_H);
     stage.style.transform = `translate(${(w - STAGE_W * s) / 2}px, ${(h - STAGE_H * s) / 2}px) scale(${s})`;
   }
@@ -349,10 +348,8 @@ export function renderCommandCenter(room, { onExit } = {}) {
 
     // top status
     const time = day ? `${icon('sun', 18)} Day · sunset in ${fmtSec(CC_CONFIG.dayLength - g.clock)}` : `${icon('moon', 18)} Night`;
-    $('status').innerHTML = `Sol ${g.sol} of ${CC_CONFIG.maxSols} · ${time} · <span class="cc-haz ${hazardLevel(g.hazard)}" title="Radiation hazard meter">${icon('radiation', 18)} ${Math.floor(g.hazard)}</span> · ${icon('star', 18)} ${g.stars}`;
+    $('status').innerHTML = `Sol ${g.sol} of ${CC_CONFIG.maxSols} · ${time} · ${icon('star', 18)} ${g.stars}`;
     stage.classList.toggle('night', !day);
-    stage.classList.toggle('storm-warning', g.storm === 'warning');
-    stage.classList.toggle('storm', g.storm === 'storm');
 
     // battery bank
     room.querySelectorAll('[data-b="cell"]').forEach((c) => {
@@ -383,17 +380,6 @@ export function renderCommandCenter(room, { onExit } = {}) {
     $('shelter').classList.toggle('occupied', g.inShelter);
 
     // mission control
-    let alert = '';
-    if (stormActive(g)) {
-      const head = g.storm === 'warning' ? `Solar storm in ${fmtSec(g.stormTimer)}!` : `Solar storm outside! ${fmtSec(g.stormTimer)} left.`;
-      const todo = g.inShelter
-        ? (g.tanks >= RAD_CONFIG.tanks ? 'The crew is in the core and the shelter is shielded.' : 'You are in the core. Shield it with water tanks!')
-        : 'Get into the storm shelter core and shield it with water tanks.';
-      const btn = g.inShelter && g.tanks < RAD_CONFIG.tanks
-        ? `<div class="cc-alert-actions"><button class="cc-btn small" data-act="shield-game">${icon('droplet', 18)} Shield the Shelter</button></div>` : '';
-      alert = `<div class="cc-alert">${icon('alert', 22)}<div><strong>${head}</strong> ${todo}<br>${icon('radiation', 16)} Radiation now: +${currentHazardRate(g).toFixed(1)} / min${btn}</div></div>`;
-    }
-    $('alert-screen').classList.toggle('flash', g.storm === 'warning' || g.storm === 'storm');
     const sunset = !day
       ? (p.battery >= POWER_CONFIG.nightReserve
         ? `<p class="cc-mc-good">${icon('check', 18)} You spent ${spentToday(g)} of ${Math.max(0, g.startBattery - POWER_CONFIG.nightReserve)}. Great planning!</p>`
@@ -402,7 +388,7 @@ export function renderCommandCenter(room, { onExit } = {}) {
     const dusty = p.panels === 'dusty' ? `<p class="cc-mc-warn">${icon('sun', 18)} The solar panels are dusty: only +${POWER_CONFIG.solar.dusty} each morning. Clean them on an EVA.</p>` : '';
     $('mission-body').innerHTML = `
       <p class="cc-mc-status">Sol ${g.sol} of ${CC_CONFIG.maxSols} · ${time}</p>
-      ${alert}${sunset}${dusty}
+      ${sunset}${dusty}
       <h4>Today's missions</h4>
       <ul class="cc-checklist">
         ${todaysMissions(g).map((m) => `<li class="${m.done ? 'done' : ''}">${icon(m.done ? 'check' : 'circle', 22)} ${m.text}</li>`).join('')}
@@ -470,16 +456,6 @@ export function renderCommandCenter(room, { onExit } = {}) {
   $('screens').addEventListener('mouseenter', () => openPop('mission'));
   $('wardrobe').addEventListener('mouseenter', () => openPop('wardrobe'));
 
-  // ---- Member 3's "Shield the Shelter" water-tank game (inside the storm shelter core) ----
-  const shieldGame = createShieldGame(stage, { getGame, setGame, say: (t) => say(t) });
-  const shield = {
-    ...shieldGame,
-    open() {                                   // close the other pop-ups first
-      Object.keys(pops).forEach((n) => closePop(n));
-      shieldGame.open();
-    },
-  };
-
   // ---- price preview on the HUD while pointing at something that costs power ----
   function previewFor(el) {
     const g = getGame();
@@ -491,11 +467,10 @@ export function renderCommandCenter(room, { onExit } = {}) {
       const water = id === 'recycler' && !g.power.ranToday.recycler ? WATER_CONFIG.recycler : 0;
       return cost || water ? { cost, label: sw.name, water } : null;
     }
-    if (el.dataset.s === 'fillbtn' && !getGame().tanksFilled) return { cost: COSTS.shielding, label: 'Water tanks' };
     return null;
   }
   room.addEventListener('mouseover', (e) => {
-    const el = e.target.closest('[data-switch], [data-s="fillbtn"]');
+    const el = e.target.closest('[data-switch]');
     const next = el ? previewFor(el) : null;
     if (JSON.stringify(next) !== JSON.stringify(preview)) {
       preview = next;
@@ -507,6 +482,9 @@ export function renderCommandCenter(room, { onExit } = {}) {
   function doSleep() {
     const r = sleep(getGame());
     if (!r.ok) return say(r.message);
+    const rad = window.RadiationShelter;               // Member 3's hazard meter (on the base map)
+    const hazard = rad ? Math.floor(rad.getHazard()) : null;
+    rad?.newSol();                                     // a new sol: their hazard meter and storm reset
     const others = runEndSol({ sol: r.report.sol });   // other stations' end-of-sol steps
     setGame(r.game);
     closePop('bunks');
@@ -520,7 +498,7 @@ export function renderCommandCenter(room, { onExit } = {}) {
         ${rep.cold ? '<p class="bad">The battery was below the night line, so the crew got cold.</p>' : ''}
         ${g.over ? '' : `<p>${icon('sun', 18)} Morning: the solar field added +${rep.gained}${rep.dustStorm ? ' (a dust storm is blocking the sun!)' : ''}. Battery ${rep.morning}.</p>`}
         <p>${icon('droplet', 18)} The crew drank water: ${rep.waterFrom} → ${rep.waterTo}.</p>
-        <p>${icon('radiation', 18)} Radiation today: ${Math.floor(rep.hazard)} / ${RAD_CONFIG.max}. The meter resets for the new sol.</p>
+        ${hazard === null ? '' : `<p>${icon('radiation', 18)} Radiation today: ${hazard} / 100. The meter resets for the new sol.</p>`}
         ${others.map((t) => `<p>${t}</p>`).join('')}
         ${g.over ? `<p><strong>Your crew earned ${g.stars} stars in ${CC_CONFIG.maxSols} sols.</strong></p>` : ''}
         <button class="cc-btn" data-act="wake">${g.over ? 'Play again' : `${icon('sun', 20)} Wake up · Sol ${g.sol}`}</button>
@@ -555,13 +533,8 @@ export function renderCommandCenter(room, { onExit } = {}) {
     if (e.target.closest('[data-b="prop"]')) return openPop('switchboard');
     if (e.target.closest('[data-b="screens"]')) return openPop('mission');
     if (e.target.closest('[data-b="wardrobe"]')) return openPop('wardrobe');
-    if (e.target.closest('[data-b="shelter"]') && getGame().inShelter && stormActive(getGame())) return shield.open();
 
     const a = e.target.closest('[data-act]')?.dataset.act;
-    if (a === 'shield-game') {
-      closePop('mission');
-      return shield.open();
-    }
     if (a === 'sleep') return doSleep();
     if (a === 'wake') {
       $('summary').hidden = true;
@@ -591,12 +564,7 @@ export function renderCommandCenter(room, { onExit } = {}) {
     const inside = pos.x >= SHELTER_DOOR_X;
     if (inside && !g.inShelter) {
       setGame(enterShelter(g));
-      if (stormActive(g)) {
-        say('Safe inside the storm shelter core! Now shield it with water tanks.');
-        if (g.tanks < RAD_CONFIG.tanks) shield.open();
-      } else {
-        say('You are inside the storm shelter.');
-      }
+      say('You are inside the storm shelter core. The bunks are here.');
     }
     if (!inside && g.inShelter) setGame(leaveShelter(g).game);
 
@@ -639,20 +607,9 @@ export function renderCommandCenter(room, { onExit } = {}) {
     if ($('summary').hidden) held.forEach((k) => { dx += KEYS[k][0]; dy += KEYS[k][1]; });
     dx = Math.sign(dx);
     dy = Math.sign(dy);
-    if (shield.isOpen()) {                 // the arrow keys walk inside the Shield the Shelter pop-up
-      shield.step(dt, dx, dy);
-      player.setWalking(false);
-      requestAnimationFrame(frame);
-      return;
-    }
     if (dx || dy) {
       const len = Math.hypot(dx, dy);
-      const next = walk.move(pos, (dx / len) * SPEED * dt, (dy / len) * SPEED * dt);
-      if (getGame().storm === 'storm' && pos.x >= SHELTER_DOOR_X && next.x < SHELTER_DOOR_X) {
-        if (message !== 'Stay inside! The storm is still outside.') say('Stay inside! The storm is still outside.');
-      } else {
-        pos = next;
-      }
+      pos = walk.move(pos, (dx / len) * SPEED * dt, (dy / len) * SPEED * dt);
       placePlayer();
       player.faceToward(dx, dy);
       afterMove();
@@ -668,18 +625,8 @@ export function renderCommandCenter(room, { onExit } = {}) {
     for (const ev of events) {
       if (ev === 'sunset-safe') message = `Sunset! You spent ${spentToday(g)} of ${Math.max(0, g.startBattery - POWER_CONFIG.nightReserve)}. Great planning!`;
       if (ev === 'sunset-low') message = `Sunset! The battery is ${shortForNight(g.power)} below the night line. The crew will be cold tonight.`;
-      if (ev === 'storm-warning') {
-        message = 'Mission control: a solar storm is coming! Get into the storm shelter core and shield it with water tanks.';
-        if (g.inShelter) shield.open();
-        else openPop('mission');
-      }
-      if (ev === 'storm-safe') message = 'The solar storm hit, but the crew was in the shelter core!';
-      if (ev === 'storm-hit') message = 'The solar storm hit while the crew was outside the core. The radiation meter is rising fast!';
-      if (ev === 'hazard-full') message = 'The radiation meter is full! Get into the storm shelter core now.';
-      if (ev === 'storm-over') message = 'The solar storm is over. It is safe to go out again.';
     }
     update();
-    if (shield.isOpen()) shield.render();
   });
 
   let cleaned = false;
