@@ -16,7 +16,7 @@
 
 (function () {
   const STEP_EVERY = 0.5;        // seconds between steps: about 2 a second, a calm walking pace
-  const VOLUME = 0.2;            // the steps play a lot: loud enough to hear, not too loud
+  const VOLUME = 0.15;           // the steps play a lot: loud enough to hear, not too loud
   const KEY = 'mars-footsteps-muted';
 
   let muted = false;
@@ -85,11 +85,11 @@
     const peak = c.createBiquadFilter();                      // the dry, papery middle of the crunch
     peak.type = 'peaking';
     peak.frequency.value = 2400;
-    peak.gain.value = 6;
+    peak.gain.value = 3;
     peak.Q.value = 0.8;
-    const lp = c.createBiquadFilter();                        // crisp, but not hissy
+    const lp = c.createBiquadFilter();                        // soft: the sharp top is taken off
     lp.type = 'lowpass';
-    lp.frequency.value = outside ? 6500 : 5000;
+    lp.frequency.value = outside ? 4500 : 3800;
     const g = c.createGain();
     g.gain.value = VOLUME * (outside ? 1 : 0.6);
     src.connect(hp).connect(peak).connect(lp).connect(g).connect(c.destination);
