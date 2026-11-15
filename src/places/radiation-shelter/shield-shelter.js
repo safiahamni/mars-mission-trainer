@@ -192,7 +192,7 @@ import { getGame } from '../../state/gameStore.js';
   window.addEventListener('keyup', e => {
     const d = DIRS[e.key] || DIRS[e.code];
     if (d) roomKeys[d] = false;
-    if (isOpen()) e.stopImmediatePropagation();
+    // key-ups always go through, so the Command Center room never keeps a key "held" from before the pop-up
   }, true);
   map.on('key', () => isOpen());
 
