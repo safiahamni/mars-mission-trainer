@@ -5,9 +5,9 @@
 //  for that class (on the base map, in the Command Center room, the shelter game, the solar panel yard,
 //  and inside the Science Lab / Life Support / Greenhouse) and plays the steps.
 //
-//   • OUTSIDE on the Mars roads: a crisp grass-like step (a short "crsh" of rustle and crackle)
-//   • INSIDE a building: the same step, shorter and lighter
-//   • about 3 steps a second: calm, not rushed
+//   • a dry, crunchy grass step ("kshh", like crumpling dry leaves), a different variant every step
+//   • INSIDE a building: the same step, quieter and a bit shorter
+//   • about 2 steps a second: a calm walking pace
 //   • The sounds are made by the browser (Web Audio), no sound files.
 //   • Press M to switch the footsteps off / on (remembered in this browser).
 //
@@ -15,30 +15,49 @@
 // =====================================================================
 
 (function () {
-  const STEP_EVERY = 0.34;       // seconds between steps: about 3 a second (calm, not rushed)
-  const VOLUME = 0.4;            // the steps play a lot: loud enough to hear, not too loud
+  const STEP_EVERY = 0.5;        // seconds between steps: about 2 a second, a calm walking pace
+  const VOLUME = 0.2;            // the steps play a lot: loud enough to hear, not too loud
   const KEY = 'mars-footsteps-muted';
 
   let muted = false;
   try { muted = localStorage.getItem(KEY) === '1'; } catch { /* storage can be blocked */ }
 
   // ---- sound ----
-  let ctx = null, noise = null;
+  // A grass step is a dry "kshh", like crumpling a handful of dry leaves. We make VARIANTS of it
+  // (each with its own random crackles) and pick a different one every step, so it never sounds like
+  // the same clip on repeat.
+  const VARIANTS = 6;
+  let ctx = null, steps = [];
+  function makeCrumple(c) {
+    const sr = c.sampleRate, n = Math.floor(sr * 0.32);
+    const buf = c.createBuffer(1, n, sr), d = buf.getChannelData(0);
+    // 4-7 little crunch "clusters" in the first ~0.2 s, each a burst of tiny crackles, getting quieter
+    const clusters = 4 + Math.floor(Math.random() * 4);
+    const env = new Float32Array(n);
+    for (let k = 0; k < clusters; k++) {
+      const at = Math.floor(sr * (k === 0 ? 0 : Math.random() * 0.2));
+      const len = Math.floor(sr * (0.015 + Math.random() * 0.035));
+      const amp = (k === 0 ? 1 : 0.35 + Math.random() * 0.55) * (1 - at / n);
+      for (let i = 0; i < len && at + i < n; i++) {
+        const shape = Math.sin(Math.PI * i / len);              // each cluster swells and fades
+        env[at + i] = Math.max(env[at + i], amp * shape);
+      }
+    }
+    let grain = 0;
+    for (let i = 0; i < n; i++) {
+      if (Math.random() < 0.03) grain = 0.6 + Math.random() * 0.9;   // crackles: leaves snapping
+      grain *= 0.97;
+      const fade = Math.min(1, i / (sr * 0.002)) * Math.pow(1 - i / n, 1.5);   // no click, then dies away
+      d[i] = (Math.random() * 2 - 1) * (0.15 + grain) * (0.12 + env[i]) * fade;
+    }
+    return buf;
+  }
   function audio() {
     if (ctx) return ctx;
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return null;
     ctx = new AC();
-    // half a second of crackly noise: lots of tiny bursts, like grass blades bending and snapping
-    // under a foot. Reused for every step.
-    noise = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.5), ctx.sampleRate);
-    const d = noise.getChannelData(0);
-    let grain = 0;
-    for (let i = 0; i < d.length; i++) {
-      if (Math.random() < 0.02) grain = 0.5 + Math.random() * 0.8;   // lots of little crackles (grass blades)
-      grain *= 0.985;                                                    // ...that fades in ~2 ms
-      d[i] = (Math.random() * 2 - 1) * (0.25 + grain);
-    }
+    for (let v = 0; v < VARIANTS; v++) steps.push(makeCrumple(ctx));
     return ctx;
   }
   // the browser only allows sound after the player pressed a key or clicked
@@ -46,52 +65,35 @@
   window.addEventListener('keydown', unlock, true);
   window.addEventListener('pointerdown', unlock, true);
 
-  let foot = 0;
-  // one step on GRASS, blocky-game style: a short, crisp "crsh" of grass blades and little crackles
-  // under the boot. Quick start, quick fade. Indoors: the same, shorter and lighter.
+  let lastVariant = -1;
+  // one step: a random crumple variant (never the same one twice in a row), a little random pitch,
+  // shaped to the dry middle frequencies of grass. Indoors: the same, quieter and a bit shorter.
   function step(outside) {
     const c = ctx;
     if (!c || c.state !== 'running') return;
     const t = c.currentTime;
-    foot = 1 - foot;
-    const vary = 0.9 + Math.random() * 0.2;            // no two steps sound exactly the same
-    const pitch = foot ? 1 : 0.9;                       // left and right foot a little different
-    const len = (outside ? 0.15 : 0.1) * vary;
+    let v = Math.floor(Math.random() * VARIANTS);
+    if (v === lastVariant) v = (v + 1) % VARIANTS;
+    lastVariant = v;
 
-    // the grass rustle: crackly noise in the upper-middle frequencies
     const src = c.createBufferSource();
-    src.buffer = noise;
-    src.playbackRate.value = 0.9 + Math.random() * 0.25;
-    const band = c.createBiquadFilter();
-    band.type = 'bandpass';
-    band.Q.value = 0.9;
-    const f0 = (outside ? 2600 : 3200) * vary * pitch;
-    band.frequency.setValueAtTime(f0, t);
-    band.frequency.exponentialRampToValueAtTime(f0 * 0.7, t + len);
-    const lp = c.createBiquadFilter();                  // keep it crisp, not hissy
+    src.buffer = steps[v];
+    src.playbackRate.value = 0.85 + Math.random() * 0.3;      // a little higher / lower each step
+    const hp = c.createBiquadFilter();                        // no rumble
+    hp.type = 'highpass';
+    hp.frequency.value = 500;
+    const peak = c.createBiquadFilter();                      // the dry, papery middle of the crunch
+    peak.type = 'peaking';
+    peak.frequency.value = 2400;
+    peak.gain.value = 6;
+    peak.Q.value = 0.8;
+    const lp = c.createBiquadFilter();                        // crisp, but not hissy
     lp.type = 'lowpass';
-    lp.frequency.value = 6000;
+    lp.frequency.value = outside ? 6500 : 5000;
     const g = c.createGain();
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(VOLUME * (outside ? 1 : 0.65), t + 0.008);  // quick start: crisp
-    g.gain.setValueAtTime(VOLUME * (outside ? 0.7 : 0.45), t + len * 0.35);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + len);
-    src.connect(band).connect(lp).connect(g).connect(c.destination);
-    src.start(t, Math.random() * 0.3, len + 0.03);
-
-    // a bit of body under the rustle (soft, not a thump)
-    const body = c.createBufferSource();
-    body.buffer = noise;
-    const bl = c.createBiquadFilter();
-    bl.type = 'bandpass';
-    bl.frequency.value = 700 * vary * pitch;
-    bl.Q.value = 0.8;
-    const bg = c.createGain();
-    bg.gain.setValueAtTime(0.0001, t);
-    bg.gain.exponentialRampToValueAtTime(VOLUME * 0.35, t + 0.01);
-    bg.gain.exponentialRampToValueAtTime(0.0001, t + len * 0.6);
-    body.connect(bl).connect(bg).connect(c.destination);
-    body.start(t, Math.random() * 0.3, len);
+    g.gain.value = VOLUME * (outside ? 1 : 0.6);
+    src.connect(hp).connect(peak).connect(lp).connect(g).connect(c.destination);
+    src.start(t, 0, outside ? 0.32 : 0.22);
   }
 
   // ---- who is walking? ----
