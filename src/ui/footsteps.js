@@ -16,7 +16,7 @@
 
 (function () {
   const STEP_EVERY = 0.5;        // seconds between steps: about 2 a second, a calm walking pace
-  const VOLUME = 0.12;           // the steps play a lot: loud enough to hear, not too loud
+  const VOLUME = 0.45;           // the steps play a lot: soft, but still easy to hear
   const KEY = 'mars-footsteps-muted';
 
   let muted = false;
