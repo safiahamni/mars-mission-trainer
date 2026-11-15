@@ -1,6 +1,7 @@
 ﻿const map = window.MarsMap;
 const frame = document.createElement('iframe');
 frame.title = 'Science Lab';
+frame.allow = 'autoplay';
 frame.hidden = true;
 Object.assign(frame.style, {
   position: 'fixed', inset: '0', width: '100%', height: '100%',
@@ -30,4 +31,5 @@ window.addEventListener('message', event => {
   map.pause(false);
   window.focus();
 });
+
 

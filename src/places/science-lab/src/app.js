@@ -6,6 +6,59 @@ import {directions} from './rover.js';
 
 const controller = createDemoController(80, {testMysteryRocks: true, testCosmicClaw: true, testSnapshotSafari: true, testLostLake: true, testEarth: true});
 const byId = id => document.getElementById(id);
+
+let labAudio;
+let muted = false;
+try { muted = localStorage.getItem('mars-science-muted') === 'true'; } catch {}
+const soundToggle = document.createElement('button');
+soundToggle.className = 'lab-sound';
+soundToggle.type = 'button';
+function updateSoundToggle() {
+  soundToggle.textContent = muted ? 'Sound off' : 'Sound on';
+  soundToggle.setAttribute('aria-label', 'Science Lab sound');
+  soundToggle.setAttribute('aria-pressed', String(!muted));
+}
+updateSoundToggle();
+document.querySelector('.journal-launcher').append(soundToggle);
+soundToggle.onclick = () => {
+  muted = !muted;
+  try { localStorage.setItem('mars-science-muted', String(muted)); } catch {}
+  updateSoundToggle();
+  if (!muted) void labSound('discovery');
+};
+
+const labCues = {
+  tap:[440], page:[260,320,245], photo:[880,660],
+  discovery:[523,659,784], match:[659,784], jump:[310,530], bump:[190,135]
+};
+async function labSound(cue) {
+  if (muted || !window.AudioContext) return;
+  try {
+    labAudio ??= new AudioContext();
+    if (labAudio.state !== 'running') await labAudio.resume();
+    if (muted) return;
+    labCues[cue].forEach((pitch, index) => {
+      const tone = labAudio.createOscillator();
+      const gain = labAudio.createGain();
+      const start = labAudio.currentTime + index * .09;
+      tone.frequency.value = pitch;
+      gain.gain.setValueAtTime(.105, start);
+      gain.gain.exponentialRampToValueAtTime(.001, start + .13);
+      tone.connect(gain).connect(labAudio.destination);
+      tone.start(start);
+      tone.stop(start + .14);
+    });
+  } catch {}
+}
+
+document.addEventListener('click', event => {
+  if (!event.isTrusted) return;
+  const control = event.target.closest('button, summary, input[type="radio"]');
+  if (!control || control.disabled || control === soundToggle) return;
+  if (control.id === 'scan' || control.closest('.signal-console')) return;
+  labSound(control.matches('#science-collection, #journal-prev, #journal-next, #journal-trail button, .journal-sheet .keepsake-print, #keepsakes form button, #keepsake-view form button') ? 'page' : 'tap');
+}, {capture:true});
+
 const chapter = missions[0];
 const avatar = createAvatar(byId('base-map'));
 avatar.el.setAttribute('aria-hidden', 'true');
@@ -545,6 +598,7 @@ function jump() {
   }
   if (route.height === 0) {
     route.velocity = 197;
+    labSound('jump');
     learnedJump = true;
   }
 }
@@ -569,6 +623,7 @@ function tick(now) {
   for (const item of course) {
     if (bypass(item)) continue;
     if (item.kind === 'rock' && Math.abs(item.x-route.x)<16 && route.height<19) {
+      labSound('bump');
       recover('That rock caught our wheels!');
       return;
     }
@@ -667,6 +722,7 @@ byId('skip').onclick = () => {
   readyAfterScan('PIP: Press Jump when ready to continue.');
 };
 byId('scan').onclick = () => {
+  labSound('photo');
   scan = 'scanning';
   const ring = byId('capture-ring');
   ring.style.setProperty('--capture-time', captureTime[plan.tool] + 'ms');
@@ -952,6 +1008,7 @@ function compareClues() {
         index += 1;
         byId('sample-progress').textContent = index + ' / ' + matches.length + ' matches';
         for (const option of photos.querySelectorAll('button')) option.disabled = true;
+        labSound('match');
         button.classList.add('correct-match');
         button.append(element('strong', '\u2713 You found it!'));
         pipHint.textContent = 'Nice match! ' + rock.name + ' shows ' + title.toLowerCase() + '.';
@@ -1466,6 +1523,7 @@ function startSafari() {
         return;
       }
       frame.classList.add('photo-captured');
+      labSound('photo');
       photos.add(scene.id);
       safariHint.textContent = 'Snap! Saved to your album.';
       const print = element('figure', '');
@@ -1687,6 +1745,7 @@ try {
 } catch {}
 
 function unlockKeepsake(anchor, id, spentPower) {
+  labSound('discovery');
   earnedKeepsakes.add(id);
   try {
     localStorage.setItem('mars-keepsakes', JSON.stringify([...earnedKeepsakes]));
@@ -2018,6 +2077,7 @@ function lakeEvidence() {
         lakeHint.textContent = 'PIP: Look for the explanation that fits your selected picture.';
         return;
       }
+      labSound('match');
       linked.add(i);
       const start = (i + .5) * 100 / cards.length;
       const end = (order.indexOf(i) + .5) * 100 / cards.length;
@@ -2231,7 +2291,7 @@ function repairEarth() {
 
   function flash(index) {
     pads.forEach((pad, at) => pad.classList.toggle('lit', index === at));
-    if (!audio || audio.state !== 'running' || index < 0) return;
+    if (muted || !audio || audio.state !== 'running' || index < 0) return;
     const tone = audio.createOscillator();
     const volume = audio.createGain();
     tone.frequency.value = [330,440,550][index];
