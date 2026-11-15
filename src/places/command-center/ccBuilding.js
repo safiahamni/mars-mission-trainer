@@ -19,7 +19,9 @@ const BUILDING = `
     <pattern id="cc-sh-floor" width="6" height="6" patternUnits="userSpaceOnUse"><rect width="6" height="6" fill="#3B3F57"/><path d="M6 0V6H0" fill="none" stroke="#34384E" stroke-width="0.7"/></pattern>
   </defs>
 
-  <!-- AIRLOCK: built onto the bottom wall (drawn first, so the Command Center's wall covers its top) -->
+  <!-- AIRLOCK: built onto the bottom wall (drawn first, so the Command Center's wall covers its top).
+       Its id is what the start-screen tour lights up. -->
+  <g id="cc-airlock">
   <rect x="234" y="346" width="68" height="76" rx="10" fill="#E6E4EA" stroke="#2B2A3A" stroke-width="3"/>
   <rect x="240" y="362" width="56" height="54" rx="6" fill="url(#cc-air-floor)" stroke="#2B2A3A" stroke-width="2"/>
   <rect x="243" y="368" width="7" height="30" rx="3" fill="#F28C3A" stroke="#2B2A3A" stroke-width="1.5"/>
@@ -31,6 +33,7 @@ const BUILDING = `
   <!-- the airlock's name tag, under the room -->
   <rect x="236" y="427" width="64" height="20" rx="7" fill="#2B2A3A"/>
   <text x="268" y="441.5" font-size="12" text-anchor="middle" fill="#FFFFFF">Airlock</text>
+  </g>
 
   <!-- name tag -->
   <rect x="206" y="202" width="164" height="26" rx="7" fill="#2B2A3A"/><circle cx="221" cy="215" r="5" fill="#5CE0B5" stroke="#FFFFFF" stroke-width="1.5"/>

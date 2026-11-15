@@ -473,6 +473,9 @@ let relayHighlightTimer;
 let learnedJump = false;
 let resumeOnClose = false;
 const scanSites = [1160, 2200, 3570];
+const spotDistance = 320;   // how far ahead the rover "spots" the next find (sparkle + "!")
+let photosTaken = 0;
+let findToastTimer;
 let nextScanSite;
 let scannedRock;
 const rockSamples = [
@@ -498,6 +501,11 @@ function renderRoute() {
   const label = route.running ? labels[target?.kind] || (!learnedJump ? 'SPACE · Jump!' : '') : 'SPACE · Drive!';
   hint.textContent = scan === 'offered' || scan === 'scanning' ? '' : label;
   hint.style.left = Math.max(25, Math.min(78, target && route.running ? (target.x - route.x + 64) / 3.52 : 26)) + '%';
+  const findAhead = nextScanSite < scanSites.length ? scanSites[nextScanSite] - route.x : Infinity;
+  if (route.running && !hint.textContent && findAhead > 0 && findAhead < spotDistance) {
+    hint.textContent = '! Something shiny ahead';
+    hint.style.left = Math.max(25, Math.min(78, (scanSites[nextScanSite] + 60 - route.x + 64) / 3.52)) + '%';
+  }
 
   function box(color,x,y,w,h) {
     ctx.fillStyle = color;
@@ -516,6 +524,28 @@ function renderRoute() {
     box('#b46469',x,122-(i%3)*7,72,60);
     box('#b46469',x+12,111-(i%3)*7,48,18);
   }
+  scanSites.forEach((siteX, i) => {
+    const x = siteX + 60 - route.x + 64;
+    if (x < -40 || x > 390) return;
+    box('#2b2a3a',x-25,floor-42,50,42);
+    box('#8a6250',x-22,floor-39,44,39);
+    box('#a57a64',x-22,floor-39,44,6);
+    if (i === 0) [24,16,8].forEach(dy => box('#4a3328',x-20,floor-dy-4,40,3));                  // layers
+    if (i === 1) { box('#2b1f26',x-12,floor-26,8,8); box('#d7b49a',x+2,floor-28,12,12); }    // drill hole + patch
+    if (i === 2) { box('#e9dccb',x-14,floor-26,10,10); box('#e9dccb',x+2,floor-26,10,10);     // two cores
+                   box('#b8aa98',x-11,floor-23,4,4); box('#b8aa98',x+5,floor-23,4,4); }
+    const spotted = (i === nextScanSite && siteX - route.x > 0 && siteX - route.x < spotDistance)
+      || (i === nextScanSite - 1 && (scan === 'offered' || scan === 'scanning'));
+    if (spotted) {
+      const blink = scan === 'offered' || Math.floor(performance.now() / 250) % 2;
+      if (blink) { box('#ffd23f',x+20,floor-48,4,4); box('#ffd23f',x-26,floor-30,3,3); box('#fff1ae',x+24,floor-22,3,3); }
+      box('#2b2a3a',x-9,floor-69,18,20);                                                       // "!" bubble
+      box('#ffd23f',x-7,floor-67,14,16);
+      box('#2b2a3a',x-1,floor-64,3,7);
+      box('#2b2a3a',x-1,floor-55,3,3);
+      box('#ffd23f',x-2,floor-51,5,3);
+    }
+  });
   box('#8f4a4c',0,floor,352,63);
   box('#ffb27d',0,floor,352,4);
   for (let i=0;i<20;i++) {
@@ -574,6 +604,9 @@ function start() {
   hideCaptureRing();
   nextScanSite = 0;
   scannedRock = false;
+  photosTaken = 0;
+  byId('find-card').hidden = true;
+  byId('find-toast').hidden = true;
   clearTimeout(relayHighlightTimer);
   byId('game-hint').classList.remove('relay-highlight');
   clearTimeout(scanTimer);
@@ -645,6 +678,8 @@ function tick(now) {
   if (previousX < 2860 && route.x >= 2860) byId('game-hint').textContent = 'PIP: Solar alert ahead. The crew is indoors. Keep driving the rover remotely.';
   if (previousX < stormStart && route.x >= stormStart) byId('game-hint').textContent = 'PIP: See the specks in the camera view? Keep watching the track.';
   if (previousX < stormEnd && route.x >= stormEnd) byId('game-hint').textContent = 'PIP: Solar storm cleared. The third beacon is just ahead.';
+  const spotAt = scanSites[nextScanSite] - spotDistance;
+  if (nextScanSite < scanSites.length && previousX < spotAt && route.x >= spotAt) byId('game-hint').textContent = 'PIP: Ooh, what\'s that shiny rock up ahead?';
   route.height = Math.max(0,route.height+route.velocity*dt);
   route.velocity = route.height > 0 ? route.velocity-490*dt : 0;
   for (const item of course) {
@@ -692,7 +727,9 @@ function tick(now) {
     checkpoint = {x:route.x, battery:route.battery, beacons:route.beacons, collected:new Set(route.collected)};
     byId('scan').hidden = false;
     byId('skip').hidden = false;
-    byId('game-hint').textContent = 'PIP: Layered rock ahead! Take a close-up for the lab or keep driving.';
+    byId('find-card').hidden = false;      // "Wow! You found a rock!" (a simple card, the same at every stop)
+    renderRoute();
+    byId('game-hint').textContent = 'PIP: Look what we found! Want to snap a photo for the lab?';
     byId('scan').focus();
     return;
   }
@@ -738,6 +775,8 @@ byId('plan').onsubmit = event => {
 };
 
 function readyAfterScan(message) {
+  byId('find-card').hidden = true;
+  if (route) renderRoute();              // redraw: the "!" over the find goes away
   byId('scan').hidden = true;
   byId('skip').hidden = true;
   byId('game-hint').textContent = message;
@@ -746,7 +785,7 @@ function readyAfterScan(message) {
 
 byId('skip').onclick = () => {
   scan = 'skipped';
-  readyAfterScan('PIP: Press Jump when ready to continue.');
+  readyAfterScan('PIP: Okay! Press Jump when you are ready to keep driving.');
 };
 byId('scan').onclick = () => {
   labSound('photo');
@@ -756,7 +795,8 @@ byId('scan').onclick = () => {
   ring.hidden = false;
   byId('scan').disabled = true;
   byId('skip').disabled = true;
-  byId('game-hint').textContent = 'PIP: Taking a close-up through solar interference…';
+  byId('find-card').hidden = true;
+  byId('game-hint').textContent = 'PIP: Hold still… taking the photo!';
   scanTimer = setTimeout(() => {
     hideCaptureRing();
     scan = 'complete';
@@ -768,7 +808,15 @@ byId('scan').onclick = () => {
     try {
       localStorage.setItem('mars-rock-collection', JSON.stringify([...collectedRocks]));
     } catch {}
-    readyAfterScan('PIP: Observation saved. Press Jump to continue.');
+    photosTaken += 1;
+    const field = byId('maze').parentNode;               // click! a camera flash over the playfield
+    field.classList.remove('photo-flash'); void field.offsetWidth; field.classList.add('photo-flash');
+    const toast = byId('find-toast');
+    toast.textContent = 'Photo saved for the lab · ' + photosTaken + ' / ' + scanSites.length;
+    toast.hidden = false;
+    clearTimeout(findToastTimer);
+    findToastTimer = setTimeout(() => { toast.hidden = true; }, 3000);
+    readyAfterScan('PIP: Great shot! Press Jump to keep driving.');
     showRock(rock, true, isNew);
   }, captureTime[plan.tool]);
 };

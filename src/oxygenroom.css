@@ -1645,7 +1645,9 @@ body {
   border: calc(14px * var(--s)) solid #eef0f5;
   outline: calc(6px * var(--s)) solid var(--ink);
   border-radius: calc(26px * var(--s));
-  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.2);
+  box-shadow:
+    inset 0 0 0 calc(4px * var(--s)) var(--ink),   /* the dark line round the floor, like the Command Center */
+    0 6px 0 rgba(0, 0, 0, 0.2);
   overflow: visible;
 }
 .room-art { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }

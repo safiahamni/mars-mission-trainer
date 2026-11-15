@@ -18,6 +18,7 @@
 // Other places can use: MarsHUD.getHazard(), MarsHUD.isStorm(), MarsHUD.startStorm(), MarsHUD.endStorm(),
 //   MarsHUD.addHazard(n), MarsHUD.status() ('go' | 'caution' | 'nogo'), MarsHUD.newSol()
 // Everything here starts with hud- so it can't clash with other places. Its look is in hud.css.
+import { isClockPaused } from '../state/gameStore.js';
 
 const MarsHUD = (function () {
   const map = MarsMap;
@@ -255,6 +256,14 @@ const MarsHUD = (function () {
   let lastSafe = performance.now();
   (function safeRoom(now) {
     const dt = Math.min(0.1, Math.max(0, (now - lastSafe) / 1000)); lastSafe = now;
+    // The MISSION CLOCK keeps running inside the Command Center room (the room pauses the map,
+    // so 'update' above doesn't run). It stops in the radiation shelter inside the room (the room
+    // calls pauseClock), during a solar storm (the shelter mini-game), and while the start screen is up.
+    if (!failed && map.isPaused() && map.isInside() === 'shelter' && !storm
+        && !isClockPaused() && !window.MartianoutsStart?.isOpen?.()) {
+      gameMinutes += dt * timeScale;
+      drawClock();
+    }
     if (map.isInside()) {                                // inside a building: the alarms stop (even while a room pauses the game)
       if (warnOn) { $('hud-warn').hidden = true; warnOn = false; }
       if (alarmOn && !FORCE_ALARM) { $('hud-alarm').hidden = true; alarmOn = false; }

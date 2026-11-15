@@ -148,3 +148,12 @@
 .tt-welcome .tt-text { font-size: 18px; }
 .tt-welcome .tt-foot { justify-content: center; margin-top: 14px; }
 @keyframes st-pop { from { transform: scale(.85); opacity: 0; } }
+
+/* place cards: the dots get their own row, and Back + Next/Let's go! share the row under it,
+   so the buttons always fit inside the card */
+.tt-place .tt-foot { flex-wrap: wrap; gap: 12px; }
+.tt-place .tt-dots { width: 100%; }
+.tt-place .tt-btns { width: 100%; }
+.tt-place .tt-btn { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.tt-place .tt-next { flex: 1.4; }
+.tt-rocket { flex: none; }
