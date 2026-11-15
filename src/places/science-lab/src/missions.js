@@ -8,7 +8,7 @@ export const missions = [
   {id:'message-earth', title:'Message to Earth: The Grand Discovery', points:10, power:30, minimumPower:50, supplies:{oxygen:8, water:6, food:6}, objective:'Assemble the evidence and send your report.'}
 ];
 export function greenhouseRequirement(id, progress = {}) {
-  if (id === 'snapshot-safari' && !progress.bedsUnlocked) return 'Use the Greenhouse Soil Lab to lower perchlorate below 30 and unlock the potato and millet beds.';
+  if (id === 'snapshot-safari' && !progress.bedsUnlocked) return 'Use the Greenhouse Soil Lab to lower perchlorate below 30 and unlock the potato and millet beds. If planting on Sol 4, choose potatoes for a Sol 6 harvest.';
   if (id === 'message-earth' && !progress.advancedCropHarvested) return 'Grow and harvest potatoes or millet in the Greenhouse.';
   return '';
 }

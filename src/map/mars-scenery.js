@@ -135,7 +135,7 @@ import { getGame, onGameChange } from '../state/gameStore.js';
     if (game.sol <= 4) {
       const cropTask = game.sol < 3 ? 'Plant leafy greens'
         : game.sol === 3 ? 'Prepare 50 Food for Sol 4'
-        : 'Prepare a potato or millet harvest for Sol 6';
+        : cropPrepTask(game) ? 'Plant potatoes today for a Sol 6 harvest' : 'Advanced crop planned for Sol 6';
       tasks.push([cropTask, !cropPrepTask(game)]);
     }
     if (game.sol < CHAPTERS.length) {

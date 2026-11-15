@@ -874,3 +874,10 @@ dialog:not(#mission) {max-height: calc(100dvh - 1rem); overflow: auto;}
 #chapter-preview {max-height: calc(100dvh - 1.25rem);}
 #chapter-preview .brief-hero {padding-block: .45rem;}
 #chapter-preview .rock-body > form {margin-bottom: 0;}
+
+/* Align the element choices in the Chapter 2 pattern report. */
+#pixel-report .brief-hero {text-align: center;}
+#pixel-options {display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch;}
+#pixel-options button {width: 100%; align-content: center; text-align: center;}
+#pixel-feedback {text-align: center;}
+#pixel-feedback:empty {display: none;}
