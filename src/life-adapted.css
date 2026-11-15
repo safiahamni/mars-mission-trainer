@@ -1,0 +1,265 @@
+/* life.css — LIFE SUPPORT: the Water Recycling System (Member 2). Everything starts with ls- */
+
+/* ===== the machine on the map ===== */
+#ls-recycler-map .ls-map-water { fill: #3EC6F0; }
+#ls-recycler-map .ls-map-drop { fill: #FFFFFF; }
+#ls-recycler-map .ls-map-filter { fill: #F4F2EE; }
+#ls-recycler-map .ls-map-bag-full { display: none; }
+#ls-recycler-map .ls-map-light { fill: #5CE0B5; }
+#ls-recycler-map .ls-map-flow { animation: ls-dash 0.8s linear infinite; }
+/* broken: red blinking light, no flow, and the broken part shows */
+#ls-recycler-map.ls-map-broken .ls-map-light { fill: #FF5A5A; animation: ls-blink 0.8s ease-in-out infinite alternate; }
+#ls-recycler-map.ls-map-broken .ls-map-flow { animation: none; opacity: 0; }
+#ls-recycler-map.ls-map-broken.ls-prob-filter .ls-map-filter { fill: #C98F5E; }
+#ls-recycler-map.ls-map-broken.ls-prob-brine .ls-map-bag-full { display: inline; }
+#ls-recycler-map.ls-map-broken.ls-prob-brine .ls-map-bag-flat { display: none; }
+#ls-recycler-map.ls-map-broken.ls-prob-water .ls-map-water { fill: #A8B86A; }
+#ls-recycler-map.ls-map-broken.ls-prob-water .ls-map-drop { fill: #FF5A5A; animation: ls-blink 0.8s ease-in-out infinite alternate; }
+@keyframes ls-dash { to { stroke-dashoffset: -16; } }
+@keyframes ls-blink { to { opacity: 0.3; } }
+
+/* ===== the pop-up ===== */
+.ls-popup {
+  --ls-hand: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 64 64'><rect x='18' y='52' width='28' height='10' rx='3' fill='%233EC6F0' stroke='%232B2A3A' stroke-width='3'/><path d='M20 54 C13 47 10 40 12 32 L12 22 a4 4 0 0 1 8 0 V30 V12 a4 4 0 0 1 8 0 V28 V8 a4 4 0 0 1 8 0 V28 V12 a4 4 0 0 1 8 0 V36 L50 28 a4 4 0 0 1 7 4 L48 48 C46 52 44 54 42 54 Z' fill='white' stroke='%232B2A3A' stroke-width='3' stroke-linejoin='round'/></svg>");
+  --ls-grab: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'><rect x='18' y='52' width='28' height='10' rx='3' fill='%233EC6F0' stroke='%232B2A3A' stroke-width='3'/><path d='M14 30 C14 22 20 20 24 22 C26 15 34 15 36 21 C38 15 46 16 46 23 C50 19 57 23 55 30 L52 44 C50 50 46 54 42 54 L22 54 C17 50 14 46 14 40 Z' fill='white' stroke='%232B2A3A' stroke-width='3' stroke-linejoin='round'/><path d='M24 22 V32 M36 21 V32 M46 23 V32' stroke='%232B2A3A' stroke-width='2.5' stroke-linecap='round'/></svg>");
+  position: absolute; inset: 0; z-index: 25; padding: 12px; box-sizing: border-box;
+  background: rgba(30, 29, 41, 0.6); display: flex; align-items: center; justify-content: center;
+}
+.ls-popup[hidden] { display: none; }
+.ls-card {
+  width: 760px; max-width: 100%; max-height: 100%; overflow-y: auto; box-sizing: border-box; padding: 16px 22px;
+  background: #FFFFFF; color: #2B2A3A; border: 4px solid #2B2A3A; border-radius: 22px; box-shadow: 0 6px 0 #2B2A3A;
+  display: flex; flex-direction: column; gap: 10px; font-family: 'Nunito', sans-serif;
+  animation: ls-popIn 0.25s ease-out;
+}
+@keyframes ls-popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.ls-card h2 { margin: 0; font-size: 26px; font-weight: 900; text-align: center; }
+
+/* alarm line: red and blinking until it is fixed */
+.ls-alarm { margin: 0; text-align: center; font-size: 18px; font-weight: 900; color: #E0413E; animation: ls-blink 0.7s ease-in-out infinite alternate; }
+.ls-alarm.ls-ok { color: #1E9E74; animation: none; }
+
+/* machine (left) + tools (right) */
+.ls-stage { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: stretch; }
+.ls-stage.ls-no-side { grid-template-columns: 1fr; justify-items: center; }
+.ls-no-side .ls-tools { display: none; }
+
+/* ONE machine: a metal rack like the real Water Recovery System on the space station */
+.ls-machine {
+  position: relative; display: flex; flex-direction: column;
+  background: linear-gradient(180deg, #E4E9EF, #C9D1DA); border: 4px solid #2B2A3A; border-radius: 16px;
+  box-shadow: inset 0 0 0 4px #F4F7FA, 0 4px 0 #2B2A3A;
+}
+.ls-rack-top {
+  display: flex; align-items: center; gap: 10px; padding: 8px 14px;
+  background: #2B2A3A; color: #FFFFFF; font-size: 13px; letter-spacing: 1.5px; border-radius: 11px 11px 0 0;
+}
+.ls-rack-top b { flex: 1; font-weight: 900; }
+.ls-led { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #FFFFFF; background: #5CE0B5; box-shadow: 0 0 8px #5CE0B5; }
+.ls-broken .ls-led { background: #FF5A5A; box-shadow: 0 0 10px #FF5A5A; animation: ls-blink 0.6s ease-in-out infinite alternate; }
+.ls-screw { width: 9px; height: 9px; border-radius: 50%; background: #9AA3AE; border: 2px solid #5E6C78; }
+
+/* the layers stacked top to bottom, like a water filter experiment: water drips DOWN through each one */
+.ls-bays { position: relative; flex: 1; display: flex; flex-direction: column; gap: 20px; padding: 14px 16px 12px; }
+.ls-part { position: relative; z-index: 1; display: grid; grid-template-columns: 118px 1fr; align-items: center; gap: 10px; }
+.ls-part > span {            /* label plate, like on the real rack */
+  justify-self: end; padding: 3px 8px; border-radius: 6px; background: #2B2A3A; color: #FFFFFF;
+  font-size: 12px; font-weight: 900; letter-spacing: 0.3px; white-space: nowrap;
+}
+.ls-box {
+  position: relative; width: 240px; height: 60px; box-sizing: border-box;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  background: #FFFFFF; border: 3px solid #2B2A3A; border-radius: 12px;
+}
+/* the pipe between two layers, with drops falling down */
+.ls-part + .ls-part .ls-box::before {
+  content: ""; position: absolute; left: calc(50% - 8px); top: -23px; width: 10px; height: 20px; z-index: -1;
+  background: #9AA3AE; border: 3px solid #2B2A3A; border-width: 0 3px;
+}
+.ls-flowing .ls-part + .ls-part .ls-box::before {
+  background: repeating-linear-gradient(180deg, #3EC6F0 0 5px, #9AA3AE 5px 10px); animation: ls-fall 0.5s linear infinite;
+}
+.ls-bad-water.ls-flowing .ls-part + .ls-part .ls-box::before { background: repeating-linear-gradient(180deg, #A8B86A 0 5px, #9AA3AE 5px 10px); }
+@keyframes ls-fall { from { background-position: 0 0; } to { background-position: 0 10px; } }
+
+/* 1. dirty water: murky brown water with bits of dirt floating */
+.ls-inlet { height: 48px; overflow: hidden; background: #E9E1D2; }
+.ls-dirty-water {
+  position: absolute; inset: 10px 0 0; background: #8C6A43;
+  border-radius: 40% 40% 0 0 / 10px 10px 0 0; animation: ls-slosh 1.6s ease-in-out infinite alternate;
+}
+.ls-dirty-water i { position: absolute; width: 7px; height: 5px; border-radius: 50%; background: #4A3520; animation: ls-float 2.4s ease-in-out infinite alternate; }
+.ls-dirty-water i:nth-child(1) { left: 12%; top: 30%; }
+.ls-dirty-water i:nth-child(2) { left: 30%; top: 60%; width: 5px; animation-delay: -0.6s; }
+.ls-dirty-water i:nth-child(3) { left: 52%; top: 25%; animation-delay: -1.2s; }
+.ls-dirty-water i:nth-child(4) { left: 70%; top: 55%; width: 9px; animation-delay: -0.3s; }
+.ls-dirty-water i:nth-child(5) { left: 86%; top: 35%; width: 4px; animation-delay: -1.8s; }
+@keyframes ls-slosh { from { transform: translateX(-4px) rotate(-1deg); } to { transform: translateX(4px) rotate(1deg); } }
+@keyframes ls-float { to { transform: translate(6px, -4px); } }
+
+/* the water gets cleaner on the way down: brown -> light brown -> pale -> clear */
+.ls-flowing #ls-filterPart .ls-box::before { background: repeating-linear-gradient(180deg, #8C6A43 0 5px, #9AA3AE 5px 10px); }
+.ls-flowing #ls-bagPart .ls-box::before { background: repeating-linear-gradient(180deg, #C4B08C 0 5px, #9AA3AE 5px 10px); }
+.ls-flowing #ls-cleanPart .ls-box::before { background: repeating-linear-gradient(180deg, #CFE3E8 0 5px, #9AA3AE 5px 10px); }
+
+/* 5. clean water: no pipe above the tank, real droplets drip from the Cleaner into it */
+#ls-tankPart { margin-top: 14px; }
+#ls-tankPart .ls-box::before { display: none; }
+.ls-tank { overflow: visible; }
+.ls-drips { position: absolute; left: 0; right: 0; top: -40px; height: 40px; pointer-events: none; }
+.ls-drips svg { position: absolute; left: calc(50% - 8px); top: 0; width: 16px; height: 21px; opacity: 0; }
+.ls-flowing .ls-drips svg { animation: ls-drip 0.9s ease-in infinite; }
+.ls-flowing .ls-drips svg:nth-child(2) { animation-delay: 0.3s; }
+.ls-flowing .ls-drips svg:nth-child(3) { animation-delay: 0.6s; }
+@keyframes ls-drip { 0% { transform: translateY(0) scale(0.6); opacity: 1; } 85% { opacity: 1; } 100% { transform: translateY(44px) scale(1); opacity: 0; } }
+
+.ls-slot { background: #AEB8C3; box-shadow: inset 0 6px 10px rgba(0, 0, 0, 0.3); }   /* a hole in the rack */
+.ls-slot.ls-empty { border-style: dashed; }
+.ls-bag-bay { background: #BFC8D2; }
+.ls-cleaner { background: #9B6BFF; }
+.ls-cleaner svg { width: 34px; height: 34px; }
+.ls-vents { width: 90px; height: 22px; background: repeating-linear-gradient(90deg, #2B2A3A 0 3px, transparent 3px 8px); border-radius: 4px; opacity: 0.55; }
+.ls-part.ls-zap .ls-cleaner { animation: ls-zap 0.2s steps(2) infinite; }
+@keyframes ls-zap { 50% { background: #FFD84A; box-shadow: 0 0 18px #FFD84A; } }
+.ls-part.ls-alert .ls-box { animation: ls-alertGlow 0.7s ease-in-out infinite alternate; }
+@keyframes ls-alertGlow { from { box-shadow: 0 0 0 0 rgba(255, 90, 90, 0.9); } to { box-shadow: 0 0 0 7px rgba(255, 90, 90, 0.35); } }
+.ls-rack-base { border-radius: 0 0 11px 11px; height: 14px; background: repeating-linear-gradient(90deg, #9AA3AE 0 14px, #87909B 14px 28px); border-top: 3px solid #2B2A3A; }
+
+/* tank at the bottom: a wide glass tank */
+.ls-tank { height: 96px; overflow: visible; border-radius: 14px 14px 22px 22px; }
+.ls-tank::after { content: ""; position: absolute; left: 12px; top: 10px; bottom: 10px; width: 8px; border-radius: 4px; background: rgba(255, 255, 255, 0.7); }
+#ls-tankFill { position: absolute; left: 0; right: 0; bottom: 0; max-height: 100%; background: #3EC6F0; transition: height 0.15s; border-radius: 10px 10px 19px 19px; }
+.ls-bad-water #ls-tankFill { background: #A8B86A; }
+#ls-tankNum { position: relative; z-index: 1; margin: auto; font-size: 24px; font-weight: 900; }
+
+/* ===== things you drag (they are buttons, so a click also works) ===== */
+.ls-popup .ls-item {
+  position: relative; z-index: 2; padding: 0; box-shadow: none; touch-action: none; cursor: var(--ls-hand) 16 4, grab;
+  transition: transform 0.15s;
+}
+.ls-popup .ls-item:disabled { cursor: default; }
+.ls-popup .ls-item:not(:disabled):hover, .ls-popup .ls-item:focus-visible { outline: 4px solid #3EC6F0; outline-offset: 2px; }
+.ls-popup .ls-item.ls-dragging { z-index: 60; cursor: none; transition: none; animation: none !important; box-shadow: 0 10px 18px rgba(0, 0, 0, 0.35); }
+
+.ls-popup .ls-filter-item { width: 200px; height: 44px; border-radius: 8px; background: #F4F2EE; }
+.ls-filter-item i { position: absolute; inset: 8px 12px; background: repeating-linear-gradient(90deg, transparent 0 6px, rgba(43, 42, 58, 0.35) 6px 8px); border-radius: 3px; }
+.ls-popup .ls-filter-item.ls-dirty { background: #C98F5E; }
+.ls-popup .ls-filter-item.ls-dirty:not(:disabled) { animation: ls-shake 0.9s ease-in-out infinite; }
+.ls-popup .ls-bag-item { width: 170px; height: 40px; border-radius: 20px; background: #E8F7FF; }
+.ls-popup .ls-bag-item.ls-full { width: 214px; height: 56px; border-radius: 28px; background: #E8C76A; }
+.ls-popup .ls-bag-item.ls-full::after { content: "FULL"; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-size: 15px; font-weight: 900; }
+/* the glove hand that grabs what you drag */
+.ls-popup .ls-item.ls-dragging::before {
+  content: ""; position: absolute; left: var(--hx, 50%); top: var(--hy, 20px); width: 64px; height: 64px; transform: translate(-50%, -40%);
+  background: var(--ls-grab) center / contain no-repeat; z-index: 3; pointer-events: none;
+}
+@keyframes ls-shake { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-4deg); } 75% { transform: rotate(4deg); } }
+
+/* ===== tools ===== */
+.ls-tools { display: flex; flex-direction: column; gap: 8px; justify-content: center; }
+.ls-zone, .ls-box-tools {
+  position: relative; display: flex; align-items: center; gap: 10px; min-height: 92px; padding: 8px 14px;
+  border: 3px dashed #2B2A3A; border-radius: 14px; background: #F7F5FA; font-weight: 900; font-size: 17px;
+}
+.ls-box-tools { border-style: solid; background: #FFE9A8; }
+.ls-box-tools em { font-style: normal; color: #8A7A4A; font-size: 13px; }
+.ls-emoji { font-size: 46px; line-height: 1; }
+.ls-target { animation: ls-pulse 0.8s ease-in-out infinite alternate; }
+@keyframes ls-pulse { from { box-shadow: 0 0 0 0 rgba(62, 198, 240, 0.8); } to { box-shadow: 0 0 0 6px rgba(62, 198, 240, 0.3); } }
+.ls-mini { display: inline-block; width: 26px; height: 38px; border: 2px solid #2B2A3A; border-radius: 4px; margin-left: auto; }
+.ls-mini-filter { background: #C98F5E; }
+.ls-mini-bag { background: #E8C76A; border-radius: 45%; }
+
+/* bottom */
+.ls-todo[hidden], .ls-fact[hidden] { display: none; }
+.ls-fact { margin: 0; padding: 8px 12px; background: #E8F7FF; border: 2px solid #2B2A3A; border-radius: 12px; font-size: 14px; font-weight: 700; line-height: 1.4; }
+.ls-popup .ls-done { align-self: center; background: #5CE0B5; font-size: 18px; padding: 10px 26px; }
+.ls-popup .ls-done[hidden] { display: none; }
+
+/* ===== the one thing to do ===== */
+.ls-todo { margin: 0; text-align: center; font-size: 20px; font-weight: 900; color: #2B2A3A;
+           background: #FFD84A; border: 3px solid #2B2A3A; border-radius: 14px; padding: 8px 14px; align-self: center;
+           animation: ls-bob 1s ease-in-out infinite alternate; }
+@keyframes ls-bob { to { transform: translateY(-3px); } }
+
+/* the trash: just a big icon. It grows when you bring something near, and "gulps" it */
+.ls-tools { align-items: center; }
+.ls-trash {
+  display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 30px;
+  font-weight: 900; font-size: 20px; transition: transform 0.18s cubic-bezier(.3, 1.6, .5, 1);
+}
+.ls-trash .ls-emoji { font-size: 96px; line-height: 1; filter: drop-shadow(0 4px 0 rgba(43, 42, 58, 0.25)); }
+.ls-trash.ls-target { animation: ls-trashBounce 1s ease-in-out infinite; }
+@keyframes ls-trashBounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+.ls-trash.ls-hover { animation: ls-trashWiggle 0.35s ease-in-out infinite; transform: scale(1.4); }
+@keyframes ls-trashWiggle { 0%, 100% { transform: scale(1.4) rotate(0); } 25% { transform: scale(1.45) rotate(-7deg); } 75% { transform: scale(1.45) rotate(7deg); } }
+.ls-trash.ls-gulp { animation: ls-gulp 0.45s ease-out; }
+@keyframes ls-gulp { 0% { transform: scale(1.4); } 40% { transform: scale(0.85, 1.15); } 100% { transform: scale(1); } }
+
+/* the new part pops in with a bounce */
+.ls-popup .ls-item.ls-new { animation: ls-popNew 0.5s cubic-bezier(.3, 1.6, .5, 1) 0.2s both; }
+@keyframes ls-popNew { from { transform: translateY(-60px) scale(0.3); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* germs: wiggle around, click to zap */
+.ls-germs { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
+.ls-popup .ls-germ {
+  position: absolute; width: 54px; height: 54px; padding: 0; margin: -27px 0 0 -27px; pointer-events: auto;
+  font-size: 40px; line-height: 1; background: transparent; border: none; box-shadow: none;
+  cursor: var(--ls-hand) 16 4, pointer; animation: ls-germ 1.6s ease-in-out infinite;
+}
+.ls-popup .ls-germ:hover, .ls-popup .ls-germ:focus-visible { outline: 3px solid #3EC6F0; border-radius: 50%; }
+@keyframes ls-germ { 0%, 100% { transform: translate(0, 0) rotate(0); } 25% { transform: translate(8px, -6px) rotate(12deg); }
+                     50% { transform: translate(-4px, 6px) rotate(-8deg); } 75% { transform: translate(-8px, -4px) rotate(10deg); } }
+.ls-popup .ls-germ.ls-zapped { animation: ls-zapped 0.3s ease-out forwards; }
+@keyframes ls-zapped { 0% { transform: scale(1); filter: brightness(2); } 100% { transform: scale(1.8) rotate(90deg); opacity: 0; } }
+
+/* hooray: stars and drops fly up */
+.ls-card { position: relative; }
+.ls-confetti { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.ls-confetti span { position: absolute; bottom: -30px; font-size: 28px; animation: ls-fly 1.6s ease-out forwards; }
+@keyframes ls-fly { to { transform: translateY(-560px) rotate(200deg); opacity: 0; } }
+
+/* ===== the first pop-up: "Oh no! ... needs changing!" ===== */
+.ls-intro { position: absolute; inset: 0; z-index: 30; display: flex; align-items: center; justify-content: center;
+            background: rgba(30, 29, 41, 0.55); border-radius: 18px; }
+.ls-intro[hidden] { display: none; }
+.ls-intro-card {
+  width: 420px; max-width: 90%; padding: 20px 24px; box-sizing: border-box; text-align: center;
+  background: #FFFFFF; border: 4px solid #2B2A3A; border-radius: 22px; box-shadow: 0 6px 0 #2B2A3A;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  animation: ls-introIn 0.4s cubic-bezier(.3, 1.6, .5, 1);
+}
+@keyframes ls-introIn { from { transform: scale(0.5) rotate(-4deg); opacity: 0; } to { transform: none; opacity: 1; } }
+.ls-intro-icon { height: 70px; display: flex; align-items: center; justify-content: center; animation: ls-shake 0.9s ease-in-out infinite; }
+.ls-intro-icon b { font-size: 60px; line-height: 1; }
+.ls-intro-card h3 { margin: 0; font-size: 22px; font-weight: 900; color: #E0413E; }
+.ls-intro-card p { margin: 0; font-size: 15px; font-weight: 700; color: #5E6C78; line-height: 1.4; }
+.ls-popup .ls-intro-go { margin-top: 6px; background: #FFD84A; font-size: 18px; padding: 10px 26px; animation: ls-pulse 0.8s ease-in-out infinite alternate; }
+
+/* germ problem: the Cleaner is switched off (grey) until all germs are zapped */
+.ls-bad-water .ls-cleaner { background: #8A8496; }
+.ls-bad-water .ls-cleaner svg { opacity: 0.35; }
+.ls-bad-water .ls-part.ls-zap .ls-cleaner { background: #FFD84A; }
+
+
+/* ===== buttons inside the pop-up (the team map gives these to every button; this room doesn't) ===== */
+.ls-popup button {
+  font-family: inherit; font-weight: 900; font-size: 16px; color: #2B2A3A;
+  padding: 10px 18px; border-radius: 22px; border: 3px solid #2B2A3A;
+  background: #FFFFFF; cursor: pointer; box-shadow: 0 3px 0 #2B2A3A;
+}
+.ls-popup .ls-done, .ls-popup .ls-intro-go { font-size: 18px; padding: 10px 26px; }
+
+/* the pop-up covers the whole screen (not squeezed inside the room box) */
+.ls-popup { position: fixed; inset: 0; z-index: 1000; }
+.ls-card { max-height: 94vh; font-family: 'Nunito', Arial, sans-serif; }
+
+/* ===== Water Recycler STATION in the Oxygen room (walk to it, like the CO2 and MOXIE stations) ===== */
+.ls-water-station {
+  position: absolute; z-index: 3; top: 72%; left: 60%;
+  display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer;
+}
+.ls-water-station .ls-mini-rack { display: block; width: 104px; height: auto; }
+.ls-water-station .ls-station-state { color: #29283c; font-size: 9px; font-weight: bold; }
+.ls-water-station.ls-water-broken .ls-mini-rack { filter: drop-shadow(0 0 6px #FF5A5A); }
+.ls-water-station.ls-water-fixed .ls-station-state { color: #176b55; }
