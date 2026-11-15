@@ -157,7 +157,7 @@ dialog#discovery{margin:auto;background:#fff4e6;color:#2b2a3a;border:3px solid #
 .lab-heading,.lab-pip{display:flex;align-items:center;gap:.75rem}
 .lab-heading{justify-content:space-between}
 .lab-heading h2{margin:.2rem 0;color:#261c3b}
-.lab-pip{width:fit-content;padding:.45rem .7rem;border-radius:.8rem;background:#fff3dc;color:#2b2a3a}
+.lab-pip{width:fit-content;padding:.45rem .7rem;border-radius:.8rem;background:#fff3dc;color:#2b2a3a;font-weight:800}
 #lab #stations{grid-template-rows:auto;padding:.8rem 0;gap:clamp(.45rem,2vw,1.1rem);align-items:stretch}
 .chapter-choice{width:100%;display:grid;justify-items:center;align-content:start;gap:.35rem;padding:.65rem .3rem;background:#f5e7ff;border:2px solid #2b2a3a;border-radius:1rem;box-shadow:0 6px #5e4380;color:#2b2a3a;line-height:1.15;overflow-wrap:anywhere}
 .chapter-choice:hover{transform:translateY(-3px)}
