@@ -1,5 +1,5 @@
 import {createAvatar} from './avatar.js';
-import {missions, totalPoints, roverCosts} from './missions.js';
+import {missions, totalPoints, roverCosts, greenhouseRequirement} from './missions.js';
 import {facts} from './scienceFacts.js';
 import {createDemoController} from './science.js';
 import {directions} from './rover.js';
@@ -280,8 +280,10 @@ function previewChapter(mission, index, availability) {
   const reminder = byId('readiness-message');
   reminder.hidden = availability === 'Completed';
   const tasks = [];
+  const greenhouseTask = sharedResources && greenhouseRequirement(mission.id, controller.status.greenhouseProgress);
+  if (greenhouseTask && availability !== 'Completed') tasks.push(greenhouseTask);
   const stationDirections = {
-    power: 'Visit Command Center to check Power. Clean the solar panels if charging is low.',
+    power: 'Clean all three solar panels, then use the Command Center bunks to recharge the battery the next morning.',
     oxygen: 'Visit Life Support and run the oxygen challenge or MOXIE.',
     water: 'Visit Life Support and repair the Water Recycler.',
     food: 'Visit Greenhouse and harvest crops.'

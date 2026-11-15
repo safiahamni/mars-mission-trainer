@@ -1,8 +1,24 @@
+import lifeArtwork from './life-map.png';
 import { spend } from '../../systems/commandCenter.js';
 import { COSTS } from '../../systems/power.js';
 import { getGame, setGame, pauseClock } from '../../state/gameStore.js';
 
 const map = window.MarsMap;
+const roomSpot = document.querySelector('#place-life .mm-spot');
+if (roomSpot) {
+  const svg = 'http://www.w3.org/2000/svg';
+  const artwork = document.createElementNS(svg, 'image');
+  for (const attribute of ['x', 'y', 'width', 'height']) {
+    artwork.setAttribute(attribute, roomSpot.getAttribute(attribute));
+  }
+  artwork.setAttribute('href', lifeArtwork);
+  artwork.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+  artwork.setAttribute('aria-hidden', 'true');
+  artwork.style.pointerEvents = 'none';
+  artwork.style.clipPath = 'inset(0 round 12px)';
+  roomSpot.after(artwork);
+}
+
 const room = document.createElement('section');
 room.hidden = true;
 Object.assign(room.style, {
@@ -27,6 +43,10 @@ Object.assign(frame.style, {
 window.addEventListener('message', event => {
   if (event.origin !== location.origin || event.source !== frame.contentWindow || room.hidden) return;
   const { type, resource, value } = event.data ?? {};
+  if (type === 'mars-life:leave') {
+    leaveRoom();
+    return;
+  }
   if (type !== 'mars-life:resource' || !['oxygen', 'water'].includes(resource)
     || !Number.isFinite(value) || value < 0 || value > 100) return;
   setGame({ ...getGame(), [resource]: value });
@@ -67,11 +87,13 @@ map.on('enter', place => {
   frame.focus();
 });
 
-back.addEventListener('click', () => {
+function leaveRoom() {
   room.hidden = true;
   map.leave('left');
   map.releaseKeys();
   map.pause(false);
   pauseClock(false);
   window.focus();
-});
+}
+
+back.addEventListener('click', leaveRoom);

@@ -13,7 +13,7 @@ window.MarsScienceResources = {
   read() {
     const game = getGame();
     return { power: game.power.battery, oxygen: game.oxygen, water: game.water,
-      food: game.food, roverReady: game.roverReady, sol: game.sol, radiation: window.MarsHUD?.getHazard() };
+      food: game.food, greenhouseProgress: game.greenhouseProgress, roverReady: game.roverReady, sol: game.sol, radiation: window.MarsHUD?.getHazard() };
   },
   spendMission(powerCost, supplies) {
     const game = getGame();

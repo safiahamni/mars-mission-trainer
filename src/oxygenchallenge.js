@@ -358,9 +358,11 @@ const moxieTitle = moxieStation.querySelector('.station-title')
 let playerX = room.clientWidth / 2
 let playerY = room.clientHeight * 0.85
 
-const stepSize = 20
+const WALK_SPEED = 200
+const paths = [...room.querySelectorAll('.path')]
+let pathBounds = []
 const keys = {}
-let walkingTimer = null
+
 
 // CO2 challenge state
 let challengeOpen = false
@@ -415,12 +417,11 @@ function isNearCo2() {
 }
 
 function isNearMoxie() {
-  const target = getMachinePosition(moxieStation)
-
-  return Math.hypot(
-    playerX - target.x,
-    playerY - target.y
-  ) < 85
+  const walkway = room.querySelector('.path.horizontal')
+  const stationX = moxieStation.offsetLeft + moxieStation.offsetWidth / 2
+  const walkwayY = walkway.offsetTop + walkway.offsetHeight / 2
+  return Math.abs(playerX - stationX) < 55
+    && Math.abs(playerY - walkwayY) <= walkway.offsetHeight / 2
 }
 
 function isNearWater() {
@@ -546,41 +547,31 @@ function showExitPopup() {
 
   const popup = document.createElement('div')
   popup.className = 'mission-overlay'
-
+  const completed = moxieActivatedThisSol && water.isFixed()
   popup.innerHTML = `
     <div class="mission-card">
-      <span class="mission-tag">EXIT STATION</span>
-
-      <h2>Return to Mars Base?</h2>
-
-      <p>
-        Are you ready to leave the Life Support Station?
-      </p>
-
-      <button class="mission-start">
-        Yes, Exit
-      </button>
-
-      <button class="mission-close">
-        Stay Here
-      </button>
+      <span class="mission-tag">LIFE SUPPORT</span>
+      <h2>${completed ? 'Mission complete!' : 'Return to Mars Base?'}</h2>
+      <p>${completed ? 'You ran MOXIE and repaired the Water Recycler.' : 'You can come back to finish your work.'}</p>
+      <button class="mission-start">Back to base map</button>
+      <button class="mission-close">Stay here</button>
     </div>
   `
 
   room.appendChild(popup)
   missionPopup = popup
 
-  popup.querySelector('.mission-start').addEventListener('click', () => {
+  function dismissExit() {
     closeMissionPopup()
     dismissedStation = 'exit'
     currentNearbyStation = 'exit'
-  })
+  }
 
-  popup.querySelector('.mission-close').addEventListener('click', () => {
-    closeMissionPopup()
-    dismissedStation = 'exit'
-    currentNearbyStation = 'exit'
+  popup.querySelector('.mission-start').addEventListener('click', () => {
+    dismissExit()
+    if (window.parent !== window) window.parent.postMessage({ type: 'mars-life:leave' }, location.origin)
   })
+  popup.querySelector('.mission-close').addEventListener('click', dismissExit)
 }
 
 // =====================================================
@@ -983,95 +974,77 @@ function updateInteractionPrompt() {
 // PLAYER MOVEMENT
 // =====================================================
 
-function moveOneStep(dx, dy) {
-  // Do not move while a popup or challenge is open
-  if (challengeOpen || missionPopup || water.isOpen()) return
-
-  const nextX = playerX + dx * stepSize
-  const nextY = playerY + dy * stepSize
-
-  // Keep avatar inside the room
-  if (
-    nextX < 18 ||
-    nextX > room.clientWidth - 18 ||
-    nextY < 23 ||
-    nextY > room.clientHeight - 2
-  ) {
-    return
-  }
-
-  playerX = nextX
-  playerY = nextY
-
-  player.faceToward(dx, dy)
-  player.moveTo(playerX, playerY)
-
-  player.setWalking(true)
-
-  clearTimeout(walkingTimer)
-
-  walkingTimer = setTimeout(() => {
-    player.setWalking(false)
-  }, 200)
-
-  // Check if avatar is near a machine
-  updateInteractionPrompt()
+function isOnPath(x, y) {
+  return pathBounds.some(path => x >= path.left && x <= path.right && y >= path.top && y <= path.bottom)
 }
 
-// =====================================================
-// KEYBOARD CONTROLS (WASD / ARROW KEYS ONLY)
-// =====================================================
+function measurePaths() {
+  pathBounds = paths.map(path => ({
+    left: path.offsetLeft,
+    right: path.offsetLeft + path.offsetWidth,
+    top: path.offsetTop,
+    bottom: path.offsetTop + path.offsetHeight
+  }))
+  if (!isOnPath(playerX, playerY)) {
+    const entry = pathBounds[1]
+    playerX = (entry.left + entry.right) / 2
+    playerY = room.clientHeight * 0.85
+    player.moveTo(playerX, playerY)
+  }
+}
+measurePaths()
+new ResizeObserver(measurePaths).observe(room)
+
+const directions = {
+  w: [0, -1], arrowup: [0, -1],
+  s: [0, 1], arrowdown: [0, 1],
+  a: [-1, 0], arrowleft: [-1, 0],
+  d: [1, 0], arrowright: [1, 0]
+}
 
 window.addEventListener('keydown', event => {
   const key = event.key.toLowerCase()
-
-  // Pause movement while popup or challenge is open
-  if (challengeOpen || missionPopup || water.isOpen()) return
-
-  const directions = {
-    w: [0, -1],
-    arrowup: [0, -1],
-
-    s: [0, 1],
-    arrowdown: [0, 1],
-
-    a: [-1, 0],
-    arrowleft: [-1, 0],
-
-    d: [1, 0],
-    arrowright: [1, 0]
-  }
-
-  const direction = directions[key]
-
-  if (!direction) return
-
+  if (!directions[key] || challengeOpen || missionPopup || water.isOpen()) return
   event.preventDefault()
-
-  // Ignore holding down the key
-  if (event.repeat) return
-
   keys[key] = true
-
-  const [dx, dy] = direction
-
-  moveOneStep(dx, dy)
 })
-
-// Reset pressed keys
 window.addEventListener('keyup', event => {
   keys[event.key.toLowerCase()] = false
 })
-
-// Stop walking if browser loses focus
 window.addEventListener('blur', () => {
-  Object.keys(keys).forEach(key => {
-    keys[key] = false
-  })
-
-  clearTimeout(walkingTimer)
+  for (const key of Object.keys(keys)) keys[key] = false
   player.setWalking(false)
 })
+
+let lastFrame = performance.now()
+function walkFrame(now) {
+  const dt = Math.min((now - lastFrame) / 1000, 0.03)
+  lastFrame = now
+  requestAnimationFrame(walkFrame)
+  if (challengeOpen || missionPopup || water.isOpen()) {
+    player.setWalking(false)
+    return
+  }
+  const dx = Number(!!(keys.d || keys.arrowright)) - Number(!!(keys.a || keys.arrowleft))
+  const dy = Number(!!(keys.s || keys.arrowdown)) - Number(!!(keys.w || keys.arrowup))
+  const distance = Math.hypot(dx, dy)
+  if (!distance) {
+    player.setWalking(false)
+    return
+  }
+  const step = WALK_SPEED * dt / distance
+  const oldX = playerX
+  const oldY = playerY
+  if (isOnPath(playerX + dx * step, playerY)) playerX += dx * step
+  if (playerY + dy * step < room.clientHeight && isOnPath(playerX, playerY + dy * step)) playerY += dy * step
+  const moved = playerX !== oldX || playerY !== oldY
+  player.setWalking(moved)
+  if (!moved) return
+  player.faceToward(dx, dy)
+  player.moveTo(playerX, playerY)
+  updateInteractionPrompt()
+}
+requestAnimationFrame(walkFrame)
 
 // Initial display and proximity check
 updateAirDisplay()

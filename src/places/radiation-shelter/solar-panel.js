@@ -1,5 +1,5 @@
 import { getGame, setGame, onGameChange } from '../../state/gameStore.js';
-import { cleanPanels } from '../../systems/power.js';
+import { cleanPanels, POWER_CONFIG } from '../../systems/power.js';
 
 // solar-panel.js — CLEAN SOLAR DUST mission (Member 3, Radiation Shelter).
 // =====================================================================
@@ -330,7 +330,7 @@ const SolarMission = (function () {
       const game = getGame();
       setGame({ ...game, power: cleanPanels(game.power) });
       SOUND.yay();
-      msg.textContent = 'All 3 panels are clean! Clean panels can add 40 Power at the next clear morning recharge.';
+      msg.textContent = `All 3 panels are clean! Sleep in the Command Center bunks. On a clear morning, the panels add up to ${POWER_CONFIG.solar.clean} Power.`;
       document.getElementById('sd-fact').hidden = false;
       back.textContent = 'Back to the base';
     } else {
