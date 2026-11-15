@@ -484,3 +484,20 @@
 
 /* ---- shared team avatar inside the greenhouse: keep it above the beds and stations ---- */
 .gm-game .gm-map .avatar{z-index:6}
+
+/* ---- no bottom bar any more: the map fills the whole area ---- */
+.gm-game .gm-map{bottom:0}
+
+/* ---- the exit is just a plain door ---- */
+.gm-game .gm-exit-door{height:6%;min-height:26px;background:#f28c3a;box-shadow:inset 0 0 0 3px #ffb067}
+.gm-game .gm-exit-door::before{content:"";position:absolute;top:22%;bottom:0;left:18%;right:18%;border:2px solid #2b2a3a;border-bottom:0;border-radius:4px 4px 0 0;background:#f4f2ee}
+.gm-game .gm-exit-door::after{content:"";position:absolute;right:26%;top:62%;width:5px;height:5px;border-radius:50%;background:#2b2a3a}
+
+/* ---- radiation warning: red glow from the edges, like the base map ---- */
+.gm-game.has-radiation::after{content:"";position:absolute;inset:0;z-index:20;pointer-events:none;
+  background:radial-gradient(ellipse at center,rgba(255,0,0,0) 40%,rgba(220,0,0,.75) 100%),rgba(255,0,0,.10);
+  animation:gm-rad-pulse .8s ease-in-out infinite alternate}
+.gm-game.has-radiation .gm-event-banner.radiation{z-index:21;box-shadow:0 0 26px rgba(255,0,0,.85)}
+@keyframes gm-rad-pulse{from{opacity:.35}to{opacity:1}}
+@media(prefers-reduced-motion:reduce){.gm-game.has-radiation::after{animation:none;opacity:.8}}
+.gm-game.has-radiation .gm-event-banner.radiation.shielded{background:#8a1f1a;color:#fff}

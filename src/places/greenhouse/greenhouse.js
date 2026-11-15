@@ -8,9 +8,41 @@ import '../../features/greenhouse/crops.css';
 import { createGreenhouseDemoController } from '../../features/greenhouse/greenhouseDemoController.js';
 import { mountGreenhousePanel } from '../../features/greenhouse/GreenhousePanel.js';
 
-const controller = createGreenhouseDemoController(); // created once, so crops/progress are kept between visits
+import { getGame, setGame } from '../../state/gameStore.js';
+
+import { spend } from '../../systems/commandCenter.js';
+
+// The radiation warning outside (solar storm, or radiation too high = the red alarm) is the same warning inside.
+const radiationWarning = () => {
+  const hud = window.RadiationShelter || window.MarsHUD;
+  return !!(hud?.isStorm?.() || window.MarsHUD?.isStorm?.() || window.MarsHUD?.status?.() === 'nogo');
+};
+
+const controller = createGreenhouseDemoController({
+  readSol: () => getGame().sol,
+  readRadiation: radiationWarning,
+  readResources() {
+    const game = getGame();
+    return { water: game.water, power: game.power.battery, food: game.food };
+  },
+  chargeSupplies({ water, power }) {
+    const game = getGame();
+    if (game.water < water) return false;
+    const result = spend(game, power, 'Greenhouse');
+    if (!result.ok) return false;
+    setGame({ ...result.game, water: game.water - water });
+    return true;
+  }
+}); // created once, so crops/progress are kept between visits
+controller.subscribe(({ resources }) => {
+  const game = getGame();
+  if (resources.food !== game.food) setGame({ ...game, food: resources.food });
+});
 let overlay = null;
 let unmount = null;
+
+// keep the greenhouse in step with the outside (a storm starting or a new sol), even while it is open
+setInterval(() => controller.refresh(), 1000);
 
 function leaveGreenhouse() {
   if (unmount) { unmount(); unmount = null; }
@@ -20,6 +52,7 @@ function leaveGreenhouse() {
 
 function openGreenhouse() {
   if (overlay) return;
+  controller.syncFood(getGame().food);
   overlay = document.createElement('div');
   overlay.id = 'gh-overlay';
   overlay.style.cssText = 'position:fixed;inset:0;z-index:1000;background:#c65a30;';
