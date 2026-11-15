@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   POWER_CONFIG, COSTS, createPowerState, spendable, shortForNight, spendPower, leverCost,
-  setSwitch, nightPower, morningCharge, cleanPanels, powerStatus, isCircuitOn,
+  setSwitch, unlockMoxie, nightPower, morningCharge, cleanPanels, powerStatus, isCircuitOn,
 } from './power.js';
 
 const fresh = (extra = {}) => ({ ...createPowerState(), ...extra });
@@ -14,10 +14,14 @@ test('spendable today = battery minus the 20 night reserve', () => {
   assert.equal(shortForNight(fresh({ battery: 15 })), 5);
 });
 
-test('first MOXIE run costs unlock + run (15), then 5 the next sol', () => {
-  const r = setSwitch(fresh({ battery: 55 }), 'moxie', true);
+test('MOXIE is locked until Life Support unlocks it (10), then each run costs 5', () => {
+  assert.equal(setSwitch(fresh({ battery: 55 }), 'moxie', true).ok, false);
+  const u = unlockMoxie(fresh({ battery: 55 }));
+  assert.equal(u.power.battery, 55 - COSTS.moxieUnlock);
+  assert.equal(u.power.moxieUnlocked, true);
+  assert.equal(unlockMoxie(u.power).ok, false);
+  const r = setSwitch(u.power, 'moxie', true);
   assert.equal(r.power.battery, 55 - COSTS.moxieUnlock - COSTS.moxie);
-  assert.equal(r.power.moxieUnlocked, true);
   const tomorrow = morningCharge(r.power).power;
   assert.equal(leverCost(tomorrow, 'moxie'), COSTS.moxie);
 });
