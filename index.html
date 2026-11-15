@@ -58,10 +58,14 @@
           <rect x="44" y="36" width="136" height="26" rx="7" fill="#2B2A3A"/><circle cx="59" cy="49" r="5" fill="#3EC6F0" stroke="#FFFFFF" stroke-width="1.5"/><text x="120" y="54" font-size="14" text-anchor="middle" fill="#FFFFFF">Greenhouse</text>
           <rect class="mm-spot" x="44" y="68" width="160" height="94" rx="14"/>
           <g id="gh-topdown">
-            <defs><pattern id="gh-dots" width="6" height="6" patternUnits="userSpaceOnUse"><rect width="6" height="6" fill="#C65A30"/><circle cx="3" cy="3" r="1" fill="#963F2B"/></pattern></defs>
-            <rect x="55" y="79" width="138" height="74" rx="7" fill="#000" opacity=".18"/>
-            <!-- the floor, laid out like the inside of the greenhouse -->
-            <rect x="52" y="76" width="138" height="74" rx="7" fill="url(#gh-dots)" stroke="#2B2A3A" stroke-width="3"/>
+            <defs><pattern id="gh-grass" width="7" height="7" patternUnits="userSpaceOnUse"><rect width="7" height="7" fill="#84B969"/><path d="M0 0H7M0 0V7" stroke="#719F5A" stroke-width=".9" opacity=".7"/></pattern></defs>
+            <!-- walls (same light frame as the Command Center), big enough to cover the dotted outline -->
+            <rect class="gh-wall" x="43" y="67" width="162" height="96" rx="15" fill="#E6E4EA" stroke="#2B2A3A" stroke-width="3"/>
+            <!-- floor + paths, laid out like the inside of the greenhouse -->
+            <g transform="translate(51 75) scale(1.0580 1.0811) translate(-52 -76)">
+            <rect x="52" y="76" width="138" height="74" rx="6" fill="url(#gh-grass)" stroke="#2B2A3A" stroke-width="2.4"/>
+            <path d="M121.0 135.6 L83.4 135.6 L83.4 91.7 M83.4 91.7 L70.8 91.7 M83.4 91.7 L159.6 91.7 M83.4 113.6 L64.5 113.6 M83.4 135.6 L72.7 135.6 M83.4 135.6 L171.2 135.6 L171.2 91.7 L159.6 91.7 M171.2 113.6 L190.0 113.6" fill="none" stroke="#C79667" stroke-width="5.6" stroke-linejoin="miter"/>
+            <path d="M121.0 135.6 L83.4 135.6 L83.4 91.7 M83.4 91.7 L70.8 91.7 M83.4 91.7 L159.6 91.7 M83.4 113.6 L64.5 113.6 M83.4 135.6 L72.7 135.6 M83.4 135.6 L171.2 135.6 L171.2 91.7 L159.6 91.7 M171.2 113.6 L190.0 113.6" fill="none" stroke="#E8B98A" stroke-width="4.2" stroke-linejoin="miter"/>
             <rect x="93.4" y="97.5" width="59.3" height="28.9" rx="2" fill="#E8B98A" stroke="#2B2A3A" stroke-width="1.6"/>
             <rect x="93.4" y="97.5" width="2.6" height="28.9" rx="1" fill="#6B9FB1"/><rect x="150.1" y="97.5" width="2.6" height="28.9" rx="1" fill="#6B9FB1"/>
             <rect x="96.8" y="99.5" width="25.2" height="11.4" rx="1.8" fill="#8B563B" stroke="#2B2A3A" stroke-width="1.3"/>
@@ -84,13 +88,10 @@
             <rect x="59.1" y="136.7" width="7.5" height="6.6" rx="1.2" fill="#76BB64" stroke="#2B2A3A" stroke-width="1"/><rect x="68.2" y="136.7" width="7.5" height="6.6" rx="1.2" fill="#3D9BC4" stroke="#2B2A3A" stroke-width="1"/><rect x="77.2" y="136.7" width="7.5" height="6.6" rx="1.2" fill="#888895" stroke="#2B2A3A" stroke-width="1"/>
             <rect x="156.9" y="132.2" width="29.0" height="14.1" rx="2.5" fill="#F2C95A" stroke="#2B2A3A" stroke-width="1.6"/>
             <rect x="159.9" y="135.2" width="23.0" height="8.1" rx="1.5" fill="#202331"/><path d="M161.9 139.3 q3 -4 5 0 t5 0 t5 0" stroke="#F28C3A" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-            <!-- glass roof -->
-            <rect x="52" y="76" width="138" height="74" rx="7" fill="#CFEAF8" fill-opacity=".14"/>
-            <path d="M86.5 76V150M121.0 76V150M155.5 76V150" stroke="#CFEAF8" stroke-width="1.4" opacity=".5"/>
-            <g fill="#2B2A3A"><rect x="49" y="73" width="7" height="7" rx="2"/><rect x="186" y="73" width="7" height="7" rx="2"/><rect x="49" y="146" width="7" height="7" rx="2"/><rect x="186" y="146" width="7" height="7" rx="2"/></g>
+            </g>
             <!-- door on the right wall (the road ends here) -->
-            <rect x="187" y="101" width="13" height="24" rx="4" fill="#F28C3A" stroke="#2B2A3A" stroke-width="3"/>
-            <rect x="191" y="108" width="5" height="10" rx="1.5" fill="#F4F2EE" stroke="#2B2A3A" stroke-width="1.2"/>
+            <rect x="198" y="101" width="13" height="24" rx="4" fill="#F28C3A" stroke="#2B2A3A" stroke-width="3"/>
+            <rect x="202" y="108" width="5" height="10" rx="1.5" fill="#F4F2EE" stroke="#2B2A3A" stroke-width="1.2"/>
           </g>
         </g>
         <!-- Science Lab: empty spot, top-right corner (the normal path ends at its bottom, the cliff route at its left side) -->

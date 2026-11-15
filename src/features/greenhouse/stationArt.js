@@ -84,7 +84,7 @@ export function soilStation({ waitProgress = 0, ready = false, running = false, 
   const arrow = '<i class="sl-arrow" aria-hidden="true"></i>';
   return `<button class="gm-station soil-station" data-action="station" data-station="soil" aria-label="Soil lab">
     ${label("🧪", "Soil lab")}
-    ${ready ? '<span class="st-ready">✔ SOIL READY · TAP TO TEST</span>' : running ? `<span class="st-timer" data-soil-badge>⏳ ${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, "0")}</span>` : ""}
+    ${ready ? '<span class="st-ready">✔ SOIL READY · TAP TO TEST</span>' : running ? `<span class="st-timer" data-soil-badge>⏳ ${remaining} min</span>` : ""}
     <span class="sl-row">${machine(hopper, "1. Scoop")}${arrow}${machine(tray, "2. Microbes")}${arrow}${machine(oven(waitProgress), "3. Wait")}${arrow}${machine(tester, "4. Test")}</span>
   </button>`;
 }
