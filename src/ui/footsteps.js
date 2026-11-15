@@ -8,6 +8,7 @@
 //   • a dry, crunchy grass step ("kshh", like crumpling dry leaves), a different variant every step
 //   • INSIDE a building: the same step, quieter and a bit shorter
 //   • about 2 steps a second: a calm walking pace
+//   • only while really walking: silent in missions (solar panels, rover repair, Shield the Shelter, ...)
 //   • The sounds are made by the browser (Web Audio), no sound files.
 //   • Press M to switch the footsteps off / on (remembered in this browser).
 //
@@ -97,9 +98,24 @@
   }
 
   // ---- who is walking? ----
+  // Footsteps only while the astronaut really WALKS: the avatar must have its walking legs on AND have
+  // moved in the last moment. So no steps while a mission is open (cleaning the solar panels, the
+  // Shield the Shelter game, ...), while repairing the rover, or when a pop-up froze the legs mid-step.
+  const MISSIONS = '#rs-shield';          // mission pop-ups that have their own walking: no footsteps there
+  const MOVED_WITHIN = 150;               // ms: "moved just now"
+  const lastPos = new WeakMap();
   const visible = el => !el.classList.contains('hidden') && el.getClientRects().length > 0;
+  function reallyWalking(el, now) {
+    if (!visible(el) || el.closest(MISSIONS)) return false;
+    const r = el.getBoundingClientRect();
+    const p = lastPos.get(el);
+    if (!p) { lastPos.set(el, { x: r.left, y: r.top, movedAt: 0 }); return false; }
+    if (Math.abs(r.left - p.x) > 0.3 || Math.abs(r.top - p.y) > 0.3) { p.x = r.left; p.y = r.top; p.movedAt = now; }
+    return now - p.movedAt < MOVED_WITHIN;
+  }
+  let frameNow = 0;
   function walkingIn(doc) {
-    return [...doc.querySelectorAll('.avatar.walking')].filter(visible);
+    return [...doc.querySelectorAll('.avatar.walking')].filter(el => reallyWalking(el, frameNow));
   }
   // returns null (nobody walks), 'outside' or 'inside'
   function whoWalks() {
@@ -122,6 +138,7 @@
   let last = performance.now(), sinceStep = STEP_EVERY;   // the first step sounds right away
   (function loop(now) {
     const dt = Math.min(0.1, (now - last) / 1000); last = now;
+    frameNow = now;
     const where = muted ? null : whoWalks();
     if (where) {
       sinceStep += dt;
