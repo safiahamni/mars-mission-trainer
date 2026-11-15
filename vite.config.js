@@ -5,7 +5,7 @@ export default defineConfig({
   base: './',
   build: {
     rolldownOptions: {
-      input: ['index.html', 'src/places/science-lab/index.html'],
+      input: ['index.html', 'src/places/science-lab/index.html', 'src/places/life-support/index.html'],
     },
   },
 });

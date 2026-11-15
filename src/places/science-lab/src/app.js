@@ -4,7 +4,10 @@ import {facts} from './scienceFacts.js';
 import {createDemoController} from './science.js';
 import {directions} from './rover.js';
 
-const controller = createDemoController(80, {testMysteryRocks: true, testCosmicClaw: true, testSnapshotSafari: true, testLostLake: true, testEarth: true});
+const sharedResources = window.parent !== window && new URLSearchParams(location.search).has('embedded')
+  ? window.parent.MarsScienceResources : undefined;
+const controller = createDemoController(80, { sharedResources });
+window.addEventListener('mars-science:refresh', () => renderBoard());
 const byId = id => document.getElementById(id);
 
 let labAudio;
@@ -245,10 +248,10 @@ function previewChapter(mission, index, availability) {
   byId('preview-brief').textContent = 'Dear Junior Astronaut, ' + message;
   byId('preview-pip').textContent = reaction;
   const preview = byId('chapter-preview');
-  byId('lake-prep').hidden = availability !== 'Prepare habitat';
-  byId('greenhouse-prep').hidden = availability !== 'Harvest food first';
-  byId('recycle-water').hidden = availability !== 'Run the Water Recycler';
-  byId('run-moxie').hidden = availability !== 'Refill Oxygen with MOXIE';
+  byId('lake-prep').hidden = embedded || availability !== 'Prepare habitat';
+  byId('greenhouse-prep').hidden = embedded || availability !== 'Harvest food first';
+  byId('recycle-water').hidden = embedded || availability !== 'Run the Water Recycler';
+  byId('run-moxie').hidden = embedded || availability !== 'Refill Oxygen with MOXIE';
   byId('preview-number').textContent = chapterIcons[index] + ' · Chapter ' + (index + 1);
   byId('preview-title').textContent = mission.title;
   const objectiveIcon = element('span', chapterIcons[index]);
@@ -262,39 +265,60 @@ function previewChapter(mission, index, availability) {
     if (index > 5 || !String(value).endsWith('+')) return [kind, name, value];
     return [kind, name, value, kind === 'water' ? controller.water : kind === 'food' ? controller.food : state[kind]];
   });
+  if (sharedResources) {
+    for (const [kind, cost] of Object.entries(mission.supplies)) {
+      if (!requirements.some(([resource]) => resource === kind)) {
+        const label = kind[0].toUpperCase() + kind.slice(1);
+        requirements.push([kind, label, cost + '+', controller.status[kind]]);
+      }
+    }
+  }
   if (index > 0 && controller.availability(missions[index - 1].id) !== 'Completed') {
     requirements.unshift(['science', 'Prerequisite', 'Finish Chapter ' + index]);
   }
   byId('chapter-requirements').replaceChildren(...requirements.map(readinessBadge));
   const reminder = byId('readiness-message');
-  reminder.hidden = index === 0 || availability === 'Completed';
+  reminder.hidden = availability === 'Completed';
   const tasks = [];
-  if (index === 1) {
-    if (!state.moxieUnlocked) tasks.push('Finish Rover Rescue to unlock MOXIE.');
-    if (state.oxygen < 60) tasks.push('Visit Life Support and refill oxygen to 60.');
-    if (state.power < mission.minimumPower) tasks.push('Recharge at Power Control until you have ' + mission.minimumPower + ' Power.');
+  const stationDirections = {
+    power: 'Visit Command Center to check Power. Clean the solar panels if charging is low.',
+    oxygen: 'Visit Life Support and run the oxygen challenge or MOXIE.',
+    water: 'Visit Life Support and repair the Water Recycler.',
+    food: 'Visit Greenhouse and harvest crops.'
+  };
+  for (const [kind, name, required, current] of requirements) {
+    if (kind === 'science') tasks.push(required + ' first.');
+    if (current < Number(String(required).replace('+', '')) && stationDirections[kind]) {
+      tasks.push(stationDirections[kind]);
+    }
   }
-  if (index === 2) {
-    if (!controller.samplingTarget) tasks.push('Finish Mystery Rocks to identify the sample.');
-    if (controller.water < 40) tasks.push('Run the Water Recycler to reach 40 Water.');
-    if (state.power < mission.minimumPower) tasks.push('Recharge to ' + mission.minimumPower + ' Power.');
-  }
-  if (index === 3) {
-    if (controller.availability('cosmic-claw') !== 'Completed') tasks.push('Finish Cosmic Claw first.');
-    if (controller.food < 50) tasks.push('Harvest greens to reach 50 Food.');
-    if (state.power < mission.minimumPower) tasks.push('Recharge to ' + mission.minimumPower + ' Power.');
-  }
+  if (index === 4) tasks.push('Check the base map radiation alert before going outside.');
   const advice = [
-    '', 'Scanner ready! Your crew has enough oxygen and power.',
+    'The rover is ready to launch.', 'Scanner ready! Your crew has enough oxygen and power.',
     'Charge the sampler and run the Water Recycler before heading out.',
     'Recharge the rover camera and harvest food in the Greenhouse.',
     'Stock the habitat and check the radiation alert before any EVA.',
     'Stock the habitat, gather your discoveries, and power the transmitter.'
   ];
   byId('readiness-copy').textContent = tasks.length ? tasks.join(' ') : advice[index];
-  byId('preview-status').textContent = availability === 'Ready'
-    ? tasks.length ? 'Test mode: You can play while these preparations are pending.' : ''
-    : availability === 'In development' ? 'Chapter preview' : availability;
+  const costs = byId('mission-costs');
+  costs.hidden = !sharedResources || availability === 'Completed';
+  costs.replaceChildren();
+  if (!costs.hidden) {
+    const powerCost = index === 0 ? roverCosts.rocky + '\u2013' + roverCosts.safe : mission.power;
+    const tiles = element('ul', '');
+    for (const [kind, cost] of Object.entries({ power: powerCost, ...mission.supplies })) {
+      const tile = element('li', '');
+      tile.dataset.resource = kind;
+      const icon = element('span', '');
+      icon.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + resourceShapes[kind] + '</svg>';
+      tile.append(icon, element('strong', '\u2212' + cost), element('small', kind));
+      tiles.append(tile);
+    }
+    costs.append(element('h4', 'Used on completion'), tiles);
+  }
+  byId('preview-status').textContent = availability === 'Ready' ? '' :
+    availability === 'In development' ? 'Chapter preview' : availability;
   preview.dataset.state = availability;
   byId('preview-play').hidden = availability !== 'Ready';
   if (index === 2 && controller.samplingTarget) {
@@ -304,6 +328,7 @@ function previewChapter(mission, index, availability) {
 }
 
 byId('preview-play').onclick = () => {
+  if (controller.availability(selectedChapter.id) !== 'Ready') return;
   byId('chapter-preview').close();
   if (selectedChapter.id === 'mystery-rocks') startScanner();
   else if (selectedChapter.id === 'cosmic-claw') startClaw();

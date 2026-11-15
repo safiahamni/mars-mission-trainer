@@ -1,19 +1,32 @@
 import {missions, roverCosts} from './missions.js';
 
-export function createDemoController(initialPower = 80, {testMysteryRocks = false, testCosmicClaw = false, testSnapshotSafari = false, testLostLake = false, testEarth = false} = {}) {
+export function createDemoController(initialPower = 80, {testMysteryRocks = false, testCosmicClaw = false, testSnapshotSafari = false, testLostLake = false, testEarth = false, sharedResources} = {}) {
   const completed = new Set();
   let power = initialPower;
   let science = 0;
   let oxygen = 50;
   let water = 30;
   let food = 40;
+  const resources = () => sharedResources?.read() ?? { power, oxygen, water, food, sol: 1, radiation: null };
+  function spendMission(mission, cost = mission.power) {
+    if (sharedResources) return sharedResources.spendMission(cost, mission.supplies);
+    if (power < cost) return false;
+    power -= cost;
+    return true;
+  }
   return {
     snapshot() {
+      const { power, oxygen } = resources();
       return {power, oxygen, science, stars: completed.size, moxieUnlocked: completed.has('rover-rescue'), lostLakeClue: completed.has('mystery-rocks')};
     },
     availability(id) {
+      const { power, oxygen, water, food } = resources();
       if (completed.has(id)) return 'Completed';
-      const minimum = missions.find(mission => mission.id === id)?.minimumPower;
+      const mission = missions.find(mission => mission.id === id);
+      const minimum = mission?.minimumPower;
+      if (sharedResources && mission && Object.entries(mission.supplies).some(
+        ([resource, cost]) => resources()[resource] < cost
+      )) return 'Top up mission supplies';
       if (id === 'mystery-rocks') {
         if (testMysteryRocks) return 'Ready';
         if (!completed.has('rover-rescue')) return 'Finish Rover Rescue first';
@@ -38,11 +51,12 @@ export function createDemoController(initialPower = 80, {testMysteryRocks = fals
         return power >= minimum && oxygen >= 65 && water >= 50 ? 'Ready' : 'Prepare habitat';
       }
       if (id === 'message-earth') {
-        if (!testEarth && !missions.slice(0, 5).every(mission => completed.has(mission.id))) return 'Finish Chapters 1?5';
+        if (!testEarth && !missions.slice(0, 5).every(mission => completed.has(mission.id))) return 'Finish Chapters 1-5';
         if (power < minimum) return 'Needs ' + minimum + ' Power';
         return testEarth || (oxygen >= 60 && food >= 40 && water >= 40) ? 'Ready' : 'Prepare base resources';
       }
       if (id !== 'rover-rescue') return 'In development';
+      if (resources().roverReady === false) return 'Repair the rover at the solar panel yard';
       return power >= minimum ? 'Ready' : 'Insufficient power';
     },
     prepareLostLake() {
@@ -55,24 +69,24 @@ export function createDemoController(initialPower = 80, {testMysteryRocks = fals
     completeLostLake({mapped, matched, rebuilt} = {}) {
       if (!mapped || matched !== 3 || !rebuilt || this.availability('lost-lake') !== 'Ready') return false;
       const mission = missions.find(mission => mission.id === 'lost-lake');
+      if (!spendMission(mission)) return false;
       completed.add(mission.id);
-      power -= mission.power;
       science += mission.points;
       return true;
     },
     completeEarth({report, repaired, received}) {
       if (!report || !repaired || !received || this.availability('message-earth') !== 'Ready') return false;
       const mission = missions[5];
+      if (!spendMission(mission)) return false;
       completed.add(mission.id);
-      power -= mission.power;
       science += mission.points;
       return true;
     },
     get samplingTarget() {
       return completed.has('mystery-rocks') ? 'rockytop' : null;
     },
-    get status() { return {...this.snapshot(), water, food, sol:1, maxSols:7, radiation:null}; },
-    get food() { return food; },
+    get status() { return {...this.snapshot(), ...resources(), maxSols:7}; },
+    get food() { return resources().food; },
     harvestFood() {
       if (!completed.has('cosmic-claw') || food >= 50) return false;
       food = 55;
@@ -82,13 +96,12 @@ export function createDemoController(initialPower = 80, {testMysteryRocks = fals
       if (this.availability('snapshot-safari') !== 'Ready'
         || !photos.has('delta') || !photos.has('layers') || !photos.has('ripples')) return false;
       const mission = missions.find(mission => mission.id === 'snapshot-safari');
-      if (power < mission.power) return false;
+      if (!spendMission(mission)) return false;
       completed.add(mission.id);
-      power -= mission.power;
       science += mission.points;
       return true;
     },
-    get water() { return water; },
+    get water() { return resources().water; },
     recycleWater() {
       if (!this.samplingTarget || water >= 40) return false;
       water = 55;
@@ -98,9 +111,8 @@ export function createDemoController(initialPower = 80, {testMysteryRocks = fals
       if (this.availability('cosmic-claw') !== 'Ready'
         || sample?.target !== (this.samplingTarget ?? (testCosmicClaw ? 'rockytop' : null)) || !sample.cored || !sample.sealed) return false;
       const mission = missions.find(mission => mission.id === 'cosmic-claw');
-      if (power < mission.power) return false;
+      if (!spendMission(mission)) return false;
       completed.add(mission.id);
-      power -= mission.power;
       science += mission.points;
       return true;
     },
@@ -113,9 +125,8 @@ export function createDemoController(initialPower = 80, {testMysteryRocks = fals
     completeMysteryRocks(identified) {
       if (this.availability('mystery-rocks') !== 'Ready' || !['layers', 'crystals', 'spots'].every(id => identified.has(id))) return false;
       const mission = missions.find(mission => mission.id === 'mystery-rocks');
-      if (power < mission.power) return false;
+      if (!spendMission(mission)) return false;
       completed.add(mission.id);
-      power -= mission.power;
       science += mission.points;
       return true;
     },
@@ -123,8 +134,8 @@ export function createDemoController(initialPower = 80, {testMysteryRocks = fals
       const cost = route?.routeName === 'rocky' ? roverCosts.rocky : roverCosts.safe;
       if (id !== 'rover-rescue' || completed.has(id) || !route?.finished || this.availability(id) !== 'Ready') return false;
       const mission = missions[0];
+      if (!spendMission(mission, cost)) return false;
       completed.add(id);
-      power -= cost;
       science += mission.points;
       return true;
     }

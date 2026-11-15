@@ -1,3 +1,6 @@
+import { getGame, setGame, onGameChange } from '../../state/gameStore.js';
+import { cleanPanels } from '../../systems/power.js';
+
 // solar-panel.js — CLEAN SOLAR DUST mission (Member 3, Radiation Shelter).
 // =====================================================================
 //  Inside the Command Center press ▼: you go out through the airlock into the solar panel yard.
@@ -324,8 +327,10 @@ const SolarMission = (function () {
     const back = document.getElementById('sd-back');
     back.hidden = false;
     if (allClean()) {
+      const game = getGame();
+      setGame({ ...game, power: cleanPanels(game.power) });
       SOUND.yay();
-      msg.textContent = 'All 3 panels are clean! Base power is back to 100%. Great job, crew!';
+      msg.textContent = 'All 3 panels are clean! Clean panels can add 40 Power at the next clear morning recharge.';
       document.getElementById('sd-fact').hidden = false;
       back.textContent = 'Back to the base';
     } else {
@@ -361,7 +366,7 @@ const SolarMission = (function () {
     for (const k in keys) keys[k] = false;
     map.pause(false);
     waitPanel = current;
-    if (allClean()) map.status('All solar panels clean, base power 100%! Walk back up to the airlock to go inside.');
+    if (allClean()) map.status('All solar panels clean. Recharge at the next clear morning. Walk back up to the airlock to go inside.');
     else {
       const left = dirt.map((_, p) => p).filter(p => !panelClean(p)).map(p => `Panel ${p + 1}`);
       map.status(`Base power ${power()}%. Still dusty: ${left.join(', ')}. Walk up to a panel to clean it.`);
@@ -418,11 +423,18 @@ const SolarMission = (function () {
   // ================= ROVER REPAIR (a random mission) =================
   // Some Sols the rover breaks down. Stand next to it: the astronaut repairs it while a loading bar fills.
   // Walk away = the repair pauses (it keeps its progress). Add ?repair to the page address to always get it.
-  const ROVER_BREAK_CHANCE = 0.5;   // chance the rover is broken on a Sol (about 1 in 2)
   const REPAIR_TIME = 5;            // seconds of repairing to fix it
   const FORCE_REPAIR = new URLSearchParams(location.search).has('repair');
   const ROVER = rectPx(SOLAR.rover);
-  let roverBroken = FORCE_REPAIR || Math.random() < ROVER_BREAK_CHANCE;
+  let roverBroken = FORCE_REPAIR;
+  const initialGame = getGame();
+  setGame({ ...initialGame, roverReady: !roverBroken, power: { ...initialGame.power, panels: 'dusty' } });
+  onGameChange(game => {
+    if (game.power.panels !== 'dusty' || !allClean()) return;
+    dirt.forEach(panel => panel.fill(1));
+    waitPanel = -1;
+    mapPanels.forEach(panel => panel.classList.remove('sd-clean'));
+  });
   let repairDone = 0;               // 0..1
   let repairing = false, lastClank = 0;
   const brokenSign = document.getElementById('sd-roverBroken');
@@ -459,6 +471,7 @@ const SolarMission = (function () {
   }
   function roverFixed() {
     roverBroken = false;
+    setGame({ ...getGame(), roverReady: true });
     setRepairing(false);
     show(repairBar, false);
     SOUND.yay();

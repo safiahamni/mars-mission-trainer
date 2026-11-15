@@ -12,7 +12,7 @@ import './life-adapted.css';
 // This version lives INSIDE the Life Support (Air) room: initWaterRecycler(room, { onClose }).
 // Everything here starts with ls- so it can't clash with the room. Its look is in life-adapted.css.
 
-export function initWaterRecycler(room, { onClose } = {}) {   // onClose: called when the pop-up closes
+export function initWaterRecycler(room, { onClose, onFull } = {}) {   // onClose: called when the pop-up closes
   if (!room) throw new Error('WaterRecycler needs the existing .room element');
   if (room.querySelector('#ls-water-station')) return window.WaterRecycler;
 
@@ -286,7 +286,7 @@ export function initWaterRecycler(room, { onClose } = {}) {   // onClose: called
     const dt = Math.min(0.05, (now - last) / 1000); last = now;
     if (!popup.hidden && fixed && !full) {
       level = Math.min(100, level + dt * 70 / FILL_TIME);
-      if (level >= 100) { full = true; yay(); confetti(); render(); $('ls-done').focus(); }
+      if (level >= 100) { full = true; onFull?.(); yay(); confetti(); render(); $('ls-done').focus(); }
       else drawTank();
     }
     requestAnimationFrame(tick);
@@ -334,6 +334,11 @@ export function initWaterRecycler(room, { onClose } = {}) {   // onClose: called
     isFixed: () => fixed,
     isClogged: () => !fixed && problem === 'filter',
     level: () => level,
+    syncLevel(value) {
+      level = value;
+      full = level >= 100;
+      render();
+    },
     open,
     close,
     isOpen: () => !popup.hidden,

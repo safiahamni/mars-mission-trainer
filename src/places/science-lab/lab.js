@@ -1,3 +1,5 @@
+import { getGame, setGame } from '../../state/gameStore.js';
+import { spend } from '../../systems/commandCenter.js';
 import labArtwork from './lab-map.png';
 
 // Older map builds do not yet include the shared mission clock.
@@ -6,6 +8,24 @@ const clockStores = import.meta.glob('../../state/gameStore.js', {
   import: 'pauseClock'
 });
 const pauseClock = clockStores['../../state/gameStore.js'];
+
+window.MarsScienceResources = {
+  read() {
+    const game = getGame();
+    return { power: game.power.battery, oxygen: game.oxygen, water: game.water,
+      food: game.food, roverReady: game.roverReady, sol: game.sol, radiation: window.MarsHUD?.getHazard() };
+  },
+  spendMission(powerCost, supplies) {
+    const game = getGame();
+    const costs = Object.entries(supplies);
+    if (costs.some(([resource, cost]) => !Number.isFinite(game[resource]) || game[resource] < cost)) return false;
+    const result = spend(game, powerCost, 'Science Lab');
+    if (!result.ok) return false;
+    const remaining = Object.fromEntries(costs.map(([resource, cost]) => [resource, game[resource] - cost]));
+    setGame({ ...result.game, ...remaining });
+    return true;
+  }
+};
 
 const map = window.MarsMap;
 const labSpot = document.querySelector('#place-lab .mm-spot');
@@ -60,6 +80,7 @@ map.on('enter', place => {
     frame.src = url.href;
   }
   frame.hidden = false;
+  frame.contentWindow?.dispatchEvent(new Event('mars-science:refresh'));
   frame.focus();
 });
 

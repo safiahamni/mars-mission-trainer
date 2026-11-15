@@ -774,3 +774,13 @@ header.mission-hud h1{align-self:start;margin:.1rem 0;font-size:1rem;white-space
 #chapter-requirements .readiness-track:after{background:#4c3b62;box-shadow:0 0 0 1px #fff}
 .journal-launcher .lab-sound{border:2px solid #2b2a3a;border-radius:.75rem;background:#fff0b5;color:#2b2a3a;box-shadow:0 4px #2b2a3a}
 .control-hint{font-size:.78rem;font-weight:600;color:#583589;line-height:1.35}
+
+#mission-costs {margin: .85rem 0 1rem;}
+#mission-costs h4 {margin: 0 0 .45rem; font-size: .95rem;}
+#mission-costs ul {display: grid; grid-template-columns: repeat(auto-fit, minmax(4.25rem, 1fr)); gap: .4rem; list-style: none; margin: 0; padding: 0;}
+#mission-costs li {display: grid; justify-items: center; gap: .1rem; padding: .4rem .2rem; border-radius: .75rem; border: 1px solid currentColor; color: #603d20; background: #fff1b7;}
+#mission-costs li[data-resource="oxygen"] {color: #245776; background: #dff4ff;}
+#mission-costs li[data-resource="water"] {color: #52407d; background: #eee3ff;}
+#mission-costs li[data-resource="food"] {color: #215e49; background: #dbf6e7;}
+#mission-costs svg {display: block; width: 1.2rem; height: 1.2rem;}
+#mission-costs small {text-transform: capitalize;}

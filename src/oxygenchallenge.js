@@ -334,9 +334,16 @@ document.head.appendChild(popupStyle)
 // PLAYER AND GAME STATE
 // =====================================================
 
+function publishLifeResource(resource, value) {
+  if (window.parent !== window) {
+    window.parent.postMessage({ type: 'mars-life:resource', resource, value }, location.origin)
+  }
+}
+
 const room = document.querySelector('.room')
 const player = createAvatar(room)
 const water = initWaterRecycler(room, {          // Add Water Recycling to this same room
+  onFull: () => publishLifeResource('water', 100),
   onClose: () => { dismissedStation = 'water'; currentNearbyStation = 'water' }   // don't reopen until you walk away
 })
 const waterStation = water.station
@@ -364,8 +371,15 @@ let challengeTimer = null
 // MOXIE state
 let moxieUnlocked = false
 let oxygenProduced = false
+const sharedLifeSupport = window.parent !== window ? window.parent.MarsLifeSupport : undefined
 let powerCells = 2
 let airLevel = 60
+window.addEventListener('message', event => {
+  if (event.source !== window.parent || event.origin !== location.origin || event.data?.type !== 'mars-life:sync') return
+  airLevel = event.data.oxygen
+  water.syncLevel(event.data.water)
+  updateAirDisplay()
+})
 let currentSol = 3
 let moxieActivatedThisSol = false
 const AIR_DEMAND_PER_SOL = 10 // Simplified gameplay value, not a NASA measurement
@@ -458,7 +472,7 @@ function showMissionPopup(station) {
   const objective = isCo2
     ? 'PHASE 1: Tap all 5 CO₂ molecules within 20 seconds, then answer the science quiz to unlock MOXIE.'
     : (moxieUnlocked
-      ? `PHASE 2: Click Activate MOXIE. It will use 1 power cell and increase Air by 20%. You have ${powerCells} power cells.`
+      ? `PHASE 2: Click Activate MOXIE. It will increase Air by up to 20%. ${sharedLifeSupport ? 'Cost: ' + sharedLifeSupport.moxieCost + ' Power.' : 'Cost: 1 power cell. You have ' + powerCells + ' cells.'}`
       : 'First complete the CO₂ challenge and science quiz. Then return here to activate MOXIE.')
 
   const buttonText = isCo2
@@ -818,7 +832,7 @@ function activateMoxie() {
     return
   }
 
-  if (powerCells <= 0) {
+  if (!sharedLifeSupport && powerCells <= 0) {
     showMessagePopup(
       'Not enough power!',
       'You need at least one power cell to activate MOXIE.'
@@ -834,11 +848,17 @@ function activateMoxie() {
     return
   }
 
-  // Consume one power cell
-  powerCells--
-
-  // Increase Air by 20%
-  airLevel = Math.min(100, airLevel + 20)
+  if (sharedLifeSupport) {
+    const oxygen = sharedLifeSupport.runMoxie()
+    if (oxygen === null) {
+      showMessagePopup('Not enough power!', 'Check the battery in Command Center before running MOXIE.')
+      return
+    }
+    airLevel = oxygen
+  } else {
+    powerCells--
+    airLevel = Math.min(100, airLevel + 20)
+  }
   moxieActivatedThisSol = true
 
   // Update Air bar and percentage
@@ -868,7 +888,7 @@ function activateMoxie() {
   // Show success popup
   showMessagePopup(
     'Oxygen produced!',
-    `Great job! MOXIE used one power cell. Your Air level is now ${airLevel}%.`
+    `Great job! MOXIE used ${sharedLifeSupport ? sharedLifeSupport.moxieCost + ' Power' : 'one power cell'}. Your Air level is now ${airLevel}%.`
   )
 }
 
@@ -887,6 +907,7 @@ function endCurrentSol() {
 
   const airBeforeUsage = airLevel
   airLevel = Math.max(0, airLevel - AIR_DEMAND_PER_SOL)
+  publishLifeResource('oxygen', airLevel)
   const airUsed = airBeforeUsage - airLevel
   const completedSol = currentSol
 
