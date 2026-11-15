@@ -34,9 +34,13 @@ const controller = createGreenhouseDemoController({
     return true;
   }
 }); // created once, so crops/progress are kept between visits
-controller.subscribe(({ resources }) => {
+controller.subscribe(({ resources, soilPerchlorate, advancedCropHarvested }) => {
   const game = getGame();
-  if (resources.food !== game.food) setGame({ ...game, food: resources.food });
+  const bedsUnlocked = Boolean(game.greenhouseProgress?.bedsUnlocked || soilPerchlorate < 30);
+  if (resources.food !== game.food || bedsUnlocked !== Boolean(game.greenhouseProgress?.bedsUnlocked)
+    || advancedCropHarvested !== Boolean(game.greenhouseProgress?.advancedCropHarvested)) {
+    setGame({ ...game, food: resources.food, greenhouseProgress: { bedsUnlocked, advancedCropHarvested } });
+  }
 });
 let overlay = null;
 let unmount = null;

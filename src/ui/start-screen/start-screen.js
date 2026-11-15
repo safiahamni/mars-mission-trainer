@@ -1,5 +1,5 @@
 // =========================================================
-//  MARTIANOUTS START SCREEN
+//  MARTIANAUTS START SCREEN
 //  Shows a full-screen menu (PLAY) before the game, then the spaceship landing,
 //  then a short tour of the base (Welcome card + a spotlight on each place).
 //  The game waits (MarsMap.pause) until the player presses PLAY.
@@ -35,16 +35,20 @@
   <circle class="st-light" cx="-24" cy="-58" r="6" fill="${TRIM}" stroke="${INK}" stroke-width="3"/>`;
   }
 
-  // the little helmet that replaces the first "O" of the title
+  // the little astronaut head that is the second "A" of the title (MARTIAN-A-UTS):
+  // a round helmet inside a big orange A (the helmet is the A's crossbar, with a light at the tip)
+  const A_POLE = 'M6 58 L30 -18 L54 58';
   const HELMET = `<svg class="st-helmet" viewBox="0 0 60 62" aria-hidden="true">
+    <path d="${A_POLE}" fill="none" stroke="${INK}" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="${A_POLE}" fill="none" stroke="#FF8A3D" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
     <circle cx="30" cy="31" r="27" fill="#fff" stroke="${INK}" stroke-width="5"/>
     <rect x="11" y="17" width="38" height="28" rx="14" fill="${VISOR}" stroke="${INK}" stroke-width="4"/>
     <circle cx="24" cy="30" r="2.6" fill="${INK}"/><circle cx="36" cy="30" r="2.6" fill="${INK}"/>
     <path d="M25 36 Q30 40 35 36" stroke="${INK}" stroke-width="2.6" fill="none" stroke-linecap="round"/>
     <ellipse cx="18" cy="22" rx="4" ry="2.4" fill="#fff" opacity=".8"/>
-    <circle cx="30" cy="4.5" r="4" fill="${TRIM}" stroke="${INK}" stroke-width="2.5"/></svg>`;
+    <circle class="st-light" cx="30" cy="-24" r="5.5" fill="${TRIM}" stroke="${INK}" stroke-width="2.5"/></svg>`;
 
-  const title = [...'MARTIANOUTS'].map((ch, i) =>
+  const title = [...'MARTIANAUTS'].map((ch, i) =>
     `<span style="animation-delay:${(i * 0.12).toFixed(2)}s">${i === 7 ? HELMET : ch}</span>`).join('');
 
   // stars (fixed pattern so it looks the same every time)
@@ -79,7 +83,7 @@
   </svg>
 
   <div class="st-front">
-    <div class="st-title" role="heading" aria-level="1" aria-label="Martianouts">${title}</div>
+    <div class="st-title" role="heading" aria-level="1" aria-label="Martianauts">${title}</div>
     <div class="st-tag">ONE ASTRONAUT · ONE MARS BASE · SURVIVE</div>
     <div class="st-menu">
       <button type="button" class="st-btn st-play" id="st-play">PLAY</button>
@@ -184,8 +188,6 @@
       placed = true;
       if (map.isInside && map.isInside() === 'shelter' && map.leave) map.leave('up');
     };
-    const hoverY = Math.max(90, ty - 190);
-    const W = window.innerWidth;
 
     const box = document.createElement('div');
     box.className = 'st-intro';
@@ -197,6 +199,11 @@
       <div class="st-ship">${SHIP}</div>
       <div class="st-skip">click or press Enter to skip</div>`;
     document.body.appendChild(box);
+    const bounds = box.getBoundingClientRect();
+    const W = box.clientWidth;
+    tx = (tx - bounds.left) * W / bounds.width;
+    ty = (ty - bounds.top) * box.clientHeight / bounds.height;
+    const hoverY = Math.max(90, ty - 190);
     const q = c => box.querySelector(c);
     const at = (x, y) => `translate(${x}px, ${y}px)`;
     const anims = [];
@@ -349,7 +356,7 @@
     let step = -1;           // -1 = the welcome card
 
     function placeCard(r, side) {
-      const W = window.innerWidth, H = window.innerHeight, cw = card.offsetWidth, ch = card.offsetHeight, gap = 26;
+      const W = wrap.clientWidth, H = wrap.clientHeight, cw = card.offsetWidth, ch = card.offsetHeight, gap = 26;
       const fits = { right: r.x + r.w + gap + cw < W - 12, left: r.x - gap - cw > 12, top: r.y - gap - ch > 12, bottom: r.y + r.h + gap + ch < H - 12 };
       const order = [side, 'right', 'left', 'top', 'bottom'];
       const sd = order.find(o => fits[o]) || side;
@@ -379,7 +386,16 @@
       q('.tt-place .tt-fact').innerHTML = pl.fact;
       wrap.querySelectorAll('.tt-dots i').forEach((d, i) => d.classList.toggle('on', i === step));
       q('.tt-place .tt-next').textContent = step === N - 1 ? 'Let’s go! 🚀' : 'Next →';
-      const r = placeRect(pl) || { x: window.innerWidth / 2 - 60, y: window.innerHeight / 2 - 60, w: 120, h: 120 };
+      const bounds = wrap.getBoundingClientRect();
+      const sx = wrap.clientWidth / bounds.width;
+      const sy = wrap.clientHeight / bounds.height;
+      const target = placeRect(pl);
+      const r = target ? {
+        x: (target.x - bounds.left) * sx,
+        y: (target.y - bounds.top) * sy,
+        w: target.w * sx,
+        h: target.h * sy
+      } : { x: wrap.clientWidth / 2 - 60, y: wrap.clientHeight / 2 - 60, w: 120, h: 120 };
       hole.hidden = false;
       Object.assign(hole.style, { left: r.x + 'px', top: r.y + 'px', width: r.w + 'px', height: r.h + 'px' });
       card.classList.remove('tt-pop'); void card.offsetWidth; card.classList.add('tt-pop');
