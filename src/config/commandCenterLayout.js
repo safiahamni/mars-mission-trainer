@@ -32,7 +32,6 @@ export const EXIT_DOOR_Y = 852;
 // spots the player can walk up to (x, y = the place on the path in front of it)
 export const ROOM_SPOTS = {
   switchboard: { x: 492, y: 290, range: 45 },
-  missionControl: { x: 286, y: 600, range: 45 },
   battery: { x: 150, y: 484, range: 45 },
   bunks: { x: 895, y: 484, range: 45 },
   wardrobe: { x: 440, y: 362, range: 24 },

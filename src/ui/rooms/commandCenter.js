@@ -1,8 +1,7 @@
 // COMMAND CENTER ROOM (Member 1)
 // Follows the "Command Center · room interior" design + the team's Power Budget:
 //   top HUD: battery cells with the night line, power to spend, water tank
-//   1 Switchboard (levers with prices), 2 Mission control (today's checklist),
-//   3 Battery bank, W Wardrobe (crew shirt / spacesuit), ! Storm shelter core (bunks to sleep).
+//   1 Switchboard (levers with prices), 2 Battery bank, W Wardrobe (crew shirt / spacesuit), ! Radiation shelter (bunks to sleep).
 // Radiation (hazard meter, solar storm, Shield the Shelter) is Member 3's, on the base map:
 //   src/places/radiation-shelter/  (window.RadiationShelter)
 // The player walks on the tan paths with WASD or the arrow keys.
@@ -16,11 +15,12 @@ import { icon } from '../icons.js';
 import { createAvatar } from '../avatar.js';
 import { dressAvatar } from '../outfit.js';
 import {
-  SWITCHES, POWER_CONFIG, COSTS, spendable, shortForNight, leverCost, powerStatus,
+  SWITCHES, POWER_CONFIG, COSTS, spendable, shortForNight, powerStatus,
 } from '../../systems/power.js';
 import {
-  CC_CONFIG, WATER_CONFIG, SHIRT_COLORS, todaysMissions, pullLever,
+  CC_CONFIG, WATER_CONFIG, SHIRT_COLORS,
   enterShelter, leaveShelter, sleep, isDay, spentToday, setOutfit, setShirt,
+  chapterCheck, endDayEarly,
 } from '../../systems/commandCenter.js';
 import { runEndSol } from '../../systems/endSol.js';
 import { makeWalker, isNear } from '../../systems/roomWalk.js';
@@ -52,7 +52,7 @@ function fmtSec(s) {
 // small switchboard prop on the wall: 5 lamps + 5 mini levers (Switchboard Kit)
 function propSvg(switches) {
   const cols = SWITCHES.map((sw, i) => {
-    const x = 34 + i * 23;
+    const x = 80 - ((SWITCHES.length - 1) * 23) / 2 + i * 23;   // levers centred on the box
     const on = switches[sw.id];
     return `<circle cx="${x}" cy="44" r="6" fill="${on ? '#4cd07d' : '#1e2129'}" stroke="${on ? '#2b2a3a' : '#6b7080'}" stroke-width="2"/>
       ${on
@@ -151,8 +151,8 @@ export function renderCommandCenter(room, { onExit } = {}) {
       <div class="cc-line-night"></div>
       <div class="cc-hazard"></div>
     </div>
-    <div class="cc-tag" style="left:93px;top:423px"><b>3</b> Battery bank <small data-b="pct"></small></div>
-    <div class="cc-tip" data-b="battery-tip"></div>
+    <div class="cc-tag" style="left:93px;top:423px"><b>2</b> Battery bank <small data-b="pct"></small></div>
+    <div class="cc-tip cc-tip-battery" data-b="battery-tip"></div>
 
     <!-- W wardrobe -->
     <button class="cc-wardrobe" data-b="wardrobe" aria-label="Wardrobe">${WARDROBE_SVG}</button>
@@ -161,9 +161,10 @@ export function renderCommandCenter(room, { onExit } = {}) {
     <!-- 1 switchboard on the wall -->
     <div class="cc-mount"></div>
     <button class="cc-prop" data-b="prop" aria-label="Switchboard"></button>
-    <div class="cc-tag" style="left:563px;top:217px"><b>1</b> Switchboard · on the wall</div>
+    <div class="cc-tip cc-tip-switch"><strong>Switchboard</strong><br>Shows which of the base's machines are on. A lock means MOXIE still needs to be unlocked in Life Support.</div>
+    <div class="cc-tag" style="left:420px;top:240px"><b>1</b> Switchboard</div>
 
-    <!-- ! storm shelter core -->
+    <!-- ! radiation shelter -->
     <div class="cc-shelter" data-b="shelter">
       <i class="t" style="left:17px;top:15px;width:65px"></i><i class="t" style="left:95px;top:15px;width:65px"></i>
       <i class="t" style="left:173px;top:15px;width:65px"></i><i class="t" style="left:251px;top:15px;width:84px"></i>
@@ -178,11 +179,12 @@ export function renderCommandCenter(room, { onExit } = {}) {
       <span class="cc-lamp"></span>
     </div>
     <div class="cc-door"></div>
-    <div class="cc-tag" style="left:758px;top:232px"><b class="red">!</b> Storm shelter core</div>
+    <div class="cc-tag" style="left:758px;top:232px"><b class="red">!</b> Radiation shelter</div>
+    <div class="cc-tip cc-tip-shelter"><strong>Radiation shelter</strong><br>A safe room with thick walls and water tanks that block space radiation. The crew sleeps here.</div>
 
-    <!-- 2 mission control -->
-    <div class="cc-tag" style="left:104px;top:573px"><b>2</b> Mission control</div>
-    <button class="cc-screens" data-b="screens" aria-label="Mission control">
+    <!-- mission control: just part of the room now (no pop-up, no checklist) -->
+    <div class="cc-tag" style="left:104px;top:573px">Mission control</div>
+    <div class="cc-screens" data-b="screens" aria-hidden="true">
       <span class="cc-screen" style="left:0;top:9px;width:96px;height:72px">${EARTH_SVG}</span>
       <span class="cc-screen" style="left:110px;top:0;width:101px;height:82px">
         <svg viewBox="0 0 80 40" width="72" height="36" aria-hidden="true"><path d="M2 22 H22 L30 6 L40 34 L48 18 H78" stroke="#5fd38a" stroke-width="4" fill="none" stroke-linejoin="round" stroke-linecap="round"/></svg>
@@ -190,7 +192,7 @@ export function renderCommandCenter(room, { onExit } = {}) {
       <span class="cc-screen" data-b="alert-screen" style="left:225px;top:9px;width:96px;height:72px">
         <svg viewBox="0 0 60 40" width="56" height="36" aria-hidden="true"><path d="M8 10 H52 M14 20 H46 M8 30 H52" stroke="#f0a04b" stroke-width="4" stroke-linecap="round"/></svg>
       </span>
-    </button>
+    </div>
     <svg class="cc-console" viewBox="0 0 336 110" width="336" height="110" aria-hidden="true">
       <path d="M4 10 Q168 -6 332 10 L312 70 Q168 58 24 70 Z" fill="#e8e8ee" stroke="#2b2a3a" stroke-width="4"/>
       <circle cx="84" cy="32" r="7" fill="#e0605a" stroke="#2b2a3a" stroke-width="2.5"/>
@@ -200,7 +202,7 @@ export function renderCommandCenter(room, { onExit } = {}) {
       <rect x="137" y="70" width="62" height="35" rx="12" fill="#5b8de8" stroke="#2b2a3a" stroke-width="4"/>
     </svg>
 
-    <div class="cc-fact">Water blocks space radiation, so the base stores its water in tanks around the shelter.</div>
+    <div class="cc-tip cc-tip-mission"><strong>Mission control</strong><br>Screens that talk to Earth. A message takes 4 to 24 minutes to travel between Earth and Mars!</div>
     <div class="cc-exit-door" data-b="exit-door" aria-hidden="true"></div>
 
     <div class="cc-player" data-b="player"></div>
@@ -208,14 +210,11 @@ export function renderCommandCenter(room, { onExit } = {}) {
     <!-- right: tasks in this room -->
     <aside class="cc-side">
       <h2>Tasks in this room</h2>
-      <div class="cc-task"><b>1</b><div><h4>Switchboard</h4><p>Run the systems you need. Each one shows its power price.</p></div></div>
-      <div class="cc-task"><b>2</b><div><h4>Mission control</h4><p>Get today's missions from Earth.</p></div></div>
-      <div class="cc-task"><b>3</b><div><h4>Battery bank</h4><p>Keep ${POWER_CONFIG.nightReserve} power for the night. The sun adds more every morning.</p></div></div>
-      <div class="cc-task"><b class="purple">W</b><div><h4 class="purple">Wardrobe</h4><p>Put on the spacesuit before you go outside for an EVA.</p></div></div>
-      <div class="cc-task"><b class="red">!</b><div><h4 class="red">Storm shelter core</h4><p>Water tanks around the core block radiation. In a solar storm, shield it with water tanks.</p></div></div>
-      <div class="cc-task"><b class="teal">Z</b><div><h4 class="teal">Sleep</h4><p>Use the bunks in the core to end the sol and get your stars.</p></div></div>
-      <hr>
-      <div class="cc-legend"><span></span> Walkable path (one avatar)</div>
+      <div class="cc-task"><b>1</b><div><h4>Switchboard</h4><p>Shows which machines are on. MOXIE and the water recycler are run in Life Support.</p></div></div>
+      <div class="cc-task"><b>2</b><div><h4>Battery bank</h4><p>Your power. Keep <strong>${POWER_CONFIG.nightReserve}</strong> for the night, or the crew gets cold.</p></div></div>
+      <div class="cc-task"><b class="purple">W</b><div><h4 class="purple">Wardrobe</h4><p>Put on the spacesuit before going outside.</p></div></div>
+      <div class="cc-task"><b class="teal">Z</b><div><h4 class="teal">Bunks</h4><p>After today's chapter, sleep here to start the next sol. ${icon('star', 16)} for a warm night.</p></div></div>
+      <div class="cc-goal">${icon('star', 24)}<div><small>TODAY'S GOAL</small><strong data-b="goal"></strong></div></div>
     </aside>
 
     <div class="cc-msg" data-b="msg" aria-live="polite"></div>
@@ -229,23 +228,11 @@ export function renderCommandCenter(room, { onExit } = {}) {
         </div>
         <div class="cc-levers">
           ${SWITCHES.map((sw) => `
-            <button class="cc-col" data-switch="${sw.id}" role="switch" aria-label="${sw.name}">
+            <div class="cc-col" data-switch="${sw.id}" role="img">
               <span class="cc-lamp-big"></span>${LEVER_SVG}<span class="cc-plate">${sw.plate}</span>
-              <span class="cc-price" data-price="${sw.id}"></span>
-            </button>`).join('')}
+              ${sw.id === 'moxie' ? `<span class="cc-lock" data-b="moxie-lock">${icon('lock', 34)}</span>` : ''}
+            </div>`).join('')}
         </div>
-        <p class="cc-pop-foot">A system's price is paid once per sol when you switch it on. Every morning they switch off so you can plan again.</p>
-      </div>
-    </div>
-
-    <!-- pop-up: mission control checklist -->
-    <div class="cc-pop cc-pop-mission" data-pop="mission" role="dialog" aria-label="Mission control" hidden>
-      <div class="cc-pop-in">
-        <div class="cc-pop-head">
-          <h3>${icon('radio', 24)} Mission control</h3>
-          <button class="cc-x" data-close="mission" aria-label="Close">${icon('close', 22)}</button>
-        </div>
-        <div data-b="mission-body"></div>
       </div>
     </div>
 
@@ -338,6 +325,24 @@ export function renderCommandCenter(room, { onExit } = {}) {
     $('wlbl').className = `cc-wlbl ${g.water < WATER_CONFIG.target ? 'low' : ''}`;
   }
 
+  // the morning pop-up's one line: what to do today
+  // the "Today's goal" box in the side panel
+  function goalText(g) {
+    if (!isDay(g)) return 'Night: sleep in the bunks';
+    if (g.done.chapter) return 'Done! Go sleep in the bunks';
+    const ch = chapterCheck(g);
+    if (ch.reason === 'dust-storm') return 'Dust storm! No chapter. Rest when ready';
+    if (ch.reason === 'all-done') return 'All chapters done. Rest when ready';
+    return `Chapter ${ch.chapter.n} in the Science Lab`;
+  }
+
+  function todayText(g) {
+    const ch = chapterCheck(g);
+    if (ch.reason === 'dust-storm') return 'dust storm! No chapter. Look after the base and rest.';
+    if (ch.reason === 'all-done') return 'all chapters done. Enjoy Mars!';
+    return `Chapter ${ch.chapter.n}, ${ch.chapter.name}, in the Science Lab`;
+  }
+
   // ---- draw everything ----
   let dressed = '';
   function update() {
@@ -345,9 +350,14 @@ export function renderCommandCenter(room, { onExit } = {}) {
     const p = g.power;
     const day = isDay(g);
     renderHud();
+    $('goal').textContent = goalText(g);
 
     // top status
-    const time = day ? `${icon('sun', 18)} Day · sunset in ${fmtSec(CC_CONFIG.dayLength - g.clock)}` : `${icon('moon', 18)} Night`;
+    const ch = chapterCheck(g);
+    const today = ch.reason === 'dust-storm' ? 'dust storm, rest day'
+      : ch.reason === 'all-done' ? 'all chapters done'
+      : g.done.chapter ? 'chapter done' : `Chapter ${ch.chapter.n}: ${ch.chapter.name}`;
+    const time = day ? `${icon('sun', 18)} Day · ${today}` : `${icon('moon', 18)} Night`;
     $('status').innerHTML = `Sol ${g.sol} of ${CC_CONFIG.maxSols} · ${time} · ${icon('star', 18)} ${g.stars}`;
     stage.classList.toggle('night', !day);
 
@@ -357,48 +367,32 @@ export function renderCommandCenter(room, { onExit } = {}) {
       c.className = powerStatus(p);
     });
     $('pct').textContent = `· ${p.battery}`;
-    $('battery-tip').innerHTML = `<strong>Battery ${p.battery}/100</strong><br>${spendable(p)} to spend today. ${POWER_CONFIG.nightReserve} is kept for heaters and life support at night.<br><span class="dim">Panels: ${p.panels}. The sun adds +${POWER_CONFIG.solar[p.panels]} every morning.</span>`;
+    $('battery-tip').innerHTML = `<strong>Battery bank</strong><br>Stores the power from the solar panels.<br><strong>Battery ${p.battery}/100</strong><br>${spendable(p)} to spend today. ${POWER_CONFIG.nightReserve} is kept for heaters and life support at night.<br><span class="dim">Panels: ${p.panels}. The sun adds +${POWER_CONFIG.solar[p.panels]} every morning.</span>`;
 
     // switchboard
     $('prop').innerHTML = propSvg(p.switches);
-    room.querySelectorAll('[data-switch]').forEach((t) => t.setAttribute('aria-checked', String(!!p.switches[t.dataset.switch])));
-    SWITCHES.forEach((sw) => {
-      const el = room.querySelector(`[data-price="${sw.id}"]`);
-      const cost = leverCost(p, sw.id);
-      let text = `${icon('zap', 14)} ${cost}`;
-      let cls = 'cc-price';
-      if (sw.locked) { text = 'Night reserve'; cls += ' muted'; }
-      else if (p.ranToday[sw.id]) { text = `${icon('check', 14)} Ran today`; cls += ' done'; }
-      else if (cost === 0) { text = 'Free'; cls += ' muted'; }
-      else if (cost > p.battery) { text = `Need ${cost - p.battery} more`; cls += ' need'; }
-      else if (sw.unlockCost && !p.moxieUnlocked) text = `${icon('zap', 14)} ${cost} (unlock)`;
-      el.className = cls;
-      el.innerHTML = text;
+    // the switchboard only SHOWS what is running (Life Support runs MOXIE and the recycler)
+    room.querySelectorAll('[data-switch]').forEach((t) => {
+      const id = t.dataset.switch;
+      t.setAttribute('aria-checked', String(!!p.switches[id]));
+      const locked = id === 'moxie' && !p.moxieUnlocked;
+      t.classList.toggle('locked', locked);
+      t.setAttribute('aria-label', `${SWITCHES.find((s) => s.id === id).name}: ${locked ? 'locked' : p.switches[id] ? 'on' : 'off'}`);
     });
 
     // shelter
     $('shelter').classList.toggle('occupied', g.inShelter);
 
-    // mission control
-    const sunset = !day
-      ? (p.battery >= POWER_CONFIG.nightReserve
-        ? `<p class="cc-mc-good">${icon('check', 18)} You spent ${spentToday(g)} of ${Math.max(0, g.startBattery - POWER_CONFIG.nightReserve)}. Great planning!</p>`
-        : `<p class="cc-mc-bad">${icon('alert', 18)} Below the night line by ${shortForNight(p)}. The crew will be cold tonight.</p>`)
-      : '';
-    const dusty = p.panels === 'dusty' ? `<p class="cc-mc-warn">${icon('sun', 18)} The solar panels are dusty: only +${POWER_CONFIG.solar.dusty} each morning. Clean them on an EVA.</p>` : '';
-    $('mission-body').innerHTML = `
-      <p class="cc-mc-status">Sol ${g.sol} of ${CC_CONFIG.maxSols} · ${time}</p>
-      ${sunset}${dusty}
-      <h4>Today's missions</h4>
-      <ul class="cc-checklist">
-        ${todaysMissions(g).map((m) => `<li class="${m.done ? 'done' : ''}">${icon(m.done ? 'check' : 'circle', 22)} ${m.text}</li>`).join('')}
-      </ul>
-      <p class="cc-mc-fact">${icon('satellite', 18)} Messages from Earth take 4 to 24 minutes to reach Mars, so the crew must plan on their own.</p>`;
-
     // bunks
     $('bunks-body').innerHTML = day
-      ? `<p>Sleep after sunset to end the sol.</p><p class="cc-dim">Sunset in ${fmtSec(CC_CONFIG.dayLength - g.clock)}.</p>
-         <button class="cc-btn" disabled>${icon('moon', 20)} Sleep · end sol ${g.sol}</button>`
+      ? (ch.ok || g.inChapter
+        ? `<p>The sun sets when you finish today's chapter in the Science Lab. Then come back here to sleep.</p>
+           <button class="cc-btn" disabled>${icon('moon', 20)} Sleep · end sol ${g.sol}</button>`
+        : `<p>${ch.reason === 'dust-storm' ? 'A dust storm is blocking the sky, so there is no chapter today.'
+            : ch.reason === 'all-done' ? 'All the chapters are done.'
+            : `Not enough to start Chapter ${ch.chapter.n} (need ${ch.missing.join(', ')}). Rest today and the sun will recharge the battery.`}</p>
+           <p class="cc-dim">Finish your chores first, then end the day.</p>
+           <button class="cc-btn" data-act="rest">${icon('moon', 20)} Rest · end the day early</button>`)
       : `<p>Tonight the heaters and life support use ${POWER_CONFIG.nightReserve} power${p.battery < POWER_CONFIG.nightReserve ? `, but you only have ${p.battery}. The crew will be cold` : ''}.</p>
          <button class="cc-btn" data-act="sleep">${icon('moon', 20)} Sleep · end sol ${g.sol}</button>`;
 
@@ -424,7 +418,7 @@ export function renderCommandCenter(room, { onExit } = {}) {
 
   // ---- pop-ups: open when you walk up to (or hover / tap) the thing ----
   const pops = {};
-  ['switchboard', 'mission', 'wardrobe', 'bunks'].forEach((name) => {
+  ['switchboard', 'wardrobe', 'bunks'].forEach((name) => {
     pops[name] = { el: room.querySelector(`[data-pop="${name}"]`), open: false, dismissed: false, near: false };
   });
   function openPop(name) {
@@ -452,31 +446,8 @@ export function renderCommandCenter(room, { onExit } = {}) {
     }
     p.near = near;
   }
-  $('prop').addEventListener('mouseenter', () => openPop('switchboard'));
-  $('screens').addEventListener('mouseenter', () => openPop('mission'));
   $('wardrobe').addEventListener('mouseenter', () => openPop('wardrobe'));
 
-  // ---- price preview on the HUD while pointing at something that costs power ----
-  function previewFor(el) {
-    const g = getGame();
-    if (el.dataset.switch) {
-      const id = el.dataset.switch;
-      const sw = SWITCHES.find((s) => s.id === id);
-      if (g.power.switches[id] || sw.locked) return null;
-      const cost = leverCost(g.power, id);
-      const water = id === 'recycler' && !g.power.ranToday.recycler ? WATER_CONFIG.recycler : 0;
-      return cost || water ? { cost, label: sw.name, water } : null;
-    }
-    return null;
-  }
-  room.addEventListener('mouseover', (e) => {
-    const el = e.target.closest('[data-switch]');
-    const next = el ? previewFor(el) : null;
-    if (JSON.stringify(next) !== JSON.stringify(preview)) {
-      preview = next;
-      renderHud();
-    }
-  });
 
   // ---- sleeping and the end-of-sol summary ----
   function doSleep() {
@@ -495,14 +466,18 @@ export function renderCommandCenter(room, { onExit } = {}) {
     $('summary').innerHTML = `
       <div class="cc-summary-in">
         <h2>${g.over ? 'Mission complete!' : `Sol ${rep.sol} complete`}</h2>
-        <p class="cc-stars">${icon('star', 34)} ${rep.earned} of ${rep.total} missions done</p>
+        <p class="cc-stars">${icon('star', 34)} ${rep.earned} of ${rep.total} stars</p>
+        ${rep.stars.map((s) => `<p>${icon(s.earned ? 'check' : 'circle', 18)} ${s.text}</p>`).join('')}
         <p>${icon('moon', 18)} Night: heaters and life support used ${POWER_CONFIG.nightReserve}. Battery ${rep.bedtime} → ${rep.afterNight}.</p>
         ${rep.cold ? '<p class="bad">The battery was below the night line, so the crew got cold.</p>' : ''}
         ${g.over ? '' : `<p>${icon('sun', 18)} Morning: the solar field added +${rep.gained}${rep.dustStorm ? ' (a dust storm is blocking the sun!)' : ''}. Battery ${rep.morning}.</p>`}
         <p>${icon('droplet', 18)} The crew drank water: ${rep.waterFrom} → ${rep.waterTo}.</p>
+        <p>${icon('wind', 18)} The crew breathed oxygen: ${rep.oxygenFrom} → ${rep.oxygenTo}.</p>
+        <p>${icon('carrot', 18)} The crew ate food: ${rep.foodFrom} → ${rep.foodTo}.${rep.hungry ? ' The food store is empty! Harvest the greenhouse.' : ''}</p>
         ${hazard === null ? '' : `<p>${icon('radiation', 18)} Radiation today: ${hazard} / 100. The meter resets for the new sol.</p>`}
         ${others.map((t) => `<p>${t}</p>`).join('')}
         ${g.over ? `<p><strong>Your crew earned ${g.stars} stars in ${CC_CONFIG.maxSols} sols.</strong></p>` : ''}
+        ${g.over ? '' : `<p class="cc-today">${icon('flask', 18)} <strong>Today: ${todayText(g)}</strong></p>`}
         <button class="cc-btn" data-act="wake">${g.over ? 'Play again' : `${icon('sun', 20)} Wake up · Sol ${g.sol}`}</button>
       </div>`;
     $('summary').hidden = false;
@@ -512,14 +487,6 @@ export function renderCommandCenter(room, { onExit } = {}) {
 
   // ---- clicks ----
   room.addEventListener('click', (e) => {
-    const sw = e.target.closest('[data-switch]');
-    if (sw) {
-      const g = getGame();
-      const r = pullLever(g, sw.dataset.switch, !g.power.switches[sw.dataset.switch]);
-      if (r.ok) setGame(r.game);
-      preview = null;
-      return say(r.message);
-    }
     const outfit = e.target.closest('[data-outfit]');
     if (outfit) {
       setGame(setOutfit(getGame(), outfit.dataset.outfit));
@@ -533,11 +500,16 @@ export function renderCommandCenter(room, { onExit } = {}) {
     const x = e.target.closest('[data-close]');
     if (x) return closePop(x.dataset.close, true);
     if (e.target.closest('[data-b="prop"]')) return openPop('switchboard');
-    if (e.target.closest('[data-b="screens"]')) return openPop('mission');
     if (e.target.closest('[data-b="wardrobe"]')) return openPop('wardrobe');
 
     const a = e.target.closest('[data-act]')?.dataset.act;
     if (a === 'sleep') return doSleep();
+    if (a === 'rest') {
+      const r = endDayEarly(getGame());
+      if (!r.ok) return say(r.message);
+      setGame(r.game, r.events);   // sunset: the night line message shows, then the bunks unlock
+      return;
+    }
     if (a === 'wake') {
       $('summary').hidden = true;
       if (getGame().over) location.reload();
@@ -566,12 +538,11 @@ export function renderCommandCenter(room, { onExit } = {}) {
     const inside = pos.x >= SHELTER_DOOR_X;
     if (inside && !g.inShelter) {
       setGame(enterShelter(g));
-      say('You are inside the storm shelter core. The bunks are here.');
+      say('You are inside the radiation shelter. The bunks are here.');
     }
     if (!inside && g.inShelter) setGame(leaveShelter(g).game);
 
     nearPop('switchboard', isNear(pos, ROOM_SPOTS.switchboard));
-    nearPop('mission', isNear(pos, ROOM_SPOTS.missionControl));
     nearPop('wardrobe', isNear(pos, ROOM_SPOTS.wardrobe));
     nearPop('bunks', isNear(pos, ROOM_SPOTS.bunks));
     stage.classList.toggle('near-battery', isNear(pos, ROOM_SPOTS.battery));

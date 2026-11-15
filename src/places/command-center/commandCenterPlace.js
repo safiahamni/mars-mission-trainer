@@ -11,7 +11,7 @@ import { renderCommandCenter } from '../../ui/rooms/commandCenter.js';
 import { icon } from '../../ui/icons.js';
 import { dressAvatar } from '../../ui/outfit.js';
 import { getGame, onGameChange } from '../../state/gameStore.js';
-import { CC_CONFIG, isDay } from '../../systems/commandCenter.js';
+import { CC_CONFIG, isDay, todaysChapter } from '../../systems/commandCenter.js';
 import { POWER_CONFIG, spendable } from '../../systems/power.js';
 
 const map = window.MarsMap;
@@ -56,7 +56,10 @@ function update() {
   }
   const p = g.power;
   const low = p.battery < POWER_CONFIG.nightReserve;
-  const time = isDay(g) ? `${icon('sun', 16)} Day · sunset in ${Math.max(0, Math.ceil(CC_CONFIG.dayLength - g.clock))}s` : `${icon('moon', 16)} Night: sleep in the Command Center`;
+  const ch = todaysChapter(g);
+  const time = !isDay(g) ? `${icon('moon', 16)} Night: sleep in the Command Center`
+    : g.done.chapter || !ch ? `${icon('sun', 16)} Day · no chapter today`
+    : `${icon('sun', 16)} Day · Chapter ${ch.n} in the Science Lab`;
   bar.innerHTML = `
     <div class="cc-mapbar-row"><strong>Sol ${g.sol} of ${CC_CONFIG.maxSols}</strong><span>${icon('star', 16)} ${g.stars}</span></div>
     <div class="cc-mapbar-row">${time}</div>
@@ -74,5 +77,6 @@ onGameChange((g, events) => {
 });
 
 // The crew starts inside the Command Center, so the game opens in the room
+// (unless the start screen is showing: then the spaceship drops the crew on the road outside instead)
 update();
-if (map.isInside() === 'shelter') openRoom();
+if (map.isInside() === 'shelter' && !window.MartianoutsStart?.isOpen()) openRoom();

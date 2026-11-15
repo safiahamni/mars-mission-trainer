@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   POWER_CONFIG, COSTS, createPowerState, spendable, shortForNight, spendPower, leverCost,
-  setSwitch, nightPower, morningCharge, cleanPanels, powerStatus, isCircuitOn,
+  setSwitch, unlockMoxie, nightPower, morningCharge, cleanPanels, powerStatus, isCircuitOn,
 } from './power.js';
 
 const fresh = (extra = {}) => ({ ...createPowerState(), ...extra });
@@ -14,10 +14,14 @@ test('spendable today = battery minus the 20 night reserve', () => {
   assert.equal(shortForNight(fresh({ battery: 15 })), 5);
 });
 
-test('first MOXIE run costs unlock + run (15), then 5 the next sol', () => {
-  const r = setSwitch(fresh({ battery: 55 }), 'moxie', true);
+test('MOXIE is locked until Life Support unlocks it (10), then each run costs 5', () => {
+  assert.equal(setSwitch(fresh({ battery: 55 }), 'moxie', true).ok, false);
+  const u = unlockMoxie(fresh({ battery: 55 }));
+  assert.equal(u.power.battery, 55 - COSTS.moxieUnlock);
+  assert.equal(u.power.moxieUnlocked, true);
+  assert.equal(unlockMoxie(u.power).ok, false);
+  const r = setSwitch(u.power, 'moxie', true);
   assert.equal(r.power.battery, 55 - COSTS.moxieUnlock - COSTS.moxie);
-  assert.equal(r.power.moxieUnlocked, true);
   const tomorrow = morningCharge(r.power).power;
   assert.equal(leverCost(tomorrow, 'moxie'), COSTS.moxie);
 });
@@ -48,20 +52,20 @@ test('night uses the reserve; below it the crew gets cold', () => {
   assert.equal(cold.power.battery, 0);
 });
 
-test('morning charge: +40 clean, +20 dusty, +5 in a dust storm, never above 100', () => {
-  assert.equal(morningCharge(fresh({ battery: 30 })).power.battery, 70);
+test('morning charge: +55 clean, +20 dusty, +5 in a dust storm, never above 100', () => {
+  assert.equal(morningCharge(fresh({ battery: 30 })).power.battery, 85);
   assert.equal(morningCharge(fresh({ battery: 30, panels: 'dusty' })).power.battery, 50);
   const storm = morningCharge(fresh({ battery: 30 }), { dustStorm: true });
   assert.equal(storm.power.battery, 35);
   assert.equal(storm.power.panels, 'dusty');
   assert.equal(morningCharge(fresh({ battery: 90 })).power.battery, POWER_CONFIG.max);
-  assert.equal(morningCharge(cleanPanels(fresh({ battery: 0, panels: 'dusty' }))).gained, 40);
+  assert.equal(morningCharge(cleanPanels(fresh({ battery: 0, panels: 'dusty' }))).gained, POWER_CONFIG.solar.clean);
 });
 
 test('morning switches per-sol systems off so the crew plans again', () => {
-  let p = setSwitch(fresh(), 'greenhouse', true).power;
+  let p = setSwitch(fresh(), 'recycler', true).power;
   p = morningCharge(p).power;
-  assert.equal(p.switches.greenhouse, false);
+  assert.equal(p.switches.recycler, false);
   assert.equal(p.switches.lab, true);
 });
 

@@ -246,8 +246,8 @@
 .cc-tip .dim {
   color: #a9aebd;
 }
-.cc-bank:hover ~ .cc-tip,
-.cc-stage.near-battery .cc-tip {
+.cc-bank:hover ~ .cc-tip-battery,
+.cc-stage.near-battery .cc-tip-battery {
   opacity: 1;
 }
 
@@ -279,7 +279,7 @@
   outline: 5px solid rgba(255, 224, 120, 0.9);
 }
 
-/* ---------- ! storm shelter core ---------- */
+/* ---------- ! radiation shelter ---------- */
 .cc-shelter {
   left: 678px;
   top: 275px;
@@ -398,10 +398,6 @@
   border: 3px solid var(--ink);
   border-radius: 8px;
   box-sizing: border-box;
-}
-.cc-screens:hover .cc-screen,
-.cc-pop-mission:not([hidden]) ~ .cc-screens .cc-screen {
-  outline: 4px solid rgba(255, 224, 120, 0.9);
 }
 .cc-screen.flash {
   animation: cc-flash 0.8s steps(2) infinite;
@@ -616,7 +612,7 @@
 .cc-pop-switch {
   left: 575px;
   top: 128px;
-  width: 740px;
+  width: 604px;   /* fits the 4 levers (122px each + 14px gaps) with no empty space */
 }
 .cc-pop-switch::before {
   top: 40px;
@@ -1175,4 +1171,74 @@
 }
 .cc-shelter {
   cursor: pointer;
+}
+/* today's goal, at the bottom of the side panel */
+.cc-goal {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 16px;
+  padding: 12px 14px;
+  background: #fff3c4;
+  color: #2b2a3a;
+  border: 3px solid #2b2a3a;
+  border-radius: 14px;
+}
+.cc-goal .icon {
+  color: #ba7517;
+  flex-shrink: 0;
+}
+.cc-goal small {
+  display: block;
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  color: #854f0b;
+}
+.cc-goal strong {
+  display: block;
+  font-size: 18px;
+}
+.cc-task p .icon {
+  vertical-align: -3px;
+}
+
+/* short descriptions when you point at the switchboard, mission control or the shelter
+   (the battery bank's tip is .cc-tip above) */
+.cc-tip-switch { left: 565px; top: 140px; }
+.cc-tip-mission { left: 140px; top: 500px; width: 290px; }
+.cc-tip-shelter { left: 700px; top: 664px; width: 300px; }
+.cc-prop:hover ~ .cc-tip-switch,
+.cc-screens:hover ~ .cc-tip-mission,
+.cc-shelter:hover ~ .cc-tip-shelter {
+  opacity: 1;
+}
+
+/* switchboard pop-up: levers only show what is on. MOXIE shows a lock until Life Support unlocks it */
+.cc-col { position: relative; cursor: default; }
+.cc-col:hover { background: #3a3f50; }
+.cc-col.locked .cc-lamp-big,
+.cc-col.locked > svg {
+  opacity: 0.35;              /* the lamp and lever fade out */
+}
+.cc-lock {
+  position: absolute;
+  top: 78px;                  /* over the middle of the lever */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 60px;
+  display: none;
+  place-items: center;
+  background: #2b2a3a;
+  border: 4px solid #ffd23f;
+  border-radius: 50%;
+  color: #ffd23f;
+}
+.cc-col.locked .cc-lock { display: grid; }
+
+/* the same yellow outline as the wardrobe when you point at the battery bank, mission control or the shelter */
+.cc-bank:hover,
+.cc-screens:hover .cc-screen,
+.cc-shelter:hover {
+  outline: 5px solid rgba(255, 224, 120, 0.9);
 }

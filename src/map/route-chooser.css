@@ -54,3 +54,17 @@
   font-family: 'Nunito', sans-serif; font-size: 15px; font-weight: 900;
 }
 .rc-banner[hidden] { display: none; }
+
+/* quick choice when leaving the Science Lab: just Left (cliff) or Right (normal), no explaining */
+.rc-chooser.rc-quick .rc-card { width: 470px; }
+.rc-chooser.rc-quick .rc-sub,
+.rc-chooser.rc-quick .rc-route-row,
+.rc-chooser.rc-quick .rc-route-note,
+.rc-chooser.rc-quick .rc-info-btn,
+.rc-chooser.rc-quick .rc-info,
+.rc-chooser.rc-quick .rc-walk-self { display: none; }
+.rc-chooser.rc-quick .rc-route-cliff { order: -1; }
+.rc-chooser.rc-quick .rc-route { align-items: center; padding: 16px 14px 12px; gap: 6px; }
+.rc-chooser.rc-quick .rc-route-icon svg { width: 54px; height: 54px; }
+.rc-chooser.rc-quick .rc-route-name { font-size: 22px; }
+.rc-chooser.rc-quick .rc-route-key { font-size: 15px; color: #2B2A3A; background: #FFFFFF; border: 2px solid #2B2A3A; border-radius: 999px; padding: 2px 12px; }
