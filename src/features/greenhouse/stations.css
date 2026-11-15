@@ -525,7 +525,13 @@
 .gm-game .gm-map{position:relative;inset:auto;bottom:auto;width:min(100%,calc((100vh - 112px) * 1.5));aspect-ratio:1.5;border:4px solid #2b2a3a;border-radius:40px;background:#e8e8ee;box-shadow:0 6px 0 rgba(0,0,0,.2)}
 .gm-game .gm-wall{display:none}
 .gm-game .gm-floor-grid{inset:16px;border-radius:22px}
-.gm-game .gm-exit-door{bottom:-4px}
+/* the door is on the RIGHT wall (the player comes in from the right side of the base) */
+.gm-game .gm-exit-door{top:50.8%;right:-4px;bottom:auto;left:auto;width:28px;height:70px;min-height:0;transform:translateY(-50%);border-radius:8px 0 0 8px;border:3px solid #2b2a3a;border-right:0;background:#f28c3a;box-shadow:inset 0 0 0 3px #ffb067}
+.gm-game .gm-exit-door::before{top:14%;bottom:14%;left:18%;right:0;border:2px solid #2b2a3a;border-right:0;border-radius:4px 0 0 4px;background:#f4f2ee}
+.gm-game .gm-exit-door::after{right:auto;left:34%;top:46%;width:5px;height:5px}
+/* soil lab locked: padlock badge like the MOXIE in the Life Support room */
+.gm-game .soil-station.is-locked{filter:saturate(.55) brightness(.95)}
+.gm-game .soil-station .st-lock{position:absolute;z-index:6;right:-30px;bottom:-6px;display:grid;place-items:center;width:40px;height:40px;border:3px solid #2b2a3a;border-radius:50%;background:#ffc93c;color:#2b2a3a;font-size:20px;box-shadow:0 3px 0 rgba(0,0,0,.25)}
 
 /* right sidebar */
 .gm-game .gm-tasks{width:auto;max-height:100%;overflow-y:auto;overflow-x:hidden;height:auto;align-self:start;padding:22px 22px 24px;border:0;border-radius:22px;background:#262a35;box-shadow:0 6px 0 rgba(0,0,0,.2)}

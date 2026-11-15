@@ -422,7 +422,7 @@ export function mountGreenhousePanel(root, controller, { onExit, dressAvatar } =
         <div class="gm-floor-grid"></div><div class="gm-wall wall-n"></div><div class="gm-wall wall-s"></div><div class="gm-wall wall-w"></div><div class="gm-wall wall-e"></div><svg class="gm-path-layer" aria-hidden="true"></svg>
         <div class="gm-bed-grid"><div class="gm-bedrow">${bed(plots[0],"Leafy greens","greens")}${bed(plots[1],"Leafy greens","greens")}</div><div class="gm-bedrow">${bed(plots[2],"Soil bed","potato")}${bed(plots[3],"Soil bed","millet")}</div></div>
         ${climateStation({temperature:s.climate.temperature,light:s.climate.light,band:BANDS[activeCrop()],needsTuning:!tempOkay})}
-        ${soilStation({waitProgress:soilFill,ready:soilStep===3,running:!!soilWaitTimer,remaining:soilRemaining})}
+        ${soilStation({locked:!s.soilLabUnlocked,waitProgress:soilFill,ready:soilStep===3,running:!!soilWaitTimer,remaining:soilRemaining})}
         ${shieldStation({urgent:radiation})}
         ${compostStation()}
         ${wiringStation({outage})}
@@ -636,7 +636,7 @@ export function mountGreenhousePanel(root, controller, { onExit, dressAvatar } =
   function onDragOver(event){if(event.target.closest("[data-drop], [data-shield-target]")){event.preventDefault();if(event.dataTransfer)event.dataTransfer.dropEffect="move";}}
   function onDrop(event){const target=event.target.closest("[data-shield-target]");if(target){event.preventDefault();const payload=event.dataTransfer?.getData("text/plain")||"";const id=target.dataset.shieldTarget;if(payload===`shield:${id}`){const rect=target.getBoundingClientRect();panels[id].placed=true;panels[id].position=clamp((event.clientX-rect.left)/rect.width*100,5,95);note="Shield moved. Check the marker and adjust its distance if needed.";render();}else if(payload.startsWith("shield:")){note="That shield belongs to a different bed. Match each shield to its marked bed.";render();}return;}const bin=event.target.closest("[data-drop]");if(!bin)return;event.preventDefault();bin.click();}
   let exitArmed=false;
-  function nearExit(){return Math.hypot(player.x-PATH.width*.5,player.y-PATH.height*.98)<50;}
+  function nearExit(){return Math.hypot(player.x-PATH.width*.985,player.y-PATH.height*.508)<50;}
   function movePlayerFrame(time){
     if(modal||movementKeys.size===0){movementFrame=0;previousFrameTime=0;avatar?.setWalking(false);return;}
     const elapsed=previousFrameTime?Math.min((time-previousFrameTime)/1000,.05):0;previousFrameTime=time;
@@ -649,7 +649,7 @@ export function mountGreenhousePanel(root, controller, { onExit, dressAvatar } =
     const unitsX=mapEl&&mapEl.clientWidth?PATH.width/mapEl.clientWidth:1,unitsY=mapEl&&mapEl.clientHeight?PATH.height/mapEl.clientHeight:1;
     let dx=(Number(right)-Number(left))*pxStep*unitsX;let dy=(Number(down)-Number(up))*pxStep*unitsY;
     if(dx&&dy){dx*=Math.SQRT1_2;dy*=Math.SQRT1_2;}
-    if(onExit&&down&&!up&&nearExit()){movementKeys.clear();movementFrame=0;previousFrameTime=0;avatar?.setWalking(false);onExit();return;}
+    if(onExit&&right&&!left&&nearExit()){movementKeys.clear();movementFrame=0;previousFrameTime=0;avatar?.setWalking(false);onExit();return;}
     if(dx||dy){const previous=player;player=moveOnPath({...player},dx,dy);avatar?.faceToward(dx,dy);const scene=root.querySelector(".gm-map");avatar?.moveTo(player.x/PATH.width*scene.clientWidth,player.y/PATH.height*scene.clientHeight);avatar?.setWalking(Math.abs(player.x-previous.x)+Math.abs(player.y-previous.y)>.1);}
     movementFrame=requestAnimationFrame(movePlayerFrame);
   }
