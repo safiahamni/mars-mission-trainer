@@ -291,7 +291,7 @@ function previewChapter(mission, index, availability) {
   for (const [kind, name, required, current] of requirements) {
     if (kind === 'science') tasks.push(required + ' first.');
     if (current < Number(String(required).replace('+', '')) && stationDirections[kind]) {
-      tasks.push(stationDirections[kind]);
+      tasks.push(name + ' needs ' + (Number.parseInt(required, 10) - current) + ' more. ' + stationDirections[kind]);
     }
   }
   if (index === 4) tasks.push('Check the base map radiation alert before going outside.');
@@ -416,7 +416,7 @@ function renderBoard() {
   const hazard = element('div', '');
   hazard.dataset.resource = 'radiation';
   const hazardLabel = element('span', 'Radiation');
-  const hazardValue = element('strong', typeof status.radiation === 'number' ? status.radiation : '\u2014');
+  const hazardValue = element('strong', typeof status.radiation === 'number' ? Math.round(status.radiation) : '\u2014');
   hazardValue.title = typeof status.radiation === 'number' ? 'Radiation level' : 'Radiation data unavailable';
   hazard.append(hazardLabel, hazardValue);
   bar.append(hazard);

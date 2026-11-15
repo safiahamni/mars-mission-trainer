@@ -20,7 +20,7 @@ import {
 import {
   CC_CONFIG, WATER_CONFIG, SHIRT_COLORS,
   enterShelter, leaveShelter, sleep, isDay, spentToday, setOutfit, setShirt,
-  chapterCheck, endDayEarly,
+  chapterCheck, sleepRequirement, cropPrepTask,
 } from '../../systems/commandCenter.js';
 import { runEndSol } from '../../systems/endSol.js';
 import { makeWalker, isNear } from '../../systems/roomWalk.js';
@@ -230,7 +230,7 @@ export function renderCommandCenter(room, { onExit } = {}) {
       <div class="cc-task"><b>1</b><div><h4>Switchboard</h4><p>Shows which machines are on. MOXIE and the water recycler are run in Life Support.</p></div></div>
       <div class="cc-task"><b>2</b><div><h4>Battery bank</h4><p>Your power. Keep <strong>${POWER_CONFIG.nightReserve}</strong> for the night, or the crew gets cold.</p></div></div>
       <div class="cc-task"><b class="purple">W</b><div><h4 class="purple">Wardrobe</h4><p>Put on the spacesuit before going outside.</p></div></div>
-      <div class="cc-task"><b class="teal">Z</b><div><h4 class="teal">Bunks</h4><p>After today's chapter, sleep here to start the next sol. ${icon('star', 16)} for a warm night.</p></div></div>
+      <div class="cc-task"><b class="teal">Z</b><div><h4 class="teal">Bunks</h4><p>Finish today?s tasks, then sleep here to start the next Sol.</p></div></div>
       <div class="cc-goal">${icon('star', 24)}<div><small>TODAY'S GOAL</small><strong data-b="goal"></strong></div></div>
     </aside>
 
@@ -403,17 +403,20 @@ export function renderCommandCenter(room, { onExit } = {}) {
     $('shelter').classList.toggle('occupied', g.inShelter);
 
     // bunks
-    $('bunks-body').innerHTML = day
-      ? (ch.ok || g.inChapter
-        ? `<p>The sun sets when you finish today's chapter in the Science Lab. Then come back here to sleep.</p>
-           <button class="cc-btn" disabled>${icon('moon', 20)} Sleep · end sol ${g.sol}</button>`
-        : `<p>${ch.reason === 'dust-storm' ? 'A dust storm is blocking the sky, so there is no chapter today.'
-            : ch.reason === 'all-done' ? 'All the chapters are done.'
-            : `Not enough to start Chapter ${ch.chapter.n} (need ${ch.missing.join(', ')}). Rest today and the sun will recharge the battery.`}</p>
-           <p class="cc-dim">Finish your chores first, then end the day.</p>
-           <button class="cc-btn" data-act="rest">${icon('moon', 20)} Rest · end the day early</button>`)
-      : `<p>Tonight the heaters and life support use ${POWER_CONFIG.nightReserve} power${p.battery < POWER_CONFIG.nightReserve ? `, but you only have ${p.battery}. The crew will be cold` : ''}.</p>
-         <button class="cc-btn" data-act="sleep">${icon('moon', 20)} Sleep · end sol ${g.sol}</button>`;
+    const evaUnsafe = window.MarsHUD?.status() === 'nogo';
+    const pendingSleepTask = sleepRequirement(g, { evaUnsafe });
+    $('bunks-body').innerHTML = g.over
+      ? '<p>Mission complete! Earth received your report.</p>'
+      : day
+        ? `<p>Complete today&#8217;s Science Lab chapter before sleeping.</p>
+           <h4>Sol ${g.sol} objectives</h4>
+           <ul><li>${ch.chapter?.name ?? 'Science Lab chapter'}</li>
+           ${ch.missing.map(task => `<li>${task}</li>`).join('')}
+           ${cropPrepTask(g) ? `<li>${cropPrepTask(g)}</li>` : ''}
+           <li>${p.panels === 'clean' ? 'Solar panels cleaned' : evaUnsafe ? 'Solar cleaning deferred for unsafe EVA' : 'Clean all three solar panels'}</li></ul>
+           ${p.battery < 55 ? '<button class="cc-btn" data-act="backup-power">Use backup battery</button>' : ''}`
+        : `<p>${pendingSleepTask || 'Sleep to recharge the battery and grow your crops.'}</p>
+           <button class="cc-btn" data-act="sleep" ${pendingSleepTask ? 'disabled' : ''}>${icon('moon', 20)} Sleep to start Sol ${g.sol + 1}</button>`;
 
     // wardrobe + player outfit
     room.querySelectorAll('[data-outfit]').forEach((b) => b.classList.toggle('picked', b.dataset.outfit === g.outfit));
@@ -469,12 +472,12 @@ export function renderCommandCenter(room, { onExit } = {}) {
 
   // ---- sleeping and the end-of-sol summary ----
   function doSleep() {
-    const r = sleep(getGame());
+    const r = sleep(getGame(), { evaUnsafe: window.MarsHUD?.status() === 'nogo' });
     if (!r.ok) return say(r.message);
     // Member 3's hazard meter: the side-panel HUD (MarsHUD) and, when it's switched on, the shelter game
     const rad = window.RadiationShelter || window.MarsHUD;
     const hazard = rad ? Math.floor(rad.getHazard()) : null;
-    window.MarsHUD?.newSol();                          // a new sol: hazard meter and storm reset
+    window.MarsHUD?.newSol(r.game.sol);                          // a new sol: hazard meter and storm reset
     window.RadiationShelter?.newSol();
     const others = runEndSol({ sol: r.report.sol });   // other stations' end-of-sol steps
     setGame(r.game);
@@ -483,9 +486,11 @@ export function renderCommandCenter(room, { onExit } = {}) {
     const rep = r.report;
     $('summary').innerHTML = `
       <div class="cc-summary-in">
+        <div class="cc-sunrise" aria-hidden="true">${icon('sun', 42)}</div>
+        <p class="cc-new-sol">Good morning! Sol ${g.sol} of ${CC_CONFIG.maxSols}</p>
         <h2>${g.over ? 'Mission complete!' : `Sol ${rep.sol} complete`}</h2>
-        <p class="cc-stars">${icon('star', 34)} ${rep.earned} of ${rep.total} stars</p>
-        ${rep.stars.map((s) => `<p>${icon(s.earned ? 'check' : 'circle', 18)} ${s.text}</p>`).join('')}
+        <p class="cc-stars">${icon('star', 34)} +1 Science Star &middot; ${g.stars} / ${CC_CONFIG.maxSols} total</p>
+
         <p>${icon('moon', 18)} Night: heaters and life support used ${POWER_CONFIG.nightReserve}. Battery ${rep.bedtime} → ${rep.afterNight}.</p>
         ${rep.cold ? '<p class="bad">The battery was below the night line, so the crew got cold.</p>' : ''}
         ${g.over ? '' : `<p>${icon('sun', 18)} Morning: the solar field added +${rep.gained}${rep.dustStorm ? ' (a dust storm is blocking the sun!)' : ''}. Battery ${rep.morning}.</p>`}
@@ -521,10 +526,11 @@ export function renderCommandCenter(room, { onExit } = {}) {
 
     const a = e.target.closest('[data-act]')?.dataset.act;
     if (a === 'sleep') return doSleep();
-    if (a === 'rest') {
-      const r = endDayEarly(getGame());
-      if (!r.ok) return say(r.message);
-      setGame(r.game, r.events);   // sunset: the night line message shows, then the bunks unlock
+    if (a === 'backup-power') {
+      const game = getGame();
+      if (!game.over && game.phase === 'day' && game.power.battery < 55) {
+        setGame({ ...game, power: { ...game.power, battery: 65 } });
+      }
       return;
     }
     if (a === 'wake') {
