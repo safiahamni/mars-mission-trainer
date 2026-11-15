@@ -211,10 +211,18 @@ export function createGreenhouseDemoController({ readResources, chargeSupplies, 
     if (action.type === "harvest") {
       const result = harvestCrop(state.greenhouse, action.plotId);
       if (!result.ok) return result;
-      if (state.resources.food + result.foodReward > 100) return fail("Food storage is full.", "food-full");
-      state = { ...state, resources: { ...state.resources, food: state.resources.food + result.foodReward }, greenhouse: result.nextState };
+      const cropId = state.greenhouse.plots[action.plotId].cropId;
+      const storedFood = Math.min(result.foodReward, Math.max(0, 100 - state.resources.food));
+      state = {
+        ...state,
+        resources: { ...state.resources, food: state.resources.food + storedFood },
+        advancedCropHarvested: state.advancedCropHarvested || cropId === "potato" || cropId === "millet",
+        greenhouse: result.nextState,
+      };
       notify();
-      return result;
+      const message = storedFood === result.foodReward ? result.message
+        : `${result.message} ${storedFood} Food stored. The pantry is full.`;
+      return { ...result, foodReward: storedFood, message };
     }
     return fail("That greenhouse action is not available.");
   }
