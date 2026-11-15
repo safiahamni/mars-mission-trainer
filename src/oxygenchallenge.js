@@ -322,11 +322,15 @@ let powerCells = 2
 let airLevel = 60
 window.addEventListener('message', event => {
   if (event.source !== window.parent || event.origin !== location.origin || event.data?.type !== 'mars-life:sync') return
+  currentSol = event.data.sol
+  scienceStars = event.data.scienceStars
+  moxieActivatedThisSol = event.data.moxieRan
   airLevel = event.data.oxygen
   water.syncLevel(event.data.water)
   updateAirDisplay()
 })
 let currentSol = 3
+let scienceStars = 0
 let moxieActivatedThisSol = false
 const AIR_DEMAND_PER_SOL = 10 // Simplified gameplay value, not a NASA measurement
 
@@ -390,6 +394,10 @@ const MOXIE_ICON = (locked) => `<span class="pop-moxie${locked ? ' locked' : ''}
 const CO2_ICON = '<span class="pop-co2"><i></i><i></i><i></i></span>'
 
 function showMissionPopup(station) {
+  if (sharedLifeSupport && scienceStars < 1) {
+    showMessagePopup('MOXIE needs one Science Star', 'Finish Rover Rescue in the Science Lab to unlock the oxygen challenge.')
+    return
+  }
   closeMissionPopup()
 
   const popup = document.createElement('div')

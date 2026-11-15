@@ -8,7 +8,7 @@ import {
 } from './commandCenter.js';
 import { COSTS, POWER_CONFIG } from './power.js';
 
-const night = (g) => endDayEarly(g).game;
+const night = (g) => ({ ...g, phase: 'night', done: { chapter: true }, greenhouseProgress: { ...g.greenhouseProgress, greensPlantedSol: g.sol } });
 const playChapter = (g) => finishChapter(startChapter(g).game);
 
 test('running MOXIE and the recycler costs power; the recycler adds water', () => {
@@ -31,8 +31,8 @@ test('finishing the chapter = sunset with 20+ power = safe night', () => {
 });
 
 test('sunset below the night line = warning', () => {
-  const g = { ...createGame(), power: { ...createGame().power, battery: 10 } };
-  const r = endDayEarly(g);
+  const g = { ...createGame(), power: { ...createGame().power, battery: 15 } };
+  const r = playChapter(g);
   assert.ok(r.events.includes('sunset-low'));
 });
 
@@ -42,18 +42,19 @@ test('you can only sleep at night, inside the shelter', () => {
   assert.equal(sleep(enterShelter(night(createGame()))).ok, true);
 });
 
-test('sleeping: night uses 20, crew drinks water, +40 in the morning, next sol', () => {
+test('sleeping uses the night reserve, recharges and resets panels for the next Sol', () => {
   const g = enterShelter(night(createGame()));
   const r = sleep(g);
   assert.equal(r.report.afterNight, g.power.battery - POWER_CONFIG.nightReserve);
   assert.equal(r.game.power.battery, Math.min(100, r.report.afterNight + POWER_CONFIG.solar.clean));
   assert.equal(r.game.water, g.water - WATER_CONFIG.crewPerNight);
   assert.equal(r.game.sol, 2);
-  assert.equal(r.game.stars, r.report.earned);
+  assert.equal(r.game.power.panels, 'dusty');
+  assert.equal(r.game.stars, g.stars);
 });
 
 test('a dust storm sol gives only +5 in the morning', () => {
-  const g = enterShelter(night({ ...createGame(), sol: CC_CONFIG.dustStorms[0] - 1 }));
+  const g = enterShelter(night({ ...createGame(), sol: CC_CONFIG.dustStorms[0] - 1, food: 50 }));
   const r = sleep(g);
   assert.equal(r.report.gained, POWER_CONFIG.solar.storm);
   assert.equal(r.game.power.panels, 'dusty');
@@ -66,9 +67,20 @@ test('sleeping below the night line = a cold night', () => {
   assert.equal(r.game.coldNights, 1);
 });
 
-test('the mission ends after the last sol', () => {
-  const g = enterShelter(night({ ...createGame(), sol: CC_CONFIG.maxSols }));
-  assert.equal(sleep(g).game.over, true);
+test('the final chapter ends the mission on Sol 6', () => {
+  const g = { ...createGame(), sol: CC_CONFIG.maxSols, chapter: 6, food: 60,
+    greenhouseProgress: { advancedCropHarvested: true } };
+  const result = playChapter(g);
+  assert.equal(result.ok, true);
+  assert.equal(result.game.over, true);
+  assert.equal(result.game.sol, 6);
+});
+
+test('sleep needs clean panels unless EVA is unsafe', () => {
+  const g = enterShelter(night(createGame()));
+  const dusty = { ...g, power: { ...g.power, panels: 'dusty' } };
+  assert.equal(sleep(dusty).ok, false);
+  assert.equal(sleep(dusty, { evaUnsafe: true }).ok, true);
 });
 
 test('wardrobe: change outfit and shirt colour', () => {
@@ -77,19 +89,20 @@ test('wardrobe: change outfit and shirt colour', () => {
   assert.equal(setShirt(createGame(), 'gold').shirt, 'blue');
 });
 
-test('stars: up to 2 per sol (chapter + warm night)', () => {
+test('stars: one per chapter, awarded before sleep', () => {
   const played = playChapter(createGame()).game;
-  assert.deepEqual(solStars(played).map((x) => x.earned), [true, true]);
+  assert.deepEqual(solStars(played).map((x) => x.earned), [true]);
   const cold = { ...createGame(), power: { ...createGame().power, battery: 10 } };
-  assert.deepEqual(solStars(cold).map((x) => x.earned), [false, false]);
-  const r = sleep(enterShelter(played));
-  assert.equal(r.report.earned, 2);
-  assert.equal(r.game.stars, 2);
+  assert.deepEqual(solStars(cold).map((x) => x.earned), [false]);
+  const r = sleep(enterShelter({ ...played, greenhouseProgress: { greensPlantedSol: 1 } }));
+  assert.equal(r.report.earned, 1);
+  assert.equal(played.stars, 1);
+  assert.equal(r.game.stars, 1);
 });
 
-test('stars: the dust storm sol gives the chapter star for getting through it', () => {
+test('stars: the storm does not award a chapter star', () => {
   const g = { ...createGame(), sol: CC_CONFIG.dustStorms[0] };
-  assert.equal(solStars(g)[0].earned, true);
+  assert.equal(solStars(g)[0].earned, false);
 });
 
 test('you can always walk out of the shelter core', () => {
@@ -112,19 +125,19 @@ test('chapter: finishing uses its power, oxygen, water and food, then the sun se
   assert.equal(f.game.done.chapter, true);
 });
 
-test('chapter: not enough power = cannot start, the crew can rest instead', () => {
+test('chapter: low power cannot skip today?s chapter', () => {
   const g = { ...createGame(), power: { ...createGame().power, battery: 10 } };
   const c = chapterCheck(g);
   assert.equal(c.ok, false);
   assert.deepEqual(c.missing, ['power 15']);
   assert.equal(startChapter(g).ok, false);
   const r = endDayEarly(g);
-  assert.equal(r.game.phase, 'night');
-  assert.equal(r.game.chapter, 1);   // the same chapter waits for tomorrow
+  assert.equal(r.ok, false);
+  assert.equal(r.game, g);
 });
 
-test('chapter: none on a dust storm sol, and only one per day', () => {
-  assert.equal(todaysChapter({ ...createGame(), sol: CC_CONFIG.dustStorms[0] }), null);
+test('chapter: available on a dust storm Sol, and only one per day', () => {
+  assert.equal(todaysChapter({ ...createGame(), sol: CC_CONFIG.dustStorms[0] }).id, CHAPTERS[0].id);
   const done = playChapter(createGame()).game;
   assert.equal(startChapter(done).ok, false);
 });

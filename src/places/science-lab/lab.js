@@ -1,5 +1,5 @@
 import { getGame, setGame } from '../../state/gameStore.js';
-import { spend } from '../../systems/commandCenter.js';
+import { CC_CONFIG, startChapter, finishChapter } from '../../systems/commandCenter.js';
 import labArtwork from './lab-map.png';
 
 // Older map builds do not yet include the shared mission clock.
@@ -13,17 +13,15 @@ window.MarsScienceResources = {
   read() {
     const game = getGame();
     return { power: game.power.battery, oxygen: game.oxygen, water: game.water,
-      food: game.food, greenhouseProgress: game.greenhouseProgress, roverReady: game.roverReady, sol: game.sol, radiation: window.MarsHUD?.getHazard() };
+      food: game.food, greenhouseProgress: game.greenhouseProgress, roverReady: game.roverReady, sol: game.sol, maxSols: CC_CONFIG.maxSols, phase: game.phase, chapter: game.chapter, radiation: window.MarsHUD?.getHazard() };
   },
-  spendMission(powerCost, supplies) {
+  spendMission(id, powerCost, supplies) {
     const game = getGame();
-    const costs = Object.entries(supplies);
-    if (costs.some(([resource, cost]) => !Number.isFinite(game[resource]) || game[resource] < cost)) return false;
-    const result = spend(game, powerCost, 'Science Lab');
-    if (!result.ok) return false;
-    const remaining = Object.fromEntries(costs.map(([resource, cost]) => [resource, game[resource] - cost]));
-    setGame({ ...result.game, ...remaining });
-    return true;
+    const start = startChapter(game);
+    if (!start.ok || start.chapter.id !== id) return false;
+    const result = finishChapter(start.game, { ...supplies, power: powerCost });
+    if (result.ok) setGame(result.game, result.events);
+    return result.ok;
   }
 };
 

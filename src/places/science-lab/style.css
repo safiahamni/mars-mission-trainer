@@ -101,7 +101,7 @@ dialog#discovery{margin:auto;background:#fff4e6;color:#2b2a3a;border:3px solid #
 #discovery article{background:#f1e7fb;color:#2b2a3a}
 #discovery form{margin-top:.75rem}
 
-#prep{width:min(42rem,calc(100% - 1.5rem));max-width:none;padding:0;max-height:calc(100dvh - 1.5rem);background:#2b2a3a;color:#fff4e6;border:2px solid #9b6bff;border-radius:1rem}
+#prep{width:min(56rem,calc(100% - 1.5rem));max-width:none;padding:0;max-height:calc(100dvh - 1.5rem);background:#2b2a3a;color:#fff4e6;border:2px solid #9b6bff;border-radius:1rem}
 .brief-hero{padding:1.1rem 1.2rem;background:linear-gradient(155deg,#54377e,#382a54 65%,#683e4a)}
 .brief-hero h2{margin:.25rem 0;font-size:clamp(1.35rem,4vw,2rem)}
 .brief-hero p{margin:.35rem 0 .65rem}
@@ -165,7 +165,7 @@ dialog#discovery{margin:auto;background:#fff4e6;color:#2b2a3a;border:3px solid #
 .chapter-choice[data-state="Completed"]{background:#b2f1db}
 .chapter-choice small{font-size:.72rem}
 .chapter-icon{display:grid;place-items:center;width:2.65rem;height:2.65rem;border-radius:50%;background:#fff9ec;font-size:1.45rem}
-#chapter-preview{padding:0;width:min(29rem,calc(100% - 1rem));max-width:none;border-color:#9b6bff}
+#chapter-preview{padding:0;width:min(44rem,calc(100% - 1rem));max-width:none;border-color:#9b6bff}
 #chapter-preview form{margin-top:.7rem}
 @media(max-width:450px){#lab #stations{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
@@ -784,3 +784,93 @@ header.mission-hud h1{align-self:start;margin:.1rem 0;font-size:1rem;white-space
 #mission-costs li[data-resource="food"] {color: #215e49; background: #dbf6e7;}
 #mission-costs svg {display: block; width: 1.2rem; height: 1.2rem;}
 #mission-costs small {text-transform: capitalize;}
+
+#prep {font-size: 1.125rem; line-height: 1.45;}
+#prep .brief-hero h2 {font-size: clamp(1.5rem, 4vw, 2.35rem);}
+#prep #plan legend {font-size: 1.15em;}
+#prep #plan .pick small, #prep #plan .pick b {font-size: .95rem;}
+#prep #plan button {font-size: 1.05rem;}
+@media (max-width: 560px) {
+  #prep {font-size: 1rem;}
+  #prep .tool-options {grid-template-columns: 1fr;}
+}
+
+/* Keep chapter screens readable and let longer content scroll. */
+html {font-size: clamp(16px, calc(15px + .22vw), 18px);}
+dialog:not(#mission) {max-height: calc(100dvh - 1rem); overflow: auto;}
+#scanner, #claw-game, #safari, #lost-lake-game, #earth-game, #discovery {
+  width: min(54rem, calc(100% - 1rem));
+  max-width: none;
+}
+#chapter-preview {width: min(48rem, calc(100% - 1rem));}
+.chapter-choice strong {font-size: 1.15rem;}
+#chapter-requirements small {font-size: .88rem;}
+
+/* Fit the briefing on wide screens while keeping full-size game controls. */
+#chapter-preview .brief-hero {padding: .65rem 1rem;}
+#chapter-preview .rock-body {padding: .65rem 1rem;}
+#chapter-preview .chapter-brief,
+#chapter-preview .scanner-pip,
+#chapter-preview #preview-objective,
+#chapter-preview #preview-science,
+#chapter-preview #preview-reward {margin: .35rem 0;}
+#chapter-preview .scanner-pip p {margin: 0;}
+#chapter-preview #chapter-requirements {gap: .35rem; margin: .35rem 0;}
+#chapter-preview #chapter-requirements li {padding: .35rem .5rem; gap: .18rem;}
+#chapter-preview #mission-costs {margin: .45rem 0;}
+#chapter-preview #mission-costs li {padding: .25rem .2rem;}
+#chapter-preview form {margin-top: .45rem;}
+#scanner, #claw-game, #safari, #lost-lake-game, #earth-game {
+  width: min(58rem, calc(100% - 1rem));
+}
+#mission .game-shell {width: min(100%, 960px, calc(115vh - 115px));}
+
+@media (min-width: 760px) {
+  #chapter-preview {width: min(57rem, calc(100% - 1.5rem));}
+  #chapter-preview #chapter-requirements {grid-template-columns: repeat(3, minmax(0, 1fr));}
+  #chapter-preview #mission-costs li {grid-template-columns: auto auto auto; align-items: center; justify-content: center; gap: .3rem;}
+}
+
+/* Keep briefing and readiness side by side when there is room for both. */
+@media (min-width: 760px) {
+  #chapter-preview .rock-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: .6rem 1rem;
+    align-items: start;
+  }
+  #chapter-preview #chapter-requirements {grid-template-columns: repeat(2, minmax(0, 1fr));}
+  #chapter-preview #mission-costs li {grid-template-columns: 1fr; justify-items: center;}
+  #chapter-preview .rock-body > form {
+    grid-column: 1 / -1;
+    position: sticky;
+    bottom: 0;
+    padding: .45rem 0;
+    background: #fff8ee;
+    z-index: 1;
+    flex-wrap: wrap;
+  }
+}
+
+/* Compact chapter selection, independent of the larger mission windows. */
+#lab #room {max-width: 61rem; margin-inline: auto; padding: clamp(.7rem, 1.8vw, 1.15rem);}
+#lab .lab-heading h2 {font-size: 1.35rem;}
+#lab .lab-pip {margin: .4rem 0; font-size: .88rem;}
+#lab #stations {padding: .4rem 0; gap: .7rem;}
+#lab .chapter-choice {gap: .26rem; padding: .55rem .65rem; border-radius: .75rem;}
+#lab .chapter-choice > strong {font-size: 1rem;}
+#lab .chapter-choice .chapter-icon {width: 1.65rem; height: 1.65rem; font-size: .9rem;}
+#lab .chapter-choice .chapter-badge {font-size: .72rem; max-width: 100%;}
+
+/* A smaller briefing leaves more of the viewport available for the controls. */
+#chapter-preview {width: min(760px, calc(100% - 1rem)); font-size: .88rem; line-height: 1.4;}
+#chapter-preview .brief-hero h2 {font-size: clamp(1.25rem, 3vw, 1.65rem);}
+#chapter-preview .chapter-brief p {font-size: inherit;}
+#chapter-preview #chapter-requirements small {font-size: .78rem;}
+#chapter-preview .chapter-brief,
+#chapter-preview .scanner-pip {padding: .45rem .6rem;}
+#chapter-preview form button {min-height: 2.4rem; padding: .35rem .8rem;}
+
+#chapter-preview {max-height: calc(100dvh - 1.25rem);}
+#chapter-preview .brief-hero {padding-block: .45rem;}
+#chapter-preview .rock-body > form {margin-bottom: 0;}

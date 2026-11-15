@@ -1314,3 +1314,10 @@
 .cc-suit-pop .icon { color: #ffd23f; }
 .cc-suit-pop strong { display: block; color: #ffd23f; font-size: 20px; }
 .cc-suit-pop span { display: block; font-size: 15px; margin-top: 2px; }
+.cc-sunrise {color:#ffd54a;animation:cc-sunrise .65s ease-out both}
+.cc-new-sol {color:#ffd54a;font-weight:800}
+@keyframes cc-sunrise {
+  from {opacity:0;transform:translateY(18px) scale(.6)}
+  to {opacity:1;transform:translateY(0) scale(1)}
+}
+@media (prefers-reduced-motion:reduce) {.cc-sunrise {animation:none}}

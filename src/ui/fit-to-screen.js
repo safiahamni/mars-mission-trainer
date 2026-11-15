@@ -11,6 +11,23 @@ let busy = false;
 function fit() {
   if (busy) return;
   busy = true;
+  if (html.hasAttribute('data-fit-overview')) {
+    const dialogs = body.querySelectorAll('dialog[open]');
+    if (dialogs.length) {
+      // Keep the overview fixed and size each open dialog independently.
+      const overviewScale = Number(body.style.zoom) || 1;
+      for (const dialog of dialogs) {
+        dialog.style.zoom = String(1 / overviewScale);
+        if (dialog.id === 'mission') continue; // Rover Rescue uses a full-screen playfield.
+        const neededHeight = dialog.scrollHeight + dialog.offsetHeight - dialog.clientHeight;
+        const fit = Math.max(.72, Math.min(1, (innerHeight - 24) / Math.max(1, neededHeight)));
+        dialog.style.zoom = String(fit / overviewScale);
+      }
+      html.style.overflow = 'hidden';
+      busy = false;
+      return;
+    }
+  }
   body.style.zoom = '';                                   // measure the page at its real size
   const needH = html.scrollHeight, needW = html.scrollWidth;
   const z = Math.min(1, innerHeight / needH, innerWidth / needW);

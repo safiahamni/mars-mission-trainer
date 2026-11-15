@@ -15,8 +15,8 @@ export const CROP_CATALOG = Object.freeze({
     id: "greens",
     name: "Leafy greens",
     icon: "🥬",
-    growthSols: 30, // seconds of growth needed (real time)
-    foodReward: 2,
+    growthSols: 1,
+    foodReward: 22,
     plantingCost: Object.freeze({ water: 2, power: 2, nutrients: 1 }),
     dailyCost: Object.freeze({ water: 1, power: 1, nutrients: 1 }),
   }),
@@ -24,8 +24,8 @@ export const CROP_CATALOG = Object.freeze({
     id: "potato",
     name: "Potato",
     icon: "🥔",
-    growthSols: 210, // 3 min 30 sec
-    foodReward: 10,
+    growthSols: 2,
+    foodReward: 24,
     plantingCost: Object.freeze({ water: 3, power: 3, nutrients: 2 }),
     dailyCost: Object.freeze({ water: 2, power: 1, nutrients: 2 }),
     perchlorateUnlock: 30,
@@ -34,8 +34,8 @@ export const CROP_CATALOG = Object.freeze({
     id: "millet",
     name: "Millet",
     icon: "🌾",
-    growthSols: 90, // 1 min 30 sec
-    foodReward: 6,
+    growthSols: 3,
+    foodReward: 24,
     plantingCost: Object.freeze({ water: 2, power: 2, nutrients: 1 }),
     dailyCost: Object.freeze({ water: 1, power: 1, nutrients: 1 }),
     perchlorateUnlock: 30,

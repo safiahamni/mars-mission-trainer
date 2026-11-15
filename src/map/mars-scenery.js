@@ -1,3 +1,5 @@
+import { CHAPTERS, cropPrepTask } from '../systems/commandCenter.js';
+import { getGame, onGameChange } from '../state/gameStore.js';
 // mars-scenery.js — the map background and layout (shared map extras, by Member 3).
 //   • real Mars ground: a layered mesa, a few craters, sand dunes (ripples) and rover wheel tracks
 //   • the CLIFF ZONE (canyon shade) and CLEAR ZONE (no shade) marked on the map
@@ -113,12 +115,52 @@
   const statusEl = document.getElementById('mm-status');
   const hint = document.createElement('div');
   hint.className = 'sc-hint';
-  hint.setAttribute('aria-hidden', 'true');            // the original (hidden) status box still speaks to screen readers
+  hint.setAttribute('aria-label', 'Daily objectives');            // the original (hidden) status box still speaks to screen readers
   document.getElementById('mm-topbar').appendChild(hint);
   // keep it as the LAST card, even when other places add their cards later
   new MutationObserver(() => { if (hint.nextSibling) hint.parentNode.appendChild(hint); })
     .observe(hint.parentNode, { childList: true });
-  const copy = () => { hint.textContent = statusEl.textContent.trim(); hint.hidden = !hint.textContent; };
+  const objective = document.createElement('ul');
+  objective.className = 'sc-checklist';
+  const note = document.createElement('div');
+  hint.append(objective, note);
+  const copy = () => { note.textContent = statusEl.textContent.trim(); };
   new MutationObserver(copy).observe(statusEl, { childList: true, characterData: true, subtree: true });
+  let previousTasks = '';
+  const updateObjective = () => {
+    const game = getGame();
+    hint.dataset.heading = `SOL ${game.sol} CHECKLIST`;
+    const chapter = CHAPTERS[game.sol - 1];
+    const tasks = [[`Complete ${chapter.name}`, !!game.done.chapter]];
+    if (game.sol <= 4) {
+      const cropTask = game.sol < 3 ? 'Plant leafy greens'
+        : game.sol === 3 ? 'Prepare 50 Food for Sol 4'
+        : 'Prepare a potato or millet harvest for Sol 6';
+      tasks.push([cropTask, !cropPrepTask(game)]);
+    }
+    if (game.sol < CHAPTERS.length) {
+      const clean = game.power.panels === 'clean';
+      const deferred = !clean && window.MarsHUD?.status() === 'nogo';
+      tasks.push([deferred ? 'Solar cleaning deferred until EVA is safe' : 'Clean all three solar panels', clean]);
+      tasks.push(['Sleep in Command Center', false]);
+    }
+    const nextTasks = JSON.stringify(tasks);
+    if (previousTasks === nextTasks) return;
+    previousTasks = nextTasks;
+    objective.replaceChildren(...tasks.map(([label, done]) => {
+      const item = document.createElement('li');
+      const marker = document.createElement('span');
+      marker.className = 'sc-check-mark';
+      marker.textContent = done ? '\u2713' : '';
+      marker.setAttribute('aria-label', done ? 'Complete' : 'Pending');
+      const text = document.createElement(done ? 's' : 'span');
+      text.textContent = label;
+      item.dataset.done = String(done);
+      item.append(marker, text);
+      return item;
+    }));
+  };
+  onGameChange(updateObjective);
+  updateObjective();
   copy();
 })();

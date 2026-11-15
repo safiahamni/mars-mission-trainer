@@ -10,8 +10,8 @@ import {
 } from './power.js';
 
 export const CC_CONFIG = {
-  maxSols: 7,
-  dustStorms: [4],     // sols that start with a dust storm (+5 morning charge, panels get dusty, no chapter)
+  maxSols: 6,
+  dustStorms: [4],     // morning storm charge; the indoor chapter remains available
 };
 
 // SCIENCE LAB CHAPTERS: one per day. The day ends (sunset) when today's chapter is finished.
@@ -47,13 +47,7 @@ export const FOOD_CONFIG = {
 
 export const SHIRT_COLORS = ['blue', 'teal', 'purple', 'orange', 'red'];
 
-// STARS: up to 2 per sol, no checklist to read.
-//   chapter: finish today's Science Lab chapter (on the dust storm sol: get through the storm)
-//   warm:    go to bed with 20+ power, so the crew stays warm
-export const STARS = [
-  { id: 'chapter', text: "Finish today's chapter" },
-  { id: 'warm', text: 'Warm night: 20+ power at bedtime' },
-];
+const CHAPTER_STAR = { id: 'chapter', text: 'Complete today?s Science Lab chapter' };
 
 export function createGame() {
   return {
@@ -87,14 +81,22 @@ export function isDay(game) {
   return game.phase === 'day';
 }
 
-// The stars for one sol. warmNight = the battery is at the night line or above.
 export function solStars(game) {
-  const chapter = !!game.done.chapter || (isDustStormSol(game.sol) && !game.inChapter);
-  const warm = game.power.battery >= POWER_CONFIG.nightReserve;
-  return [
-    { ...STARS[0], earned: chapter },
-    { ...STARS[1], earned: warm },
-  ];
+  return [{ ...CHAPTER_STAR, earned: !!game.done.chapter }];
+}
+
+export function cropPrepTask(game) {
+  const greenhouse = game.greenhouseProgress ?? {};
+  if (game.sol < 3 && greenhouse.greensPlantedSol !== game.sol) {
+    return 'Plant leafy greens in the Greenhouse before sleeping.';
+  }
+  if (game.sol === 3 && game.food + (greenhouse.foodReadyBySol4 ?? 0) < CHAPTERS[3].needs.food) {
+    return 'Plant enough greens to reach 50 Food by Sol 4.';
+  }
+  if (game.sol === 4 && !greenhouse.advancedCropHarvested && !greenhouse.advancedCropReadyBySol6) {
+    return 'Plant potatoes so they can mature by Sol 6.';
+  }
+  return '';
 }
 
 // Flip a lever on the switchboard. The water recycler adds water when it runs.
@@ -149,18 +151,18 @@ function sunset(game) {
 
 // ---------- today's chapter ----------
 
-// The chapter for today, or null (dust storm day, or all 6 chapters done)
+// The chapter for today, or null after all six chapters are done.
 export function todaysChapter(game) {
-  if (isDustStormSol(game.sol)) return null;
   return CHAPTERS.find((c) => c.n === game.chapter) || null;
 }
 
 // Can the crew start today's chapter? { ok, chapter, missing: ['power 15', ...], reason }
 export function chapterCheck(game) {
   const chapter = todaysChapter(game);
-  if (!chapter) return { ok: false, chapter: null, missing: [], reason: isDustStormSol(game.sol) ? 'dust-storm' : 'all-done' };
+  if (!chapter) return { ok: false, chapter: null, missing: [], reason: 'all-done' };
   if (!isDay(game)) return { ok: false, chapter, missing: [], reason: 'night' };
   if (game.done.chapter) return { ok: false, chapter, missing: [], reason: 'done-today' };
+  if (chapter.id === 'rover-rescue' && game.roverReady === false) return { ok: false, chapter, missing: ['repair the rover'], reason: 'not-enough' };
   const have = { power: game.power.battery, water: game.water, oxygen: game.oxygen, food: game.food };
   const missing = Object.entries(chapter.needs)
     .filter(([k, v]) => have[k] < v)
@@ -175,7 +177,6 @@ export function startChapter(game) {
   const check = chapterCheck(game);
   if (!check.ok) {
     const why = {
-      'dust-storm': 'No chapter today: a dust storm is blocking the sky. Look after the base and rest.',
       'all-done': 'All 6 chapters are done!',
       night: "It's night. Chapters open again in the morning.",
       'done-today': "Today's chapter is already done. Sleep to start the next sol.",
@@ -195,22 +196,22 @@ export function finishChapter(game, uses = {}) {
   const u = { ...ch.uses, ...uses };
   const power = { ...game.power, battery: clamp(game.power.battery - u.power, 0, 100) };
   const g = {
-    ...game, power,
+    ...game, power, stars: game.stars + 1,
     oxygen: clamp(game.oxygen - u.oxygen, 0, 100),
     water: clamp(game.water - u.water, 0, 100),
     food: clamp(game.food - u.food, 0, 100),
     inChapter: false, chapter: game.chapter + 1, done: { ...game.done, chapter: true },
   };
+  if (game.chapter === CHAPTERS.length) {
+    return { ok: true, game: { ...g, over: true }, events: [], message: 'Mission complete!' };
+  }
   const r = sunset(g);
   return { ok: true, game: r.game, events: r.events, message: `Chapter ${game.chapter} complete!` };
 }
 
-// Rest day: no chapter today (not enough power, or a dust storm). The crew ends the day early.
+// A six-Sol run requires today's chapter before advancing.
 export function endDayEarly(game) {
-  if (!isDay(game)) return { ok: false, game, events: [], message: "It's already night." };
-  if (game.inChapter) return { ok: false, game, events: [], message: 'Finish the chapter first.' };
-  const r = sunset(game);
-  return { ok: true, game: r.game, events: r.events, message: 'The crew rests today. Sleep to start the next sol.' };
+  return { ok: false, game, events: [], message: 'Complete today?s chapter before sleeping.' };
 }
 
 export function enterShelter(game) {
@@ -228,9 +229,17 @@ export function spentToday(game) {
 
 // Sleep in the bunks: night uses the reserve, the crew drinks water,
 // stars are counted, and a new sol starts with the morning solar charge.
-export function sleep(game) {
+export function sleepRequirement(game, { evaUnsafe = false } = {}) {
+  if (game.over) return 'The mission is complete.';
+  if (!game.done.chapter) return 'Complete today?s chapter before sleeping.';
+  if (game.power.panels !== 'clean' && !evaUnsafe) return 'Clean all three solar panels before sleeping.';
+  return cropPrepTask(game);
+}
+
+export function sleep(game, options) {
   if (!game.inShelter) return { ok: false, game, message: 'The bunks are inside the radiation shelter.' };
-  if (game.phase === 'day') return { ok: false, game, message: "It's still daytime. Sleep after sunset." };
+  const message = sleepRequirement(game, options);
+  if (message || game.phase !== 'night') return { ok: false, game, message: message || 'Sleep after sunset.' };
 
   const night = nightPower(game.power);
   const water = clamp(game.water - WATER_CONFIG.crewPerNight, 0, 100);
@@ -269,13 +278,12 @@ export function sleep(game) {
     sol: nextSol,
     clock: 0,
     phase: 'day',
-    power: morning.power,
+    power: { ...morning.power, panels: 'dusty' },
     water,
     oxygen,
     food,
     startBattery: morning.power.battery,
     done: {},
-    stars: game.stars + earned,
     coldNights: game.coldNights + (night.cold ? 1 : 0),
     over: last,
   };
