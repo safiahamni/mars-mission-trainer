@@ -44,9 +44,11 @@ const MarsHUD = (function () {
     return Math.hypot(x - (ax + t * vx), y - (ay + t * vy)) < 26;
   }
   const outside = () => !map.isInside();
+  let routeShade = null;                   // set by the route chooser while the avatar walks a route by itself
   function rate() {
     if (!outside()) return 0;
-    return BASE_RATE * (storm ? STORM_X : 1) * (inCanyon(map.getPos()) ? CLIFF_X : 1);
+    const shade = routeShade !== null ? routeShade : (inCanyon(map.getPos()) ? CLIFF_X : 1);
+    return BASE_RATE * (storm ? STORM_X : 1) * shade;
   }
 
   // ================= THE PANEL =================
@@ -207,6 +209,8 @@ const MarsHUD = (function () {
 
   return {
     getHazard: () => hazard,
+    getRate: () => rate(),
+    setRouteShade: v => { routeShade = (v === null || v === undefined) ? null : v; },   // route chooser: whole-route shade
     addHazard(n) { hazard = Math.max(0, Math.min(MAX_HAZARD, hazard + n)); },
     isStorm: () => storm,
     startStorm, endStorm,
