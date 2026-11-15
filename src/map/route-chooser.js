@@ -12,9 +12,9 @@ const RouteChooser = (function () {
   const S = map.GRID.SPLIT;
 
   // same numbers as the side panel (hud.js)
-  const BASE_RATE = 1;     // hazard points per game minute outside
+  const BASE_RATE = 0.5;   // hazard points per game minute outside (kid-friendly)
   const CLIFF_X   = 0.9;   // cliffs block some radiation: 10% less (real Curiosity measurement ~4%)
-  const STORM_X   = 2;     // solar storm: 2x faster
+  const STORM_X   = 1.5;   // solar storm: 1.5x faster
   const stormX = () => (hud()?.isStorm() ? STORM_X : 1);
 
   const ROUTES = {
@@ -23,6 +23,7 @@ const RouteChooser = (function () {
   };
   const routeRate  = r => BASE_RATE * stormX() * r.shade;
   const routeTotal = r => r.minutes * routeRate(r);
+  const num = n => String(Math.round(n * 100) / 100);   // 0.45 -> "0.45", 5 -> "5" (so cliff vs normal shows)
 
   // GOING TO THE LAB: route -> into the lab door.  GOING HOME: route backwards -> shared road -> Command Center
   const TO_LAB = {}, TO_HOME = {};
@@ -80,13 +81,14 @@ const RouteChooser = (function () {
   let tripMode = 'lab';   // 'lab' = to the Science Lab, 'home' = back to the Command Center
   let auto = null;        // set while the avatar walks a chosen route by itself
   let toFork = false;     // true after leaving the Command Center by ▲, until reaching the fork
+  let openedAt = 0;       // so the arrow key that left the lab doesn't pick a road by itself
   const isOpen = () => !chooser.hidden;
 
   function fillCards() {
     for (const [id, r] of Object.entries(ROUTES)) {
       $(`rc-${id}Time`).textContent  = `${r.minutes} min`;
-      $(`rc-${id}Rate`).textContent  = `+${routeRate(r).toFixed(1)} per min`;
-      $(`rc-${id}Total`).textContent = `+${routeTotal(r).toFixed(1)}`;
+      $(`rc-${id}Rate`).textContent  = `+${num(routeRate(r))} per min`;
+      $(`rc-${id}Total`).textContent = `+${num(routeTotal(r))}`;
     }
   }
 
@@ -95,14 +97,20 @@ const RouteChooser = (function () {
     map.pause(true);                       // the game waits for your answer
     tripMode = mode;
     player.setWalking(false);
-    $('rc-title').textContent = mode === 'lab' ? 'Which way to the Science Lab?' : 'Which way back to the Command Center?';
+    // going home = quick choice: just Left (cliff route) or Right (normal path), no explaining
+    const quick = mode === 'home';
+    chooser.classList.toggle('rc-quick', quick);
+    openedAt = performance.now();
+    chooser.querySelector('.rc-route-cliff .rc-route-key').textContent = quick ? '◀ Left' : 'Press 2';
+    chooser.querySelector('.rc-route-open .rc-route-key').textContent = quick ? 'Right ▶' : 'Press 1';
+    $('rc-title').textContent = mode === 'lab' ? 'Which way to the Science Lab?' : 'Which way back home?';
     $('rc-sub').textContent = (hud()?.isStorm() ? 'Solar storm! ' : '') +
       (mode === 'lab' ? 'Pick the route that keeps you safest!' : 'Pick the safest way back to the Command Center.');
     fillCards();
     $('rc-info').hidden = true;
     $('rc-infoBtn').setAttribute('aria-expanded', 'false');
     chooser.hidden = false;
-    chooser.querySelector('.rc-route').focus();
+    (quick ? chooser.querySelector('.rc-route-cliff') : chooser.querySelector('.rc-route')).focus();
   }
   function hide() { chooser.hidden = true; map.pause(false); }
 
@@ -149,7 +157,7 @@ const RouteChooser = (function () {
       } else {
         const other = auto.route.name === ROUTES.open.name ? ROUTES.cliff : ROUTES.open;
         const result = hud()
-          ? `${auto.route.name}: hazard +${auto.routeHazard.toFixed(1)} (the ${other.name.toLowerCase()} would be +${routeTotal(other).toFixed(1)}).`
+          ? `${auto.route.name}: hazard +${num(auto.routeHazard)} (the ${other.name.toLowerCase()} would be +${num(routeTotal(other))}).`
           : '';
         map.setPos(x, y);
         stopAuto();
@@ -175,6 +183,10 @@ const RouteChooser = (function () {
   });
   document.addEventListener('keydown', e => {
     if (!isOpen()) return;
+    if (chooser.classList.contains('rc-quick') && performance.now() - openedAt > 250) {
+      if (e.key === 'ArrowLeft' || e.code === 'KeyA') { choose('cliff'); return; }
+      if (e.key === 'ArrowRight' || e.code === 'KeyD') { choose('open'); return; }
+    }
     if (e.key === '1') choose('open');
     if (e.key === '2') choose('cliff');
     if (e.key === 'Escape') hide();
@@ -185,9 +197,9 @@ const RouteChooser = (function () {
   map.on('leave', (place, dir) => {
     if (place === 'shelter' && dir === 'up') {
       toFork = true;
-      map.status('Walk up the road to the fork, then pick your route.');
+      map.status('First mission: go to the Science Lab! Walk up the road until it splits in two, then pick your path.');
     } else if (place === 'lab') {
-      show('home');                         // "Which way back to the Command Center?"
+      setTimeout(() => show('home'), 0);    // "Which way back home?" (after the lab's own code has finished leaving)
     }
   });
   map.on('update', dt => {

@@ -17,6 +17,46 @@
 }
 @keyframes hud-flash { 50% { background: #8A0000; } }
 
+/* ===== the YELLOW WARNING: hazard 50-79 outside (softer than the red alarm) ===== */
+.hud-warn { position: fixed; inset: 0; z-index: 999; pointer-events: none; }
+.hud-warn[hidden] { display: none; }
+.hud-warn::before {
+  content: ""; position: absolute; inset: 0;
+  background: radial-gradient(ellipse at center, rgba(255, 216, 74, 0) 50%, rgba(255, 190, 30, 0.6) 100%);
+  animation: hud-pulse 1.3s ease-in-out infinite alternate;
+}
+.hud-warn-banner {
+  position: absolute; left: 50%; top: 18px; transform: translateX(-50%);
+  padding: 10px 22px; border: 4px solid #2B2A3A; border-radius: 14px; background: #FFD84A; color: #2B2A3A;
+  font-family: 'Nunito', sans-serif; font-size: 22px; font-weight: 900; letter-spacing: 1px; white-space: nowrap;
+  box-shadow: 0 0 24px rgba(255, 200, 40, 0.85); animation: hud-warnFlash 1s steps(2) infinite;
+}
+@keyframes hud-warnFlash { 50% { background: #F5B700; } }
+
+/* ===== pop-up when a solar storm starts ===== */
+.hud-stormpop {
+  position: fixed; inset: 0; z-index: 2500; display: grid; place-items: center;
+  background: radial-gradient(circle at 50% 50%, rgba(43,42,58,.45), rgba(120,20,20,.65));
+  animation: hud-fadeIn .25s ease-out;
+}
+.hud-stormpop[hidden] { display: none; }
+.hud-stormpop-card {
+  width: min(520px, 92vw); box-sizing: border-box; text-align: center;
+  background: #FFF6EC; color: #2B2A3A; border: 5px solid #2B2A3A; border-radius: 24px; box-shadow: 0 8px 0 #2B2A3A;
+  padding: 22px 28px; font-family: 'Nunito', sans-serif; animation: hud-pop .3s ease-out;
+}
+@keyframes hud-pop { from { transform: scale(.85); opacity: 0; } }
+.hud-stormpop-card h2 { margin: 0 0 10px; font-size: 34px; font-weight: 900; color: #E2483A; letter-spacing: .02em; }
+.hud-stormpop-card p { margin: 0 0 12px; font-size: 17px; font-weight: 800; line-height: 1.4; }
+.hud-stormpop-card .hud-stormpop-fact { background: #E8F7FF; border: 2px solid #2B2A3A; border-radius: 12px; padding: 7px 11px; font-size: 13.5px; text-align: left; }
+.hud-stormpop-fact b { color: #1F6FA8; }
+.hud-stormpop-go {
+  font-family: inherit; font-weight: 900; font-size: 20px; letter-spacing: .04em; cursor: pointer;
+  padding: 10px 26px; color: #FFFFFF; background: #E2673A; border: 4px solid #2B2A3A; border-radius: 16px; box-shadow: 0 5px 0 #2B2A3A;
+}
+.hud-stormpop-go:hover { transform: translateY(-2px); }
+.hud-stormpop-go:focus-visible { outline: 3px solid #3EC6F0; outline-offset: 3px; }
+
 /* ===== MISSION CLOCK: flip clock (SOL box + number tiles) ===== */
 .hud-clock {
   display: flex; align-items: center; gap: 12px; padding: 10px 12px;
