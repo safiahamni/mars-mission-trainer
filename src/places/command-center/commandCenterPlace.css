@@ -52,3 +52,90 @@
 .cc-root {
   z-index: 50;
 }
+/* ---------- resources card (left column): same look as the HUD cards ---------- */
+.cc-res {
+  box-sizing: border-box;
+  padding: 12px 14px;
+  background: #FFF6EC;
+  color: #2B2A3A;
+  border: 3px solid #2B2A3A;
+  border-radius: 18px;
+  box-shadow: 0 4px 0 #2B2A3A;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+}
+.cc-res-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+}
+.cc-res-head span { white-space: nowrap; font-size: 15px; }
+.cc-res-head .icon { color: #E8A93B; vertical-align: -3px; }
+.cc-res-row { margin-top: 10px; }
+.cc-res-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+}
+.cc-res-top b { margin-left: auto; font-size: 15px; }
+.cc-res-top em {
+  font-style: normal;
+  font-size: 12px;
+  padding: 1px 8px;
+  border-radius: 999px;
+}
+.cc-res-top em.ok { background: #BDE8CE; color: #1E5A3A; }
+.cc-res-top em.no { background: #FAC775; color: #633806; }
+.cc-res-track {
+  position: relative;
+  height: 16px;
+  margin-top: 4px;
+  background: #FFFFFF;
+  border: 2.5px solid #2B2A3A;
+  border-radius: 9px;
+}
+.cc-res-track i {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  border-radius: 6px;
+  transition: width 0.4s;
+}
+.cc-res-power  .cc-res-track i { background: #F2C14E; }
+.cc-res-oxygen .cc-res-track i { background: #6FC6E0; }
+.cc-res-water  .cc-res-track i { background: #5BA8F5; }
+.cc-res-food   .cc-res-track i { background: #7FD08E; }
+.cc-res-power  .icon { color: #D99A1E; }
+.cc-res-oxygen .icon { color: #2E9CBF; }
+.cc-res-water  .icon { color: #2F7FD1; }
+.cc-res-food   .icon { color: #3E9E52; }
+.cc-res-need,
+.cc-res-night {
+  position: absolute;
+  top: -6px;
+  bottom: -6px;
+  width: 4px;
+  margin-left: -2px;
+  background: #2B2A3A;
+  border-radius: 2px;
+}
+.cc-res-night { width: 3px; background: #7F77DD; }   /* the night line (20) on the power bar */
+
+/* ---------- base map page (added by Member 1, tell the team) ----------
+   the same dotted Mars ground as the Command Center room */
+body,
+.mm-page {
+  background-color: #C65A2E;
+  background-image: radial-gradient(#AD4B24 1.4px, transparent 1.6px);
+  background-size: 22px 22px;
+}
+
+/* the left column of cards sits a little closer to the left edge
+   (only the column moves; the map and page layout stay as they are) */
+.mm-topbar {
+  margin-left: -48px;
+}

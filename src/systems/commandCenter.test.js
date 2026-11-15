@@ -95,12 +95,18 @@ test('stars: the dust storm sol gives the chapter star for getting through it', 
 test('you can always walk out of the shelter core', () => {
   assert.equal(leaveShelter(enterShelter(createGame())).ok, true);
 });
-test('chapter: starting pays its cost, finishing moves to the next chapter and sets the sun', () => {
+test('chapter: finishing uses its power, oxygen, water and food, then the sun sets', () => {
   const g0 = createGame();
   const s = startChapter(g0);
   assert.equal(s.ok, true);
-  assert.equal(s.game.power.battery, g0.power.battery - CHAPTERS[0].cost);
+  assert.equal(s.game.power.battery, g0.power.battery);   // nothing is paid when it starts
   const f = finishChapter(s.game);
+  const u = CHAPTERS[0].uses;
+  assert.equal(f.game.power.battery, g0.power.battery - u.power);
+  assert.equal(f.game.oxygen, g0.oxygen - u.oxygen);
+  assert.equal(f.game.water, g0.water - u.water);
+  assert.equal(f.game.food, g0.food - u.food);
+  assert.equal(finishChapter(startChapter(g0).game, { power: 8 }).game.power.battery, g0.power.battery - 8);
   assert.equal(f.game.phase, 'night');
   assert.equal(f.game.chapter, 2);
   assert.equal(f.game.done.chapter, true);
@@ -127,13 +133,13 @@ test('chapter: finishing without starting does nothing', () => {
   assert.equal(finishChapter(createGame()).ok, false);
 });
 
-test('MOXIE adds oxygen; at night the crew breathes, drinks and eats', () => {
+test('MOXIE adds oxygen; the night only uses power', () => {
   const g0 = createGame();
   const g = runSystem(unlockMoxieSystem(g0).game, 'moxie').game;
   assert.equal(g.oxygen, g0.oxygen + 15);
   const r = sleep(enterShelter(night(g)));
-  assert.equal(r.game.oxygen, g.oxygen - 10);
-  assert.equal(r.game.food, g.food - 10);
+  assert.equal(r.game.oxygen, g.oxygen);
+  assert.equal(r.game.food, g.food);
 });
 
 test('chapter gates use oxygen and food too (Chapter 2 needs oxygen 60)', () => {
@@ -145,6 +151,6 @@ test('chapter gates use oxygen and food too (Chapter 2 needs oxygen 60)', () => 
 
 test('changeResource: add food, cannot use more water than you have', async () => {
   const { changeResource } = await import('./commandCenter.js');
-  assert.equal(changeResource(createGame(), 'food', 20, 'Harvest').game.food, 60);
+  assert.equal(changeResource(createGame(), 'food', 20, 'Harvest').game.food, createGame().food + 20);
   assert.equal(changeResource({ ...createGame(), water: 3 }, 'water', -5, 'Watering').ok, false);
 });

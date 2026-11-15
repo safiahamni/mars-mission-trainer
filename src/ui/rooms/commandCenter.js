@@ -25,7 +25,7 @@ import {
 import { runEndSol } from '../../systems/endSol.js';
 import { makeWalker, isNear } from '../../systems/roomWalk.js';
 import {
-  ROOM_STAGE, ROOM_PATHS, SHELTER_PATHS, ROOM_PATH_WIDTH, SHELTER_DOOR_X, ROOM_SPAWN, ROOM_SPOTS, EXIT_DOOR_Y,
+  ROOM_STAGE, ROOM_PATHS, SHELTER_PATHS, ROOM_PATH_WIDTH, SHELTER_DOOR_Y, ROOM_SPAWN, ROOM_SPOTS, EXITS,
 } from '../../config/commandCenterLayout.js';
 import { getGame, setGame, onGameChange } from '../../state/gameStore.js';
 
@@ -41,6 +41,7 @@ const KEYS = {
 
 const SHIRT_HEX = { blue: '#5A8FE0', teal: '#3dbba5', purple: '#9b7be8', orange: '#f0913a', red: '#e0566a' };
 
+const CORRIDOR_X_HALF = 700;   // the shelter is on the right half of the room
 const PATH_D = ROOM_PATHS.map(([x1, y1, x2, y2]) => `M${x1} ${y1} L${x2} ${y2}`).join(' ');
 
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
@@ -138,12 +139,12 @@ export function renderCommandCenter(room, { onExit } = {}) {
     <div class="cc-floor" data-b="floor"></div>
 
     <svg class="cc-svg" viewBox="0 0 ${STAGE_W} ${STAGE_H}" aria-hidden="true">
-      <path d="M170 132 V186 M237 215 H355 V168 H442" stroke="#2b2a3a" stroke-width="16" fill="none" stroke-linejoin="round"/>
-      <path d="M170 132 V186 M237 215 H355 V168 H442" stroke="#f5c84c" stroke-width="9" fill="none" stroke-linejoin="round"/>
+      <path d="M66 760 H249 M249 640 H120 V178 H340 V222 H372" stroke="#2b2a3a" stroke-width="16" fill="none" stroke-linejoin="round"/>
+      <path d="M66 760 H249 M249 640 H120 V178 H340 V222 H372" stroke="#f5c84c" stroke-width="9" fill="none" stroke-linejoin="round"/>
       <path d="${PATH_D}" stroke="#f7ecd9" stroke-width="${ROOM_PATH_WIDTH + 6}" stroke-dasharray="7 6" fill="none"/>
       <path d="${PATH_D}" stroke="#e8c49a" stroke-width="${ROOM_PATH_WIDTH}" fill="none"/>
     </svg>
-    <div class="cc-chip-dark" style="left:184px;top:143px">From solar field</div>
+    <div class="cc-chip-dark" style="left:80px;top:772px">From solar field</div>
 
     <!-- 3 battery bank -->
     <div class="cc-bank" data-b="bank">
@@ -151,18 +152,19 @@ export function renderCommandCenter(room, { onExit } = {}) {
       <div class="cc-line-night"></div>
       <div class="cc-hazard"></div>
     </div>
-    <div class="cc-tag" style="left:93px;top:423px"><b>2</b> Battery bank <small data-b="pct"></small></div>
+    <div class="cc-tag" style="left:236px;top:824px"><b>2</b> Battery bank <small data-b="pct"></small></div>
     <div class="cc-tip cc-tip-battery" data-b="battery-tip"></div>
 
     <!-- W wardrobe -->
     <button class="cc-wardrobe" data-b="wardrobe" aria-label="Wardrobe">${WARDROBE_SVG}</button>
-    <div class="cc-tag" style="left:328px;top:424px"><b class="purple">W</b> Wardrobe</div>
+    <div class="cc-tip cc-tip-wardrobe"><strong>Wardrobe</strong><br>Change your shirt colour, and put on the spacesuit before going outside. Walk up to it to open it.</div>
+    <div class="cc-tag" style="left:184px;top:380px"><b class="purple">W</b> Wardrobe</div>
 
     <!-- 1 switchboard on the wall -->
     <div class="cc-mount"></div>
     <button class="cc-prop" data-b="prop" aria-label="Switchboard"></button>
     <div class="cc-tip cc-tip-switch"><strong>Switchboard</strong><br>Shows which of the base's machines are on. A lock means MOXIE still needs to be unlocked in Life Support.</div>
-    <div class="cc-tag" style="left:420px;top:240px"><b>1</b> Switchboard</div>
+    <div class="cc-tag" style="left:360px;top:314px"><b>1</b> Switchboard</div>
 
     <!-- ! radiation shelter -->
     <div class="cc-shelter" data-b="shelter">
@@ -179,11 +181,11 @@ export function renderCommandCenter(room, { onExit } = {}) {
       <span class="cc-lamp"></span>
     </div>
     <div class="cc-door"></div>
-    <div class="cc-tag" style="left:758px;top:232px"><b class="red">!</b> Radiation shelter</div>
+    <div class="cc-tag" style="left:858px;top:528px"><b class="red">!</b> Radiation shelter</div>
     <div class="cc-tip cc-tip-shelter"><strong>Radiation shelter</strong><br>A safe room with thick walls and water tanks that block space radiation. The crew sleeps here.</div>
 
     <!-- mission control: just part of the room now (no pop-up, no checklist) -->
-    <div class="cc-tag" style="left:104px;top:573px">Mission control</div>
+    <div class="cc-tag" style="left:716px;top:356px">Mission control</div>
     <div class="cc-screens" data-b="screens" aria-hidden="true">
       <span class="cc-screen" style="left:0;top:9px;width:96px;height:72px">${EARTH_SVG}</span>
       <span class="cc-screen" style="left:110px;top:0;width:101px;height:82px">
@@ -203,7 +205,13 @@ export function renderCommandCenter(room, { onExit } = {}) {
     </svg>
 
     <div class="cc-tip cc-tip-mission"><strong>Mission control</strong><br>Screens that talk to Earth. A message takes 4 to 24 minutes to travel between Earth and Mars!</div>
-    <div class="cc-exit-door" data-b="exit-door" aria-hidden="true"></div>
+    <!-- four doors: left = Greenhouse, up = Science Lab, right = Life Support, down = Airlock / solar panels -->
+    <div class="cc-exit-door cc-exit-down" data-b="exit-down" aria-hidden="true"></div>
+    <div class="cc-suit-lock" data-b="suit-lock" aria-hidden="true">${icon('lock', 22)}</div>
+    <div class="cc-suit-pop" data-b="suit-pop" role="alert" hidden>${icon('shirt', 28)}<div><strong>Wear your spacesuit first!</strong><span>Then you can go outside. The Wardrobe (W) is at the top left.</span></div></div>
+    <div class="cc-exit-door cc-exit-up" data-b="exit-up" aria-hidden="true"></div>
+    <div class="cc-exit-door cc-exit-left" data-b="exit-left" aria-hidden="true"></div>
+    <div class="cc-exit-door cc-exit-right" data-b="exit-right" aria-hidden="true"></div>
 
     <div class="cc-player" data-b="player"></div>
 
@@ -275,8 +283,8 @@ export function renderCommandCenter(room, { onExit } = {}) {
 
   // ---- scale the stage to fit the screen ----
   function fit() {
-    const w = window.innerWidth;    // the room covers the whole window
-    const h = window.innerHeight;
+    const w = room.clientWidth;     // the room's space (next to the left column of cards)
+    const h = room.clientHeight;
     const s = Math.min(w / STAGE_W, h / STAGE_H);
     stage.style.transform = `translate(${(w - STAGE_W * s) / 2}px, ${(h - STAGE_H * s) / 2}px) scale(${s})`;
   }
@@ -350,6 +358,8 @@ export function renderCommandCenter(room, { onExit } = {}) {
     const p = g.power;
     const day = isDay(g);
     renderHud();
+    $('suit-lock').hidden = g.outfit === 'suit';
+    if (g.outfit === 'suit') $('suit-pop').hidden = true;
     $('goal').textContent = goalText(g);
 
     // top status
@@ -446,7 +456,6 @@ export function renderCommandCenter(room, { onExit } = {}) {
     }
     p.near = near;
   }
-  $('wardrobe').addEventListener('mouseenter', () => openPop('wardrobe'));
 
 
   // ---- sleeping and the end-of-sol summary ----
@@ -471,9 +480,9 @@ export function renderCommandCenter(room, { onExit } = {}) {
         <p>${icon('moon', 18)} Night: heaters and life support used ${POWER_CONFIG.nightReserve}. Battery ${rep.bedtime} → ${rep.afterNight}.</p>
         ${rep.cold ? '<p class="bad">The battery was below the night line, so the crew got cold.</p>' : ''}
         ${g.over ? '' : `<p>${icon('sun', 18)} Morning: the solar field added +${rep.gained}${rep.dustStorm ? ' (a dust storm is blocking the sun!)' : ''}. Battery ${rep.morning}.</p>`}
-        <p>${icon('droplet', 18)} The crew drank water: ${rep.waterFrom} → ${rep.waterTo}.</p>
-        <p>${icon('wind', 18)} The crew breathed oxygen: ${rep.oxygenFrom} → ${rep.oxygenTo}.</p>
-        <p>${icon('carrot', 18)} The crew ate food: ${rep.foodFrom} → ${rep.foodTo}.${rep.hungry ? ' The food store is empty! Harvest the greenhouse.' : ''}</p>
+        ${rep.waterFrom !== rep.waterTo ? `<p>${icon('droplet', 18)} The crew drank water: ${rep.waterFrom} → ${rep.waterTo}.</p>` : ''}
+        ${rep.oxygenFrom !== rep.oxygenTo ? `<p>${icon('wind', 18)} The crew breathed oxygen: ${rep.oxygenFrom} → ${rep.oxygenTo}.</p>` : ''}
+        ${rep.foodFrom !== rep.foodTo ? `<p>${icon('carrot', 18)} The crew ate food: ${rep.foodFrom} → ${rep.foodTo}.</p>` : ''}
         ${hazard === null ? '' : `<p>${icon('radiation', 18)} Radiation today: ${hazard} / 100. The meter resets for the new sol.</p>`}
         ${others.map((t) => `<p>${t}</p>`).join('')}
         ${g.over ? `<p><strong>Your crew earned ${g.stars} stars in ${CC_CONFIG.maxSols} sols.</strong></p>` : ''}
@@ -500,7 +509,6 @@ export function renderCommandCenter(room, { onExit } = {}) {
     const x = e.target.closest('[data-close]');
     if (x) return closePop(x.dataset.close, true);
     if (e.target.closest('[data-b="prop"]')) return openPop('switchboard');
-    if (e.target.closest('[data-b="wardrobe"]')) return openPop('wardrobe');
 
     const a = e.target.closest('[data-act]')?.dataset.act;
     if (a === 'sleep') return doSleep();
@@ -535,7 +543,7 @@ export function renderCommandCenter(room, { onExit } = {}) {
 
   function afterMove() {
     const g = getGame();
-    const inside = pos.x >= SHELTER_DOOR_X;
+    const inside = pos.y >= SHELTER_DOOR_Y && pos.x > CORRIDOR_X_HALF;
     if (inside && !g.inShelter) {
       setGame(enterShelter(g));
       say('You are inside the radiation shelter. The bunks are here.');
@@ -546,15 +554,35 @@ export function renderCommandCenter(room, { onExit } = {}) {
     nearPop('wardrobe', isNear(pos, ROOM_SPOTS.wardrobe));
     nearPop('bunks', isNear(pos, ROOM_SPOTS.bunks));
     stage.classList.toggle('near-battery', isNear(pos, ROOM_SPOTS.battery));
-    $('exit-door').classList.toggle('near', pos.y > EXIT_DOOR_Y - 40);
+    $('exit-left').classList.toggle('near', pos.x < EXITS.left.x + 40);
+    $('exit-right').classList.toggle('near', pos.x > EXITS.right.x - 40);
+    $('exit-up').classList.toggle('near', pos.y < EXITS.up.y + 40);
+    $('exit-down').classList.toggle('near', pos.y > EXITS.down.y - 40);
   }
 
-  // walking down onto the orange door at the bottom leaves the Command Center
-  function leaveRoom() {
-    if (onExit) return onExit();
-    pos = { ...pos, y: EXIT_DOOR_Y - 16 };   // step back inside until the base map exists
+  // walking through one of the four doors leaves the Command Center that way
+  // (left = Greenhouse road, up = Science Lab road, right = Life Support road, down = airlock / solar panels)
+  function leaveRoom(dir) {
+    if (onExit) return onExit(dir);
+    pos = { ...ROOM_SPAWN };   // no base map (testing the room on its own): back to the middle
     placePlayer();
-    say('The base map is being rebuilt. Coming soon!');
+  }
+  // the airlock (▼) leads outside: only in the spacesuit
+  let suitPopTimer = 0;
+  function blockAirlock() {
+    pos = { ...pos, y: EXITS.down.y - 34 };   // step back from the door
+    placePlayer();
+    $('suit-pop').hidden = false;
+    clearTimeout(suitPopTimer);
+    suitPopTimer = setTimeout(() => { $('suit-pop').hidden = true; }, 3500);
+  }
+
+  function doorCrossed() {
+    if (pos.x <= EXITS.left.x) return 'left';
+    if (pos.x >= EXITS.right.x) return 'right';
+    if (pos.y <= EXITS.up.y) return 'up';
+    if (pos.y >= EXITS.down.y) return 'down';
+    return null;
   }
 
   function onKeyDown(e) {
@@ -586,7 +614,9 @@ export function renderCommandCenter(room, { onExit } = {}) {
       placePlayer();
       player.faceToward(dx, dy);
       afterMove();
-      if (dy > 0 && pos.y >= EXIT_DOOR_Y) leaveRoom();
+      const door = doorCrossed();
+      if (door === 'down' && getGame().outfit !== 'suit') blockAirlock();
+      else if (door) leaveRoom(door);
     }
     player.setWalking(!!(dx || dy));
     requestAnimationFrame(frame);

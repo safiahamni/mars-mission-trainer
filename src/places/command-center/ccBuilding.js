@@ -1,6 +1,6 @@
 // COMMAND CENTER BUILDING on the base map (Member 1).
 // The drawing is Member 3's (it was in radiation-shelter/shelter.js): the console and desk,
-// the sleep pods, and the storm shelter core with its water line and water tanks.
+// the sleep pods, and the radiation shelter with its water line and water tanks.
 // The airlock, rover and solar panels are drawn by radiation-shelter/solar-panel.js.
 // Load it BEFORE solar-panel.js (it replaces the empty box in <g id="place-shelter">).
 // Everything here starts with cc- so it can't clash with other places. Its look is in ccBuilding.css.
@@ -27,25 +27,21 @@ const BUILDING = `
   <!-- sleep pods -->
   <rect x="228" y="302" width="72" height="40" rx="8" fill="#F4F2EE" stroke="#2B2A3A" stroke-width="2"/>
   <rect x="236" y="309" width="15" height="26" rx="5" fill="#5CE0B5" stroke="#2B2A3A" stroke-width="2"/><rect x="257" y="309" width="15" height="26" rx="5" fill="#5CE0B5" stroke="#2B2A3A" stroke-width="2"/><rect x="278" y="309" width="15" height="26" rx="5" fill="#5CE0B5" stroke="#2B2A3A" stroke-width="2"/>
-  <!-- storm shelter core: the dashed blue line = water around the crew -->
+  <!-- radiation shelter: the dashed blue line = water around the crew -->
   <rect x="314" y="248" width="104" height="96" rx="10" fill="#2B2A3A" stroke="#2B2A3A" stroke-width="2"/>
   <rect class="cc-core-border" x="320" y="254" width="92" height="66" rx="8" fill="none" stroke="#3EC6F0" stroke-width="4" stroke-dasharray="9 5"/>
   <rect x="330" y="264" width="34" height="12" rx="3" fill="#F4F2EE"/><rect x="330" y="264" width="9" height="12" rx="2" fill="#FF5A5A"/>
   <rect x="330" y="282" width="34" height="12" rx="3" fill="#F4F2EE"/><rect x="330" y="282" width="9" height="12" rx="2" fill="#FF5A5A"/>
   <path d="M392 268 L402 272 L402 282 Q402 290 392 294 Q382 290 382 282 L382 272 Z" fill="#3EC6F0" stroke="#F4F2EE" stroke-width="1.5"/>
   ${MINI_TANK(342, 302)}${MINI_TANK(354, 302)}${MINI_TANK(366, 302)}
-  <text x="366" y="336" font-size="11" text-anchor="middle" fill="#FFFFFF">Storm shelter core</text>
-  <rect x="228" y="350" width="182" height="22" rx="7" fill="#FFE38A" stroke="#2B2A3A" stroke-width="2"/>
-  <text x="319" y="365" font-size="12" text-anchor="middle" fill="#2B2A3A">Missions · switches · sleep</text>
-  <!-- "Crew safe" badge (shows while the crew is inside) -->
-  <g class="cc-badge"><rect x="384" y="226" width="56" height="18" rx="7" fill="#5CE0B5" stroke="#2B2A3A" stroke-width="2"/><text x="412" y="239" font-size="10" text-anchor="middle" fill="#2B2A3A">Crew safe</text></g>
+  <text x="366" y="336" font-size="11" text-anchor="middle" fill="#FFFFFF">Radiation shelter</text>
 </g>`;
 
 // put the building into the map, in place of the empty box
 document.getElementById('place-shelter').innerHTML = BUILDING;
 const building = document.getElementById('cc-building');
 
-// green outline + "Crew safe" while the crew is inside; red water line during a solar storm
+// green outline while the crew is inside; red water line during a solar storm
 map.on('enter', (place) => building.classList.toggle('cc-inside', place === 'shelter'));
 map.on('leave', () => building.classList.remove('cc-inside'));
 map.on('update', () => building.classList.toggle('cc-storm', !!window.MarsHUD?.isStorm()));
